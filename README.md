@@ -189,3 +189,57 @@ Copilot Workspaceは、開発者が共同でコードを作成し、レビュー
    modal.openModal();
    modal.closeModal();
    ```
+
+#### SelectorComponent
+1. `src/components/SelectorComponent.js` をインポートします。
+   ```html
+   <script src="src/components/SelectorComponent.js"></script>
+   ```
+
+2. `selector-component` タグを使用してセレクターを作成します。
+   ```html
+   <selector-component></selector-component>
+   ```
+
+3. セレクター変更イベントをハンドリングします。
+   ```javascript
+   document.querySelector('selector-component').addEventListener('selector-change', (event) => {
+     console.log(event.detail.value);
+   });
+   ```
+
+#### PromptComponent
+1. `src/components/PromptComponent.js` をインポートします。
+   ```html
+   <script src="src/components/PromptComponent.js"></script>
+   ```
+
+2. `prompt-component` タグを使用してプロンプトを作成します。
+   ```html
+   <prompt-component></prompt-component>
+   ```
+
+3. プロンプト送信イベントをハンドリングします。
+   ```javascript
+   document.querySelector('prompt-component').addEventListener('prompt-submit', (event) => {
+     console.log(event.detail.value);
+   });
+   ```
+
+#### AnimationComponent
+1. `src/components/AnimationComponent.js` をインポートします。
+   ```html
+   <script src="src/components/AnimationComponent.js"></script>
+   ```
+
+2. `animation-component` タグを使用してアニメーションを作成します。
+   ```html
+   <animation-component></animation-component>
+   ```
+
+3. アニメーションを開始および停止するイベントをハンドリングします。
+   ```javascript
+   const animation = document.querySelector('animation-component');
+   animation.startAnimation();
+   animation.stopAnimation();
+   ```
