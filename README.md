@@ -123,3 +123,69 @@ Copilot Workspaceは、開発者が共同でコードを作成し、レビュー
    ```python
    automation.auto_merge("REPOSITORY_NAME", "PULL_REQUEST_NUMBER")
    ```
+
+## WebComponentsの使用方法
+
+### 概要
+このリポジトリには、動的なアプリケーションを作成するためのさまざまなWebComponentのテンプレートモジュールが含まれています。以下の手順に従って、WebComponentの機能を使用してください。
+
+### インストール
+1. `src/components` ディレクトリ内のファイルをダウンロードします。
+
+### 使用方法
+
+#### ButtonComponent
+1. `src/components/ButtonComponent.js` をインポートします。
+   ```html
+   <script src="src/components/ButtonComponent.js"></script>
+   ```
+
+2. `button-component` タグを使用してボタンを作成します。
+   ```html
+   <button-component>Click me</button-component>
+   ```
+
+3. ボタンクリックイベントをハンドリングします。
+   ```javascript
+   document.querySelector('button-component').addEventListener('button-click', (event) => {
+     console.log(event.detail.message);
+   });
+   ```
+
+#### FormComponent
+1. `src/components/FormComponent.js` をインポートします。
+   ```html
+   <script src="src/components/FormComponent.js"></script>
+   ```
+
+2. `form-component` タグを使用してフォームを作成します。
+   ```html
+   <form-component></form-component>
+   ```
+
+3. フォーム送信イベントをハンドリングします。
+   ```javascript
+   document.querySelector('form-component').addEventListener('form-submit', (event) => {
+     console.log(event.detail);
+   });
+   ```
+
+#### ModalComponent
+1. `src/components/ModalComponent.js` をインポートします。
+   ```html
+   <script src="src/components/ModalComponent.js"></script>
+   ```
+
+2. `modal-component` タグを使用してモーダルを作成します。
+   ```html
+   <modal-component>
+     <p>Modal content goes here.</p>
+   </modal-component>
+   ```
+
+3. モーダルを開くおよび閉じるイベントをハンドリングします。
+   ```javascript
+   const modal = document.querySelector('modal-component');
+   modal.openModal();
+   modal.closeModal();
+   ```
