@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cytoscape Test Application</title>
+  <script src="https://unpkg.com/whatwg-fetch@2.0.3/fetch.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+  <script src="cytoscape.umd.js"></script>
+  <script src="api.js"></script>
+  <script src="gsi.js"></script>
+
+  <script src="style.js"></script>
+  <link rel="stylesheet" href="css/collapsible-panel.css">
+  <style>
+  .vertical-text {
+      writing-mode: vertical-rl; /* 縦書きに設定 */
+      transform: rotate(180deg); /* 文字を横向きにする */
+      text-align: center;
+      font-size: 16px;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  }
+  </style>
+</head>
+<body>
+  <div id="cy"></div>
+  <div id="rightPanelContainer1" class="rightPanel">
+    <div class="panel-wrapper" id="rightPanelContainer-wrapper1">
+        <div class="panel-header2" id="infoPanelsContainer1">
+        <h4>Graph Operations</h4>
+        <span class="panel-toggle-icon">▼</span>
+       </div>
+    </div>
+  </div>
+
+
+  <div id="rightPanelContainer2" class="rightPanel">
+    <div class="panel-wrapper" id="rightPanelContainer-wrapper2">
+        <div class="panel-header2" id="infoPanelsContainer2">
+        <h4>Node Properties</h4>
+        <span class="panel-toggle-icon">▼</span>
+        </div>
+        <div class="collapsible-panel" id="infoPanelContainer">
+            <div class="panel-header">
+                <h4>選択ノード情報</h4>
+                <span class="panel-toggle-icon">▼</span>
+            </div>
+            <div class="panel-content" id="infoPanelContent">
+                <div id="noSelectionMessage">ノードを選択してください</div>
+                <div id="selectedNodeInfo" style="display: none;">
+                    <div class="panel-section" id="basicInfoSection">
+                        <h5>基本情報</h5> <div id="basicInfoDisplay"></div>
+                    </div>
+                    <div class="panel-section" id="metadataSection">
+                        <h5>メタデータ</h5> <div id="metadataDisplay"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <script src="agent.js"></script>
+  <script src="components/PanelComponent.js"></script>
+  <script src="components/ButtonComponent.js"></script>
+  <script src="components/GoogleDriver.js"></script>
+  <script src="components/panels.js"></script>
+  <script src="components/buttons.js"></script>
+  <script>
+        let driveManager;
+
+        window.onload = function () {
+        
+            CollapsiblePanel.panelize(panels, 'rightPanelContainer-wrapper1');
+            ButtonComponent.buttonize(btnProps);
+        
+            CollapsiblePanel.populateAll();
+
+        };
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>
