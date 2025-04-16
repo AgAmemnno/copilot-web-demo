@@ -26,10 +26,14 @@ const components = {
 
 */
 import { VirtualTextareaComponent } from './components/VirtualTextareaComponent.js';
+import { VirtualKeyboardComponent } from './components/VirtualKeyboardComponent.js';
 
 customElements.define('virtual-textarea-component', VirtualTextareaComponent);
+customElements.define('virtual-keyboard-component',VirtualKeyboardComponent);
+
 const wcomponents = {
-    VirtualTextareaComponent
+    VirtualTextareaComponent,
+    VirtualKeyboardComponent
 };
 Object.keys(wcomponents).forEach(key => {
     eval(`window.${key} = ${key}`);
