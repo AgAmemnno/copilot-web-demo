@@ -1,4 +1,4 @@
-class FormComponent extends HTMLElement {
+export class FormComponent extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });

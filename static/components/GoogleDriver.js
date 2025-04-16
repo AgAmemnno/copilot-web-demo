@@ -1,4 +1,4 @@
-class GoogleDriveManager {
+export class GoogleDriveManager {
     constructor() {
         this.statusDiv = document.getElementById('status');
         this.errorDiv = document.getElementById('error');

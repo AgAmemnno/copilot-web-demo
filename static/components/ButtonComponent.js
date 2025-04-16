@@ -1,4 +1,6 @@
-class ButtonComponent extends BaseHTMLElement {
+import { BaseHTMLComponent } from './BaseHTMLComponent.js';
+
+class ButtonComponent extends BaseHTMLComponent {
   _selector = "button";
   constructor() {
       super();
@@ -46,3 +48,4 @@ class ButtonComponent extends BaseHTMLElement {
 }
 customElements.define('button-comp',ButtonComponent);
 
+export { ButtonComponent };

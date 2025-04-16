@@ -1,4 +1,4 @@
-class BaseHTMLlement extends HTMLElement {
+export class BaseHTMLComponent extends HTMLElement {
     constructor() {
       super(); // ★ 派生クラスの constructor では最初に必ず super() を呼び出す
       this.attachShadow({ mode: 'open' });
@@ -12,6 +12,4 @@ class BaseHTMLlement extends HTMLElement {
     query() {
       return this.shadowRoot.querySelector(this._selecotr);
     }
-
-
-  }
+}

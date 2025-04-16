@@ -50,3 +50,5 @@ class PromptComponent extends HTMLElement {
 }
 
 customElements.define('prompt-component', PromptComponent);
+
+export { PromptComponent };

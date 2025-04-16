@@ -1,3 +1,5 @@
+import { BaseHTMLComponent } from './BaseHTMLComponent.js';
+
 class InputComponent extends BaseHTMLElement {
   _selector = "input";
   constructor() {super();}
@@ -45,3 +47,4 @@ class InputComponent extends BaseHTMLElement {
 
 customElements.define('input-comp',InputComponent);
 
+export { InputComponent };

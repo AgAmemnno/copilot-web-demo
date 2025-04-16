@@ -1,3 +1,5 @@
+import { BaseHTMLComponent } from './BaseHTMLComponent.js';
+
 class SelectorComponent extends BaseHTMLElement {
   _selector = "select";
   constructor() {super();}
@@ -45,3 +47,5 @@ class SelectorComponent extends BaseHTMLElement {
 }
 
 customElements.define('selector-component', SelectorComponent);
+
+export { SelectorComponent };

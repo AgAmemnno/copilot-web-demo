@@ -1,4 +1,4 @@
-class AnimationComponent extends HTMLElement {
+export class AnimationComponent extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
