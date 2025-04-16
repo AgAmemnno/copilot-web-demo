@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head><title>Parent Window</title></head>
+<body>
+  <h1>Parent Window</h1>
+  <iframe id="myIframe" src="iframe-content.html"></iframe>
+
+  <script>
+    const iframe = document.getElementById('myIframe');
+    let appendedGlobal = true;
+
+    if(appendedGlobal){
+        // iframe のロード完了を待つ (iframe 内のスクリプト実行後)
+        iframe.onload = () => {
+            // 親ウィンドウのグローバルスコープに登録されているか確認
+            if (window.MyClassExposedFromIframe) {
+                console.log('Creating instance from class exposed by iframe...');
+                const instance = new window.MyClassExposedFromIframe('created-in-parent');
+                instance.whoAmI(); // コンテキストは iframe 内で生成されることに注意
+            } else {
+                console.error('MyClassExposedFromIframe is not available globally in parent.');
+            }
+        };
+
+    }else{
+        // iframe のロード完了を待つ
+        iframe.onload = () => {
+            // 親ウィンドウから iframe のグローバルスコープにアクセス
+            if (iframe.contentWindow && iframe.contentWindow.MyGlobalIframeClass) {
+                console.log('Accessing iframe class from parent...');
+                const IframeClass = iframe.contentWindow.MyGlobalIframeClass;
+                const instanceFromParent = new IframeClass('accessed-from-parent');
+                instanceFromParent.whoAmI();
+            } else {
+                console.error('Could not access MyGlobalIframeClass in the iframe.');
+                // 同一オリジンでない場合、ここでエラーになる可能性が高い
+            }
+        };
+
+    }
+  </script>
+</body>
+</html>
