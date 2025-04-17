@@ -27,14 +27,21 @@ const components = {
 */
 import { VirtualTextareaComponent } from './components/VirtualTextareaComponent.js';
 import { VirtualKeyboardComponent } from './components/VirtualKeyboardComponent.js';
+import { PopoverMenuComponent } from './components/PopoverMenuComponent.js';
+import { AnimMenuComponent } from './components/AnimMenuComponent.js';
 
 customElements.define('virtual-textarea-component', VirtualTextareaComponent);
 customElements.define('virtual-keyboard-component',VirtualKeyboardComponent);
+customElements.define('popover-menu-component',PopoverMenuComponent);
+customElements.define('anim-menu-component',AnimMenuComponent);
 
 const wcomponents = {
     VirtualTextareaComponent,
-    VirtualKeyboardComponent
+    VirtualKeyboardComponent,
+    PopoverMenuComponent,
+    AnimMenuComponent
 };
+
 Object.keys(wcomponents).forEach(key => {
     eval(`window.${key} = ${key}`);
 });
@@ -50,6 +57,6 @@ function createElement(tagName, options) {
     const element = document.createElement(tagName, options);
     element.ishadow();
     return element;
-  }
+}
 
 window.createElement = createElement;
