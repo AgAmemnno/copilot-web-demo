@@ -4,24 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cytoscape Test Application</title>
-
   <script type="importmap">{"imports": {"jquery": "https://cdn.jsdelivr.net/npm/jquery@3.3.1/+esm"}}</script>
-
-
-  <style id="compiled-css" type="text/css">
-    body {
-      margin-top: 100px;
-    }
-
-    #wrap {
-      display: block;
-      margin: 0 auto;
-      width: 200px;
-    }
-
-
-    /* EOS */
-  </style>
 
 
 
@@ -32,9 +15,9 @@
   <script src="gsi.js"></script>
 
   <script src="style.js"></script>
-  <link rel="stylesheet" href="css/collapsible-panel.css">
+
   <script type="module" src="wcom.js"></script>
-  
+
   <style>
   .vertical-text {
       writing-mode: vertical-rl; /* 縦書きに設定 */
@@ -48,11 +31,40 @@
   }
   :root {
       color-scheme: light;
-    }
+  }
+    
+  #full-screen {
+    width: 100vw;           /* ビューポート幅の100% */
+    height: 100vh;          /* ビューポート高さの100% */
+    position: fixed;        /* ビューポート基準で位置を固定 */
+    top: 0;                 /* 上端をビューポートの上端に合わせる */
+    left: 0;                /* 左端をビューポートの左端に合わせる */
+
+    /* 以下は任意だが推奨 */
+    box-sizing: border-box; /* paddingやborderを含めてサイズ計算 */
+
+    background-image: url('/images/demopan.png'); /* 例: example.comの画像を指定 */
+
+    /* ★ 背景画像の表示方法を調整 */
+    background-size: cover;           /* 画像のアスペクト比を保ちつつ、要素全体を完全に覆うように拡大縮小 */
+    background-position: center center; /* 画像を要素の中央に配置 */
+    background-repeat: no-repeat;     /* 画像を繰り返さない */
+
+    z-index: -1;       /* 必要に応じて重なり順を指定 */
+}
+
   </style>
 </head>
-<body>
 
+<body>
+  <div id="full-screen"></div>
+  <script type="module">
+    let panel = createElement('virtual-keyboard-component');
+    document.body.appendChild(panel);
+    let panel2 = createElement('anim-menu-component');
+    document.body.appendChild(panel2);
+  </script>
+      
 
  <!--    
   <div id="cy"></div>
@@ -134,14 +146,6 @@ if ("virtualKeyboard" in navigator) {
 -->
 
 
-
-
-<script type="module">
-
-//let panel = createElement('virtual-textarea-component');
-let panel = createElement('virtual-keyboard-component');
-document.body.appendChild(panel);
-</script>
-  
 </body>
+  
 </html>

@@ -22,7 +22,6 @@ shadowRoot.adoptedStyleSheets = [...shadowRoot.adoptedStyleSheets, keyboardsheet
 shadowRoot.adoptedStyleSheets = [...shadowRoot.adoptedStyleSheets,  jqueryuicss];
 */
 
-
 $(function() {
 
 var simulateTyping = "Hello World!!1\b <3";
