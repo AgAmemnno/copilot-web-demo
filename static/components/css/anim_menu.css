@@ -35,14 +35,13 @@
       color: #FFFFFF;
       text-align: center;
       line-height: 80px;
-      /* transition は削除 */
   }
   
   .menu-open-button {
       z-index: 2; /* アイテムより手前 */
       cursor: pointer; /* こちらはクリック可能なカーソル */
       box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.14);
-      /* 初期スケールはJSで制御するため transform は削除orコメントアウト */
+    
   }
   
   .lines {
@@ -58,6 +57,3 @@
       /* transition は削除 */
   }
   
-  /* JSで制御するため transform は削除orコメントアウト */
-  /* .line-1 { transform: translate3d(0, -8px, 0); } */
-  /* .line-3 { transform: translate3d(0, 8px, 0); } */

@@ -28,10 +28,6 @@ const panels = [
                 <select id="allNodesSelect">
                     <option value="">グラフ上のノードを選択...</option>
                 </select>
-
-                <button id="addInputNodeButton" class="small-button">入力に追加</button>
-                <button id="addOutputNodeButton" class="small-button">出力に追加</button>
-
                 <label>入力ノードリスト:</label>
                 <div id="inputNodeList" class="node-list-display"></div>
                 <label>出力ノードリスト:</label>
@@ -81,6 +77,6 @@ const panels = [
             </div>
         `
     }
-];
+]
 
-
+export {panels};

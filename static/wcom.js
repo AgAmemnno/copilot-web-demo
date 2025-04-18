@@ -2,7 +2,7 @@
 import { AnimationComponent } from './AnimationComponent.js';
 import { ButtonComponent } from './ButtonComponent.js';
 import { FormComponent } from './FormComponent.js';
-import { GoogleDriveManager } from './GoogleDriver.js';
+
 import { InputComponent } from './InputComponent.js';
 import { ModalComponent } from './ModalComponent.js';
 import { CollapsiblePanel } from './PanelComponent.js';
@@ -29,17 +29,24 @@ import { VirtualTextareaComponent } from './components/VirtualTextareaComponent.
 import { VirtualKeyboardComponent } from './components/VirtualKeyboardComponent.js';
 import { PopoverMenuComponent } from './components/PopoverMenuComponent.js';
 import { AnimMenuComponent } from './components/AnimMenuComponent.js';
-
+import { CollapsiblePanel } from './components/PanelComponent.js';
+import { ButtonComponent } from './components/ButtonComponent.js';
+import { GoogleDriveManager } from './components/GoogleDriver.js';
 customElements.define('virtual-textarea-component', VirtualTextareaComponent);
 customElements.define('virtual-keyboard-component',VirtualKeyboardComponent);
 customElements.define('popover-menu-component',PopoverMenuComponent);
 customElements.define('anim-menu-component',AnimMenuComponent);
 
+customElements.define('collapsible-panel', CollapsiblePanel);
+customElements.define('button-component', ButtonComponent);
 const wcomponents = {
     VirtualTextareaComponent,
     VirtualKeyboardComponent,
     PopoverMenuComponent,
-    AnimMenuComponent
+    AnimMenuComponent,
+    CollapsiblePanel,
+    ButtonComponent,
+    GoogleDriveManager,
 };
 
 Object.keys(wcomponents).forEach(key => {
