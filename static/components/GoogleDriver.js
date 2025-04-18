@@ -1,8 +1,7 @@
 import BaseHTMLComponentWithEvent from './base/BaseHTMLComponentWithEvent.js';
 
-export class GoogleDriveManager extends BaseHTMLComponentWithEvent {
+export class GoogleDriveManager{
     constructor() {
-        super();
         this.statusDiv = document.getElementById('status');
         this.errorDiv = document.getElementById('error');
         this.filesDownloadSelect = document.getElementById('files_download');
@@ -10,8 +9,8 @@ export class GoogleDriveManager extends BaseHTMLComponentWithEvent {
         this.gapiInited = false;
         this.gisInited = false;
         this.tokenClient = null;
-        this.registerId();
-        this.eventInfo = this.retrieveEventInfo();
+        
+       
     }
   
     async gapiLoad() { 

@@ -2,7 +2,6 @@ export default class BaseHTMLComponent extends HTMLElement {
     constructor() {
       super();
       this.attachShadow({ mode: 'open' });
-      this._selecotr ="";
     }
 
     getId(name){
@@ -10,7 +9,7 @@ export default class BaseHTMLComponent extends HTMLElement {
     }
     
     query() {
-      return this.shadowRoot.querySelector(this._selecotr);
+      return this.shadowRoot.querySelector(this._selector);
     }
     connectedCallback(){}
     disconnectedCallback(){}

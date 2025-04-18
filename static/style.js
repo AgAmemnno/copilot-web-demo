@@ -230,7 +230,7 @@ var registerAppStyleSheet = (userConfig = {}) => {
       // start/target 用の個別セレクタは不要に
 
       // クローンマーカー表示 (ghost effect)
-      .selector('node[class="document"][clonemarker=true]')
+      .selector('node[class="document"][clonemarker="true"]')
       .css({ /* ... (前回と同じ) ... */
           'ghost': 'yes',
           'ghost-offset-x': config.cloneMarkerOffset.x,

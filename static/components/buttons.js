@@ -1,10 +1,22 @@
+function updateNodeListDisplay(listDiv, nodeIds) {
+  listDiv.innerHTML = ''; // クリア
+  nodeIds.forEach(nodeId => {
+      const node = cy.getElementById(nodeId);
+      const span = document.createElement('span');
+      span.textContent = node.data('label') || nodeId; // ラベルがあればラベル表示
+      // NOT IMPLEMENTED: リストから削除するボタンなど
+      listDiv.appendChild(span);
+  });
+}
+
+
 const btnProps =
 { 
   'status':[
       ['loadDataButton', 'LoadData',
       {
         'click': async () => {
-            driveManager = new GoogleDriveManager();
+            window.driveManager = new GoogleDriveManager();
             if (!(driveManager.gapiInited && driveManager.gisInited)) {
                 await driveManager.initializeGapi();
             }else{
@@ -33,55 +45,81 @@ const btnProps =
       ['postButton', 'Post',{'click':sendPostRequest}]
    ],
   'documentOptions':[["addDocumentNodeButton","Documentノード追加",
-    {'click': () => 
-    {
-    const nodeClass = 'document'; // 固定
-    const label = nodeLabelInput.value || `${nodeClass} ${nodeCounter}`;
-    const id = `doc_${nodeCounter}`; // IDプレフィックス変更
-    nodeCounter++;
+    {'click': { 
+      "proxy" : (self) =>{
+                   return () =>
+                  {
+                      let nodeCounter = sessionStorage.getItem("nodeCounter");
+                      if(nodeCounter == null){
+                          nodeCounter = 0;
+                      }
+                      const nodeClass = 'document'; // 固定
+                      const label = nodeLabelInput.value || `${nodeClass} ${nodeCounter}`;
+                      const id = `doc_${nodeCounter}`; // IDプレフィックス変更
+                      nodeCounter++;
+                      sessionStorage.setItem("nodeCounter",nodeCounter);
+                      const newNodeData = {
+                          group: 'nodes',
+                          data: {
+                              id: id,
+                              class: nodeClass,
+                              label: label,
+                              // デフォルト値や選択値に基づいて属性を設定
+                              role: nodeClass === 'document' ? documentRoleSelect.value : undefined,
+                              stateVariables: [],
+                              unitsOfInformation: [],
+                              //clonemarker: "false",
+                              // isTemplate: false, // テンプレート機能用
+                              // logicType: undefined, // 論理修飾用
+                          },
+                          // 画面中央あたりにランダムで配置
+                          position: {
+                              x: cy.width() / 2 + (Math.random() - 0.5) * 100,
+                              y: cy.height() / 2 + (Math.random() - 0.5) * 100
+                          }
+                      };
+                  
+                      // Documentの場合、役割に応じて初期状態を設定するなど (任意)
+                      // if (nodeClass === 'document' && newNodeData.data.role === 'start') { ... }
+                      const doc = JSON.parse(nodeDocument.value);
+                      if(doc.id != ""){ 
+                        newNodeData.data.label  = doc.label;
+                        newNodeData.data.href   = doc.href;
+                      }
+                      /*
+                      const addNodeEvent = new CustomEvent('addnode', {
+                        bubbles: true,
+                        composed: true,
+                        detail: {
+                            nodedata :newNodeData
+                        }
+                      });
+                    
+                      // カスタム要素自身 (Shadow Host) からイベントを発火
+                      self.dispatchEvent(addNodeEvent);
+                      */
+                      cy.add(newNodeData);
+                      //console.log('Added node:', newNodeData);
+                      nodeLabelInput.value = ''; // ラベル入力欄をクリア
+                    } 
+                },
+       "addnode" : (event) => {
+                  cy.add(event.detail.nodedata); 
+                  }
+      }}
+    ]],  
 
-    const newNodeData = {
-        group: 'nodes',
-        data: {
-            id: id,
-            class: nodeClass,
-            label: label,
-            // デフォルト値や選択値に基づいて属性を設定
-            role: nodeClass === 'document' ? documentRoleSelect.value : undefined,
-            stateVariables: [],
-            unitsOfInformation: [],
-            clonemarker: false,
-            // isTemplate: false, // テンプレート機能用
-            // logicType: undefined, // 論理修飾用
-        },
-        // 画面中央あたりにランダムで配置
-        position: {
-            x: cy.width() / 2 + (Math.random() - 0.5) * 100,
-            y: cy.height() / 2 + (Math.random() - 0.5) * 100
-        }
-    };
-
-    // Documentの場合、役割に応じて初期状態を設定するなど (任意)
-    // if (nodeClass === 'document' && newNodeData.data.role === 'start') { ... }
-    const doc = JSON.parse(nodeDocument.value);
-    if(doc.id != ""){ 
-      newNodeData.data.label  = doc.label;
-      newNodeData.data.href   = doc.href;
-    }
-    cy.add(newNodeData);
-    console.log('Added node:', newNodeData);
-
-
-    nodeLabelInput.value = ''; // ラベル入力欄をクリア
-  }
-    }]],
   'edgeClassSelect' :[["addEdgeButton","関連付け実行",
     {'click'  :() => 
       {
           const processType = processTypeSelectForEdge.value; // 選択されたプロセスタイプを取得
           const edgeClass = edgeClassSelect.value;
           const selectedAgent = agentSelectForEdge.value;
-      
+          const inputNodeBtn  = document.getElementById("addInputNodeButton")
+          const outputNodeBtn = document.getElementById("addOutputNodeButton")
+          const selectedInputNodes = JSON.parse(inputNodeBtn.dataset.selectedNodes);
+          const selectedOutputNodes = JSON.parse(outputNodeBtn.dataset.selectedNodes);
+          
           console.log('--- Add Edge/Process Request ---');
           console.log('Input Nodes:', selectedInputNodes);
           console.log('Output Nodes:', selectedOutputNodes);
@@ -92,7 +130,13 @@ const btnProps =
               alert('入力ノードと出力ノードをそれぞれ1つ以上選択してください。');
               return;
           }
-      
+          
+          let agentCounter = sessionStorage.getItem("agentCounter");
+          if(agentCounter == null){
+              agentCounter = 0;
+          }
+          let edgeCounter = sessionStorage.getItem("edgeCounter");
+          let processCounter = sessionStorage.getItem("processCounter");
           const agentId = `agent_${agentCounter++}`;
           const agentlabel  = `Agent ${agentCounter}`;
           const agentNode = {
@@ -179,15 +223,18 @@ const btnProps =
           alert(`エッジ生成実行 (仮):\nInputs: ${selectedInputNodes.join(', ')}\nOutputs: ${selectedOutputNodes.join(', ')}\nClass: ${edgeClass}`);
           
           // 実行後はリストをクリア
-          selectedInputNodes = [];
-          selectedOutputNodes = [];
-          updateNodeListDisplay(inputNodeListDiv, selectedInputNodes);
-          updateNodeListDisplay(outputNodeListDiv, selectedOutputNodes);
+   
+          updateNodeListDisplay(inputNodeListDiv, []);
+          updateNodeListDisplay(outputNodeListDiv, []);
           allNodesSelect.value = "";
           processTypeSelectForEdge.value = "general"; // デフォルトに戻す
           edgeClassSelect.value = "production"; // デフォルトに戻す
   
-
+           sessionStorage.setItem("agentCounter",agentCounter);
+           sessionStorage.setItem("edgeCounter",edgeCounter);
+           sessionStorage.setItem("processCounter",processCounter);
+           inputNodeBtn.dataset.selectedNodes = JSON.stringify([]);
+           outputNodeBtn.dataset.selectedNodes = JSON.stringify([]);
   }
     }]],
   'others-controls':[["deleteSelected","選択要素削除",{'click':() => 
@@ -203,19 +250,35 @@ const btnProps =
                           const layout = cy.layout({ name: 'preset' }); // とりあえず preset
                           layout.run();
                   }}]],
-  'allNodesSelect':[["addInputNodeButton","入力に追加",{'click': () => {
+  'allNodesSelect':[["addInputNodeButton","入力に追加",{'click': (event) => {
+                          const target  = event.target;
+                          let   selectedInputNodes = [];
+                          if(Object.prototype.hasOwnProperty.call(target.dataset, 'selectedNodes')){
+                             selectedInputNodes = JSON.parse(target.dataset.selectedNodes);
+                          }
+                          const inputNodeListDiv = document.getElementById('inputNodeList');
                           const selectedNodeId = allNodesSelect.value;
                           if (selectedNodeId && !selectedInputNodes.includes(selectedNodeId)) {
                               // NOT IMPLEMENTED: ノードタイプによる入力制限チェック (例: Agentは入力になれないなど)
                               selectedInputNodes.push(selectedNodeId);
                               updateNodeListDisplay(inputNodeListDiv, selectedInputNodes);
                           }
+                          target.dataset.selectedNodes = JSON.stringify(selectedInputNodes);
                   }}],["addOutputNodeButton","出力に追加",{'click': () => {
                           const selectedNodeId = allNodesSelect.value;
+                          const target  = event.target;
+                          let   selectedOutputNodes = [];
+                          if(Object.prototype.hasOwnProperty.call(target.dataset, 'selectedNodes')){
+                             selectedOutputNodes = JSON.parse(target.dataset.selectedNodes);
+                          }
+                          const outputNodeListDiv = document.getElementById('outputNodeList');
                           if (selectedNodeId && !selectedOutputNodes.includes(selectedNodeId)) {
                               // NOT IMPLEMENTED: ノードタイプによる出力制限チェック
                               selectedOutputNodes.push(selectedNodeId);
                               updateNodeListDisplay(outputNodeListDiv, selectedOutputNodes);
                           }
+                          target.dataset.selectedNodes = JSON.stringify(selectedOutputNodes);
                   }}]],
 }
+
+export {btnProps};

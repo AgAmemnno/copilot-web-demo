@@ -50,3 +50,113 @@ WebアニメーションAPI — メインページ
 Web Animations APIの使用ガイド
 CodePen には「不思議の国のアリス」のデモがすべて揃っているので、自由に試したり、フォークしたり、共有したりできます。
 web-animations-js — Web Animations API ポリフィル
+
+
+
+# Draft the Content (Property by Property, in Japanese):
+
+- Introduction: element.animate() メソッドでアニメーションを作成する際に指定するオプションオブジェクトには、アニメーションのタイミングや挙動を制御するための様々なプロパティがあります。以下に、提供されたプロパティについて解説と利用法のアイディアを列挙します。
+
+1. delay
+
+   - 説明: アニメーションが開始されるまでの遅延時間をミリ秒で指定します。デフォルトは0です。
+   - 利用法のアイディア:
+ページ読み込み後、少し間を置いて要素が登場するアニメーション。
+複数の要素が順番に、または少しずつずれてアニメーションを開始する「シーケンス」効果（例: リストアイテムが上から順番にフェードインする）。
+ユーザー操作（例: ボタンクリック）からアニメーション開始までの意図的な「間」を作る。
+
+2. direction
+
+   - 説明: アニメーションの再生方向を指定します。"normal" (順方向)、"reverse" (逆方向)、"alternate" (順方向→逆方向を繰り返す)、"alternate-reverse" (逆方向→順方向を繰り返す) があります。デフォルトは"normal"です。
+   - 利用法のアイディア:
+要素が左右に往復するアニメーション（"alternate"）。
+要素が開くアニメーション（"normal"）と閉じるアニメーション（同じキーフレームで"reverse"）を切り替えて再利用する。
+無限ループする背景アニメーションなどで、端まで行ったら逆再生して戻ってくる動き（"alternate"）。
+
+3. duration
+
+   - 説明: アニメーションの1回の繰り返し（イテレーション）にかかる時間をミリ秒で指定します。デフォルトは0ですが、0の場合はアニメーションは実行されません。
+   - 利用法のアイディア:
+アニメーションの速度を調整する。短いほど速く、長いほどゆっくりになります。
+アニメーションの種類（例: フェードインは0.3秒、スライドインは0.5秒）に応じて異なる時間を設定し、動きに変化をつける。
+インタラクションに対する反応アニメーションの速さをユーザー設定で変更可能にする。
+
+4. easing
+
+   - 説明: アニメーションの進行率の時間変化を指定します。"linear", "ease-in", "step-end" のような `<easing-function>` を指定します。"cubic-bezier(p1x, p1y, p2x, p2y)" 形式でカスタムカーブも定義できます。デフォルトは"linear"です。
+   - 利用法のアイディア:
+自然な動き（"ease", "ease-out"）をUI要素に適用する。
+勢いよく登場したり（"ease-in-out"やオーバーシュートするcubic-bezier）、弾むような動き（カスタムcubic-bezier）を作る。
+ストップモーションやデジタルカウンターのようなカクカクした動き（steps()）
+物理ベースのアニメーションを近似する （ cubic-bezier で跳ね返りなどを表現)
+   - サンプルリンク
+
+   以下のリンクをクリックして、Web Animations API のサンプルコードを試してみてください: 
+    
+    - [Easing](https://f3607115f8963c5ea774b378636fdb310a0d320a.mdnplay.dev/en-US/docs/Web/CSS/easing-function/runner.html?state=pVVNb9s4EP0rAwIBbEBfdusiVWSjaNCeFntxi150oaiRzIYauiTljbfIfy8oynbiJk6BHmzJfO%2FNG82Mxj%2BZsJblrNL1HlZQyx38LAlgq610UlMOBhV3coc3%2FniDst24HGZZtr2%2FKemhpJK86Fkpr6xWvQvS%2F2TtNjksgvAU6nhQcXHXGt1THQuttMmhUj2eQ7LjLeZgeC25ilt%2FRXITzwIQ0giFwB3Msu398BUFxLTVZL6A%2BSJ8UrjOrqYvYW%2Bzq6mHpsFcmxpN7J166%2FO9Go6d3uYwX4zJc5IdD089SxYWJDWSpEPgyqEhPhRhqNaHO9w3hndoodM7jI0vQ6hcY3QX7gAUNkOdg9mg9J5P4fcneGAoGfBa2q3i%2BxwahWN%2BSrYUS4edzUEgOTTD%2BffeOtnsY6HJIbknWMdNKymutHO6y2F%2BbDmL2MZ1iuWsqOVu5bnDTZGGn8drrwKo5CqkXVS9c5pAKG7tsmTHssUBKNlq7bhxp3oWaUBCoHSM9Cii4hUqaLRZlgy5ldTGFhUKV7LV7UZri8AJAgJNT2LoUpEOukOQoABZPxMkUAAKvfVSCADWKyUJuSnScH7OG%2BFJFkGWLPzYRDCbvshGbvEiGEt6DY917y5zLhFEX0kRV%2Fi%2FRDPJklkEcZa889nPI8hezvypLoKZl2bJdQRvXxZZh1s7WUSAVL%2FGehOB9UPxGu83uyINvXo8O0U6DCWL2He%2F94Qm68aWflLYwRJqLfoOySU%2FejT79QBpMynZYSL8Whh1Pq2Pji6pDoN9UtVy95rVcaUGXUkHp4TX9acdkvtHWoeEniyUFHcli2AyheUqbADZwOSocXjvbsMLDsvlEkp29pKVbHpYLGNyiXV7hcmR8S%2FvELzytLNKdhMkz%2FsMLnr72OTmosUX2UlqP49vKCwfdSXZ8cNfwQOgsvin2fZk8Y8SPSvHcauO1T9l8lz9N5xaPGvAXzzkYMoiZo1gOUuR4q%2FrtNbCpt%2BwSm%2FX63RcUYdtlrKHXw%3D%3D)
+
+
+5. endDelay
+
+   - 説明: 
+   
+   アニメーションの1回の繰り返しが完了した後、次の繰り返しや後続のアニメーションが開始されるまでの遅延時間（ミリ秒）を指定します。主に複数のアニメーションをシーケンス（連続再生）する際に、前のアニメーションの終了を起点として次の開始を調整するために役立ちます。デフォルトは0です。
+   - 利用法のアイディア:
+   
+   連続するアニメーションの間隔を調整する（例: Aのアニメーションが終わって1秒待ってからBのアニメーションを開始）。
+繰り返しアニメーションの各イテレーションの間に一時停止を入れる。
+
+6. fill
+
+   - 説明: 
+   
+   アニメーションが再生される前（delay期間中）や、再生が完了した後（duration * iterations + endDelay 後、またはアニメーションが削除されるまで）に、要素がアニメーションの最終状態（または開始状態）を維持するかどうかを決定します。"none" (デフォルト), "forwards", "backwards", "both", "auto" があります。"auto"は通常"none"として振る舞います。
+   - 利用法のアイディア:
+   
+   アニメーション完了後に、要素を最終状態に留めておく（"forwards"）。例: フェードインして表示されたままにする。
+delay期間中、アニメーションの開始状態を要素に適用しておく（"backwards"）。例: フェードインアニメーションの遅延中、要素を透明にしておく。
+アニメーションの前後の状態を両方適用する（"both"）。
+アニメーション完了後に元の状態に戻す（"none"）。
+
+7. iterationStart
+
+   - 説明: 
+   
+   アニメーションの最初の繰り返しがどの時点から開始されるかを0.0から1.0（またはそれ以上）の値で指定します。0.5を指定すると、最初からアニメーションの途中の50%の時点から始まります。
+
+   - 利用法のアイディア:
+   
+   繰り返しアニメーションの開始地点をランダムに変えて、バリエーション豊かなループアニメーションを作成する。
+長い繰り返しアニメーションの一部を抜粋して表示する。
+スクロール連動アニメーションで、スクロール位置に応じてアニメーションの開始地点を同期させる。
+
+8. iterations
+   - 説明:
+   
+   アニメーションを何回繰り返すかを指定します。デフォルトは1です。Infinity を指定すると、要素が存在する限りアニメーションが無限に繰り返されます。
+   - 利用法のアイディア:
+   
+   ローディングアイコンの回転など、無限に繰り返すアニメーション（Infinity）。
+注意を引くために数回点滅するアニメーション（例: 3）。
+特定の回数だけループさせたい背景アニメーション。 
+
+9. composite / iterationComposite
+   - **composite**: このアニメーションが、他の独立したアニメーション（特に他のアニメーションが自身のcompositeを指定していない場合）とプロパティ値をどのように合成するかを決定します。"replace" (デフォルト), "add", "accumulate" があります。
+   - **replace**: 新しい値で前の値を完全に置き換えます。
+   - **add**: 値を加算的に適用します（例: transform: translateX(10px) と rotate(5deg) があれば、両方の効果が合成される）。
+   - **accumulate**: 同種のプロパティ値を累積的に適用します（例: blur(2px) と blur(3px) があれば blur(5px) になる）。
+   - **iterationComposite**: このアニメーション自身の繰り返し（イテレーション）間で、値がどのように累積されるかを決定します。"replace" (デフォルト), "accumulate" があります。
+   - 利用法のアイディア (composite):
+複数のアニメーションが同時に同じ要素の異なるプロパティ（例: 一つは移動、もう一つは回転）を操作する場合に、互いに干渉せず両方の効果を適用する（"add"）。
+基底となるアニメーション効果に、別の短いアニメーション効果を重ねて加える。
+   - 利用法のアイディア (iterationComposite):
+要素が繰り返しジャンプして、次のジャンプ位置が前のジャンプの最終位置から始まるようなアニメーション（"accumulate" を translateY に適用）。例: キャラクターが段差を繰り返し登る。
+繰り返し回転するたびに角度が累積していくアニメーション（"accumulate" を rotate に適用）。例: ゼンマイが巻かれるように徐々に回転量が増える。 
+
+9. pseudoElement
+   - 説明: アニメーションを要素自身ではなく、指定した擬似要素 (::before, ::after など) に適用する場合に、そのセレクタ文字列を指定します。
+   - 利用法のアイディア:
+要素の枠線や背景に追加した ::before/::after 擬似要素を使って装飾的なアニメーションを作成する（例: ホバー時に光るアンダーライン、要素の出現エフェクト）。
+要素自体は静止させたまま、擬似要素だけを動かして視覚的な効果を加える。
+
+
