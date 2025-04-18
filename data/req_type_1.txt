@@ -1,0 +1,63 @@
+POST /v1beta/models/gemini-2.0-flash:generateContent HTTP/1.1
+Host: generativelanguage.googleapis.com
+Accept: */*
+Accept-Encoding: gzip, deflate, br, zstd
+Connection: keep-alive
+Content-Type: application/json
+x-goog-api-key: AIzaSyA2LY8plQBkbE9JxjUppOQtlBh_7tSUuFw
+user-agent: google-genai-sdk/1.7.0 gl-python/3.13.0
+x-goog-api-client: google-genai-sdk/1.7.0 gl-python/3.13.0
+Content-Length: 86
+
+{"contents": [{"parts": [{"text": "Tell me a story in 300 words."}], "role": "user"}]}
+
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=UTF-8
+Vary: Origin
+Vary: X-Origin
+Vary: Referer
+Date: Sun, 06 Apr 2025 15:50:36 GMT
+Server: scaffolding on HTTPServer2
+X-XSS-Protection: 0
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+Server-Timing: gfet4t7; dur=2715
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+Transfer-Encoding: chunked
+
+896
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "The chipped teacup, a relic from Grandma Elsie, sat precariously on Maya's desk. Rain lashed against the window, mirroring the tempest brewing inside her. She'd received another rejection letter, another slammed door to her writing dreams. Doubt, a cold and clammy hand, squeezed her heart.\n\nOutside, a flash of lightning illuminated the garden. In that stark moment, she saw it: Grandma Elsie's rose bush, battered and bowed by the storm, yet stubbornly clinging to life. Elsie had always said, \"A little rain is good for the roots, Maya. Makes them stronger.\"\n\nMaya sighed, picking up the teacup. It was more than just a cup; it was a symbol of Elsie's unwavering belief in her, a belief that felt distant now. But then she noticed something she hadn't before. A tiny crack, almost invisible, branched out from the main chip. It looked remarkably like a lightning bolt.\n\nA smile touched her lips. Elsie wouldn't want her wallowing. She would want her to be like the rose bush, bending but not breaking. The teacup, imperfect and scarred, was still used every day. It still held warmth.\n\nWith newfound resolve, Maya opened her laptop. The blank page still felt daunting, but this time, the doubt felt less oppressive. She remembered a story Elsie used to tell, about a lightning strike that revealed a hidden vein of gold. Maybe, just maybe, these rejections were just the lightning, clearing the path to something brighter. She took a sip of tea, the warmth seeping into her bones. It was time to write. The rain continued to fall, but inside, a seed of hope had begun to bloom.\n"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "avgLogprobs": -0.64748964471332093
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 11,
+    "candidatesTokenCount": 354,
+    "totalTokenCount": 365,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 11
+      }
+    ],
+    "candidatesTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 354
+      }
+    ]
+  },
+  "modelVersion": "gemini-2.0-flash"
+}
+

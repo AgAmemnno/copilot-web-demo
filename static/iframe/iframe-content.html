@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head><title>Iframe Content</title></head>
+<body>
+  <p>This is the iframe content.</p>
+  <script type="module" src="iframe-main.js"></script>
+  <script>
+    // iframe内のグローバルクラスを利用する例
+    if(window.MyGlobalIframeClass) {
+        const another = new MyGlobalIframeClass('iframe-1-script');
+        another.whoAmI();
+    }
+  </script>
+</body>
+</html>
