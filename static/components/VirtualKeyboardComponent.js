@@ -15,9 +15,24 @@ class VirtualKeyboardComponent extends  BaseHTMLComponentWithEvent {
     this.shadowRoot.innerHTML = `
   <style>
     #wrap {
-      display: block;
-      margin: 0 auto;
-      width: 200px;
+      position: absolute;
+      top: 10vh;
+      left: 10vw;
+      width: 80vw;
+      height: 80vh;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+      gap: 2px;
+    }
+    
+    #keyboard{
+      width: 80vw;
+      height: 5vh;
     }
   </style>
   <link rel="stylesheet" type="text/css" href="https://mottie.github.io/Keyboard/css/keyboard.css" >
@@ -39,6 +54,8 @@ class VirtualKeyboardComponent extends  BaseHTMLComponentWithEvent {
     scriptElem.type = 'module';
     scriptElem.src = '/components/script/keyboard.js';
     this.shadowRoot.appendChild(scriptElem);
+
+
   }
 
 

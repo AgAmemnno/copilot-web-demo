@@ -214,7 +214,8 @@ class CollapsiblePanel extends  BaseHTMLComponentWithEvent {
     //targetNode.add_select = true;
 
     });
-
+    const selectedNodeInfoDiv = document.getElementById('selectedNodeInfo');
+    let sourceNodeForEdge = null; // エッジ追加時の接続元ノード
     // 背景クリックでエッジ追加モード解除
     cy.on('tap', (event) => {
     if (event.target === cy) {
@@ -281,7 +282,7 @@ class CollapsiblePanel extends  BaseHTMLComponentWithEvent {
     });
 
 
-
+   cy.container().style.display ="none";
 
 
   }

@@ -10,10 +10,12 @@ import '/3party/widgets/autocomplete.js';
 
 
 
+let id0 = sessionStorage.getItem("test2");
+let shadowRoot0 = document.getElementById(id0).shadowRoot;
 
 let id  = sessionStorage.getItem("test1");
 
-let shadowRoot = document.getElementById(id).shadowRoot;
+let shadowRoot = shadowRoot0.getElementById(id).shadowRoot;
 
 /*
 import keyboardsheet from "https://mottie.github.io/Keyboard/css/keyboard.css" with { type: 'css' };
@@ -371,4 +373,52 @@ kb.reveal().typeIn(simulateTyping, 500, function() {
 });
 */
 
+
+async function postData(d) {
+    const url = 'https://0414-34-124-214-179.ngrok-free.app/process';
+    const data = {
+      prompt: d ==undefined ?"Geminiはどこのサーバーでかどうしているの？":d,
+      key2: "日付",
+      key3: true
+    }; // 送信するデータをオブジェクトとして定義
+  
+    try {
+      const response = await fetch(url, {
+        method: 'POST', // メソッドをPOSTに指定
+        headers: {
+          'Content-Type': 'application/json' // ボディのデータ形式をJSONに指定
+          // 必要に応じて他のヘッダーも追加可能（例: 認証トークンなど）
+          // 'Authorization': 'Bearer your_token'
+        },
+        body: JSON.stringify(data) // 送信するデータをJSON文字列に変換して設定
+      });
+  
+      if (!response.ok) {
+        // レスポンスのステータスコードが200番台でない場合のエラーハンドリング
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const responseData = await response.json(); // レスポンスボディをJSONとしてパース
+      console.log('Success:', responseData); // 成功した場合の処理（例: レスポンスデータの表示）
+  
+    } catch (error) {
+      console.error('Error:', error); // エラー発生時の処理
+    }
+}
+  
+  // 関数を実行してPOSTリクエストを送信
+  postData();
+
+$.keyboard.keyaction.accept = function(base) {
+    console.log("入力が確定されました");
+    const  prompt = base.getValue();
+    if(prompt!= ""){
+        postData(prompt);
+    }else{
+        postData("こんにちは!!");
+    }
+
+    base.close(true);
+}
+    
 });

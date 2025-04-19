@@ -140,10 +140,9 @@ class AnimMenuComponent extends  BaseHTMLComponentWithEvent {
     }
     </style>
 
-<div class="circle-outer">
+<div id="alarm-minus" class="circle-outer">
 
     <img src='/components/svg/alarm-minus.svg' alt="alarm-minus" class="circle-svg">
-
     <div class="html-content">
       <div class="input-group">
           <label for="myInput" class="circle-label">テキスト入力:</label>
@@ -161,6 +160,16 @@ class AnimMenuComponent extends  BaseHTMLComponentWithEvent {
       </div>
     </div>
 </div>
+
+<div id="alarm-top" class="circle-outer">
+  <img src='/components/svg/align-top.svg' alt="align-top" class="circle-svg">
+</div>
+
+<div id="battery-full" class="circle-outer">
+  <img src='/components/svg/battery-full.svg' alt="battery-full" class="circle-svg">
+  
+</div>
+
     <nav class="menu">
       <input type="checkbox" href="#" class="menu-open" name="menu-open" id="menu-open" style="opacity:0;" />
       <label class="menu-open-button" for="menu-open">
@@ -189,7 +198,10 @@ class AnimMenuComponent extends  BaseHTMLComponentWithEvent {
     this.shadowRoot.appendChild(scriptElem);
   }
 
-
+  append_battery_full(ele){
+    this.shadowRoot.querySelector("#battery-full").appendChild(ele);
+  }
+  
   static instanciate(parent){
     let selector =  document.createElement('anime-menu-component');
     parent.appendChild(selector);
