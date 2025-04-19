@@ -15,9 +15,10 @@ body {
     z-index: 1;
     border-right: 1px solid #ccc; /* パネルとの境界線 */
     overflow: hidden;
+    dislpay:none;
 }
 #cy::-webkit-scrollbar { display: none; }
-#cy { scrollbar-width: none; -ms-overflow-style: none; }
+#cy {scrollbar-width: none;-ms-overflow-style: none;}
 
 
 .rightPanel {
@@ -63,7 +64,9 @@ body {
     text-align: center;
     font-size: 19px;
 }
-
+#rightPanelContainer1,#rightPanelContainer2{
+    display:none;
+}
 #rightPanelContainer1.rightPanel.collapsed::before {
     content: '☝ Graph Operations'; /* 折りたたみ時のアイコン */
 }

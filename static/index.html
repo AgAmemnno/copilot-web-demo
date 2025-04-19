@@ -57,10 +57,8 @@
 </head>
 
 <body>
-<!-- 
-  <div id="full-screen"></div>
 
--->  
+  <div id="full-screen"></div>
 
    
   <div id="cy"></div>
@@ -98,7 +96,7 @@
             </div>
         </div>
     </div>
-</div>
+  </div>
 
   <script src="agent.js"></script>
 
@@ -111,12 +109,14 @@
     CollapsiblePanel.panelize(panels, 'rightPanelContainer-wrapper1');
     ButtonComponent.buttonize(btnProps);
     CollapsiblePanel.populateAll();
-    /*
+    
+
+    let animMenu = createElement('anim-menu-component');
+    document.body.appendChild(animMenu);
+
     let panel = createElement('virtual-keyboard-component');
-    document.body.appendChild(panel);
-    let panel2 = createElement('anim-menu-component');
-    document.body.appendChild(panel2);
-    */
+    animMenu.append_battery_full(panel);
+
   </script>
 
 

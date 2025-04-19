@@ -17,15 +17,18 @@ if (!id) {
     } else {
         // 要素の取得
 
-        
-
         const menuElement = shadowRoot.querySelector('.menu');
         const menuOpenButton = shadowRoot.querySelector('.menu-open-button');
         const menuItems = shadowRoot.querySelectorAll('.menu-item');
         const lines = menuOpenButton.querySelectorAll('.lines'); // line-1, line-2, line-3
 
         const category   = menuItems[0];
-        const inputOuter = shadowRoot.querySelector('.circle-outer');
+        const category2   = menuItems[1];
+        const category3   = menuItems[2];
+
+        const inputOuter = shadowRoot.querySelector('#alarm-minus');
+        const graphOuter = shadowRoot.querySelector('#alarm-top');
+        const promptOuter = shadowRoot.querySelector('#battery-full');
 
         if (!menuElement || !menuOpenButton || menuItems.length === 0 || lines.length !== 3) {
              console.error("One or more required elements not found in shadow root.");
@@ -86,8 +89,8 @@ if (!id) {
 
             inputOuter.style.transform = `scale(0.0)`;
             
-            category.dataset.is_element = "close";
-            category.addEventListener('click', (e)=>{
+            function animCategory (e,Category,Outer){
+                
                 const dst1 =  new DOMMatrix(window.getComputedStyle(menuElement).transform).translate().transformPoint();
                 const dst2 =  new DOMMatrix(window.getComputedStyle(e.target).transform).translate().transformPoint();
                 const x = (dst1.x + dst2.x) ;
@@ -96,10 +99,10 @@ if (!id) {
                 const centerX = document.documentElement.clientWidth / 2;
                 const centerY = document.documentElement.clientHeight / 2;
                
-                if(category.dataset.is_element == "close")
+                if(Category.dataset.is_element == "close")
                 {
-                    inputOuter.style.transform = `translate(${x}px, ${y}px) scale(0)`;
-                    inputOuter.animate([
+                    Outer.style.transform = `translate(${x}px, ${y}px) scale(0)`;
+                    Outer.animate([
                             { transform: `translate(${x}px, ${y}px) scale(0)` } ,
                             { transform: `translate(0px, 0px) scale(1)` },
                         ],
@@ -108,10 +111,10 @@ if (!id) {
                              easing: 'ease-out',
                              fill: 'forwards'
                         });
-                    category.dataset.is_element = "open";
+                    Category.dataset.is_element = "open";
                 }else{
-                     const center = `translate(${centerX}px, ${centerY}px) scale(1) `;
-                    inputOuter.animate([
+                    const center = `translate(${centerX}px, ${centerY}px) scale(1) `;
+                    Outer.animate([
                             { transform: `translate(0px, 0px) scale(1)` },
                             { transform: `translate(${x}px, ${y}px) scale(0)` } 
                         ],
@@ -120,7 +123,44 @@ if (!id) {
                              easing: 'ease-out',
                              fill: 'forwards'
                         });
-                    category.dataset.is_element = "close";
+                    Category.dataset.is_element = "close";
+                }
+                
+            }
+            category.dataset.is_element = "close";
+            category.addEventListener('click', (e)=>{
+                animCategory (e,category,inputOuter);
+            });
+            
+            graphOuter.style.transform = `scale(0.0)`;
+            category2.dataset.is_element = "close";
+            category2.addEventListener('click', (e)=>{
+                animCategory (e,category2,graphOuter);
+                if(category2.dataset.is_element == "open")
+                {
+                    document.getElementById("cy").style.display = "block";
+                    document.getElementById("rightPanelContainer1").style.display = "grid";
+                    document.getElementById("rightPanelContainer2").style.display =  "grid";
+                  
+                }else{
+                    document.getElementById("cy").style.display = "none";
+                    document.getElementById("rightPanelContainer1").style.display = "none";
+                    document.getElementById("rightPanelContainer2").style.display =  "none";
+                   
+                }
+            });
+
+            promptOuter.style.transform = `scale(0.0)`;
+            category3.dataset.is_element = "close";
+            category3.addEventListener('click', (e)=>{
+                animCategory (e,category3,promptOuter);
+                if(category3.dataset.is_element == "open")
+                {
+
+                  
+                }else{
+
+                   
                 }
             });
             // --- ドラッグ機能 (WAAPIの機能ではないため手動で実装) ---
