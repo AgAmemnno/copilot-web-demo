@@ -1,30 +1,3 @@
-/*
-import { AnimationComponent } from './AnimationComponent.js';
-import { ButtonComponent } from './ButtonComponent.js';
-import { FormComponent } from './FormComponent.js';
-
-import { InputComponent } from './InputComponent.js';
-import { ModalComponent } from './ModalComponent.js';
-import { CollapsiblePanel } from './PanelComponent.js';
-import { PromptComponent } from './PromptComponent.js';
-import { SelectorComponent } from './SelectorComponent.js';
-
-const components = {
-    AnimationComponent,
-    BaseHTMLComponent,
-    BaseHTMLComponentWithEvent,
-    ButtonComponent,
-    FormComponent,
-    GoogleDriveManager,
-    InputComponent,
-    ModalComponent,
-    CollapsiblePanel,
-    PromptComponent,
-    SelectorComponent,
-    VirtualTextareaComponent
-};
-
-*/
 import { VirtualTextareaComponent } from './components/VirtualTextareaComponent.js';
 import { VirtualKeyboardComponent } from './components/VirtualKeyboardComponent.js';
 import { PopoverMenuComponent } from './components/PopoverMenuComponent.js';
@@ -32,10 +5,13 @@ import { AnimMenuComponent } from './components/AnimMenuComponent.js';
 import { CollapsiblePanel } from './components/PanelComponent.js';
 import { ButtonComponent } from './components/ButtonComponent.js';
 import { GoogleDriveManager } from './components/GoogleDriver.js';
+import { Task1ManagerComponent } from './components/Task1ManagerComponent.js';
+
 customElements.define('virtual-textarea-component', VirtualTextareaComponent);
 customElements.define('virtual-keyboard-component',VirtualKeyboardComponent);
 customElements.define('popover-menu-component',PopoverMenuComponent);
 customElements.define('anim-menu-component',AnimMenuComponent);
+customElements.define('task1-manager-component', Task1ManagerComponent);
 
 customElements.define('collapsible-panel', CollapsiblePanel);
 customElements.define('button-component', ButtonComponent);
@@ -47,6 +23,7 @@ const wcomponents = {
     CollapsiblePanel,
     ButtonComponent,
     GoogleDriveManager,
+    Task1ManagerComponent,
 };
 
 Object.keys(wcomponents).forEach(key => {
