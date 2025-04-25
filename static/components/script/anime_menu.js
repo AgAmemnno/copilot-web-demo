@@ -24,11 +24,14 @@ if (!id) {
 
         const category   = menuItems[0];
         const category2   = menuItems[1];
-        const category3   = menuItems[2];
+        const category3   = menuItems[2]
+        const category4   = menuItems[3];
+;
 
         const inputOuter = shadowRoot.querySelector('#alarm-minus');
         const graphOuter = shadowRoot.querySelector('#alarm-top');
         const promptOuter = shadowRoot.querySelector('#battery-full');
+        const iframeOuter = shadowRoot.querySelector('#chat-teardrop-text');
 
         if (!menuElement || !menuOpenButton || menuItems.length === 0 || lines.length !== 3) {
              console.error("One or more required elements not found in shadow root.");
@@ -160,6 +163,20 @@ if (!id) {
                   
                 }else{
 
+                   
+                }
+            });
+
+            iframeOuter.style.transform = `scale(0.0)`;
+            category4.dataset.is_element = "close";
+            category4.addEventListener('click', (e)=>{
+                animCategory (e,category4,iframeOuter);
+                if(category4.dataset.is_element == "open")
+                {
+                 iframeOuter.menu.pushFrame();
+                  
+                }else{
+                 iframeOuter.menu.popFrame();
                    
                 }
             });

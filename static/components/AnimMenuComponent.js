@@ -1,4 +1,6 @@
 import BaseHTMLComponentWithEvent from './base/BaseHTMLComponentWithEvent.js';
+//import { Task1ManagerComponent,Task1ManagerComponentMenu } from './components/Task1ManagerComponent.js';
+
 class AnimMenuComponent extends  BaseHTMLComponentWithEvent {
   _selector = 'anime-menu-component';
   constructor() {
@@ -16,6 +18,9 @@ class AnimMenuComponent extends  BaseHTMLComponentWithEvent {
     template.innerHTML = `
     <link rel="stylesheet" href="/components/css/anim_menu.css"/>
     <style>
+    :host{
+      z-index:2;
+    }
       .i-svg {
         /* --- 基本スタイル --- */
         display: inline-block;
@@ -63,6 +68,7 @@ class AnimMenuComponent extends  BaseHTMLComponentWithEvent {
     min-width: 100vw;
     margin: 0; /* bodyのデフォルトマージンをリセット */
     transform:scale(0);
+    z-index:1;
 }
  .circle-svg{
       position: absolute; /* 親要素を基準に配置 */
@@ -169,6 +175,10 @@ class AnimMenuComponent extends  BaseHTMLComponentWithEvent {
   <img src='/components/svg/battery-full.svg' alt="battery-full" class="circle-svg">
   
 </div>
+<div id="chat-teardrop-text" class="circle-outer">
+  <img src='/components/svg/chat-teardrop-text.svg' alt="chat-teardrop-text" class="circle-svg">
+  
+</div>
 
     <nav class="menu">
       <input type="checkbox" href="#" class="menu-open" name="menu-open" id="menu-open" style="opacity:0;" />
@@ -202,6 +212,12 @@ class AnimMenuComponent extends  BaseHTMLComponentWithEvent {
     this.shadowRoot.querySelector("#battery-full").appendChild(ele);
   }
   
+  append_chat_teardrop_text(ele){
+    const menu = new Task1ManagerComponentMenu(this,ele);
+    this.shadowRoot.querySelector("#chat-teardrop-text").menu = menu;
+  
+  }
+
   static instanciate(parent){
     let selector =  document.createElement('anime-menu-component');
     parent.appendChild(selector);

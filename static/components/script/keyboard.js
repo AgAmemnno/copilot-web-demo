@@ -407,7 +407,7 @@ async function postData(d) {
 }
   
   // 関数を実行してPOSTリクエストを送信
-  postData();
+  //postData();
 
 $.keyboard.keyaction.accept = function(base) {
     console.log("入力が確定されました");
