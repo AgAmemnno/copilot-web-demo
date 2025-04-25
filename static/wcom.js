@@ -5,13 +5,15 @@ import { AnimMenuComponent } from './components/AnimMenuComponent.js';
 import { CollapsiblePanel } from './components/PanelComponent.js';
 import { ButtonComponent } from './components/ButtonComponent.js';
 import { GoogleDriveManager } from './components/GoogleDriver.js';
-import { Task1ManagerComponent,Task1ManagerComponentMenu } from './components/Task1ManagerComponent.js';
+import { Task1ManagerComponent } from './components/Task1ManagerComponent.js';
+import { GridLayoutComponent } from './components/GridLayoutComponent.js';
 
 customElements.define('virtual-textarea-component', VirtualTextareaComponent);
 customElements.define('virtual-keyboard-component',VirtualKeyboardComponent);
 customElements.define('popover-menu-component',PopoverMenuComponent);
 customElements.define('anim-menu-component',AnimMenuComponent);
 customElements.define('task1-manager-component', Task1ManagerComponent);
+customElements.define('grid-layout-component', GridLayoutComponent);
 
 customElements.define('collapsible-panel', CollapsiblePanel);
 customElements.define('button-component', ButtonComponent);
@@ -24,7 +26,7 @@ const wcomponents = {
     ButtonComponent,
     GoogleDriveManager,
     Task1ManagerComponent,
-    Task1ManagerComponentMenu
+    GridLayoutComponent,
 };
 
 Object.keys(wcomponents).forEach(key => {
