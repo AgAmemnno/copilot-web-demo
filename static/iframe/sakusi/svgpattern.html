@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML定義SVGと&lt;pattern&gt;による互い違いタイリング</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #f0f0f0; /* 背景色 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 表示用SVGコンテナのスタイル */
+        .svg-container {
+            width: 90%; /* 表示領域の幅 */
+            max-width: 800px;
+            height: 600px; /* 表示領域の高さ */
+            border: 1px solid #aaa; /* 境界線 */
+            background-color: #fff; /* 背景色 */
+        }
+    </style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute; overflow:hidden;">
+    <defs>
+        <polygon id="baseTriangle" points="50,0 0,86.6 100,86.6" />
+        <mask id="triangleCornerMask">
+            <rect width="100" height="173.2" fill="white"/>
+            <use href="#baseTriangle"
+                 fill="black"
+                 transform="translate(50, 57.733) rotate(180) translate(-50, -57.733)"
+                 />
+        </mask>
+
+        <g id="maskedTriangleBlue" fill="dodgerblue" mask="url(#triangleCornerMask)">
+            <use href="#baseTriangle"/>
+        </g>
+        <g id="maskedTriangleCoral" fill="lightcoral" mask="url(#triangleCornerMask)">
+            <use href="#baseTriangle"/>
+        </g>
+
+        <pattern id="svgTilePattern1"
+                 viewBox="0 0 100 173.2"
+                 width="100" height="173.2"
+                 patternUnits="userSpaceOnUse">
+            <use href="#maskedTriangleBlue"/>
+        </pattern>
+
+        <pattern id="svgTilePattern2"
+                 viewBox="0 0 100 173.2"
+                 width="100" height="173.2"
+                 patternUnits="userSpaceOnUse">
+            <use href="#maskedTriangleCoral" transform="translate(0 86.6)"/>
+        </pattern>
+    </defs>
+</svg>
+
+<svg class="svg-container" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="url(#svgTilePattern1)" />
+
+    <rect width="100%" height="100%" fill="url(#svgTilePattern2)" transform="translate(50 0)" />
+</svg>
+
+</body>
+</html>

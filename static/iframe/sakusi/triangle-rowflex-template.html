@@ -1,0 +1,30 @@
+<style>
+    :host { display: block; } /* 基本スタイル */
+    .grid-container {
+        /* ここには行を並べる以外のスタイルは不要かも */
+        width: 100%;
+    }
+    .grid-row {
+        display: flex; /* 行内のアイテムを横に並べる */
+        flex-wrap: nowrap; /* 折り返さない */
+        margin-bottom: var(--row-gap, 10px); /* 行間のマージン */
+        /* gap は flex では直接使えないので、アイテム側で調整 */
+    }
+    .grid-row > * { /* 各アイコン */
+        flex-shrink: 0; /* 縮まない */
+        flex-grow: 0; /* 伸びない */
+        width: var(--item-width, 100px); /* 計算されたアイテム幅 */
+        margin-right: var(--col-gap, 10px); /* 列間のマージン */
+    }
+    .grid-row > *:last-child {
+         margin-right: 0; /* 最後の要素の右マージンは不要 */
+    }
+    .grid-row.even-row {
+         /* 偶数行のオフセット */
+         margin-left: calc( (var(--item-width, 100px) / 2) + (var(--col-gap, 10px) / 2) );
+         /* 必要に応じて垂直オフセットも追加 */
+         /* margin-top: -20px; */
+         /* または transform: translateX(...) translateY(...) */
+    }
+</style>
+<div class="grid-container"></div>

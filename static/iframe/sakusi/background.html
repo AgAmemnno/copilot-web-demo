@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>背景コンテナWeb Component</title>
+    <style>
+        /* グローバルスタイル */
+        body {
+            margin: 0;
+            background-color: #f0f0f0; /* 背景色 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: sans-serif;
+        }
+
+        /* background-container コンポーネントの配置スタイル */
+        background-container {
+            display: block; /* コンポーネントをブロック要素として扱う */
+            width: 90%; /* コンテナの幅 */
+            max-width: 800px;
+            height: 600px; /* コンテナの高さ */
+            border: 1px solid #aaa; /* 境界線 */
+            /* 背景関連のスタイルはコンポーネント内部で設定 */
+        }
+         background-container:not(:defined) { /* 未定義状態のスタイル（任意） */
+            display: block;
+            text-align: center;
+            padding: 20px;
+            color: #aaa;
+            content: "Loading Background Container...";
+            min-height: 100px;
+            border: 1px dashed #ccc;
+        }
+
+        /* スロットに挿入されるコンテンツのデフォルトスタイル (任意) */
+        /* 必要であれば、コンポーネントを使う側で .content-area を定義して使う */
+        .content-area {
+             padding: 30px;
+             box-sizing: border-box;
+             height: 100%;
+             overflow-y: auto;
+             color: #333;
+        }
+        .content-area h2 {
+            margin-top: 0;
+        }
+
+    </style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute; overflow:hidden;">
+    <defs>
+        <polygon id="dataUriBaseTriangle" points="50,0 0,86.6 100,86.6" />
+        <mask id="dataUriTriangleCornerMask">
+            <rect width="100" height="173.2" fill="white"/>
+            <use href="#dataUriBaseTriangle"
+                 fill="black"
+                 transform="translate(50, 57.733) rotate(180) translate(-50, -57.733)"
+                 />
+        </mask>
+    </defs>
+</svg>
+
+<background-container id="myBackgroundContainer">
+    <div class="content-area">
+        <h2>HTMLコンテンツ</h2>
+        <p>このテキストは、背景が設定されたWeb Componentの中に配置されています。</p>
+        <p>背景のData URIは初回生成時にsessionStorageにキャッシュされます。</p>
+        <ul>
+            <li>リスト項目 A</li>
+            <li>リスト項目 B</li>
+            <li>リスト項目 C</li>
+        </ul>
+    </div>
+</background-container>
+
+<script>
+/**
+ * SVG定義を参照してData URIを生成し、キャッシュするクラス (変更なし)
+ */
+class SvgDataUriGenerator {
+    static getPatternDataUri(patternId, baseTriangleId, maskId, color, transform = '', viewBox = '0 0 100 173.2') {
+        const cacheKey = `datauri-cache-${patternId}`;
+        try { 
+            const cachedUri = sessionStorage.getItem(cacheKey); 
+            if (cachedUri) { 
+                console.log(`Data URI cache hit for: ${patternId}`); 
+                return cachedUri; 
+            } 
+        } catch (e) { 
+            console.warn('Failed to access sessionStorage:', e); 
+        }
+        console.log(`Generating Data URI for: ${patternId}`);
+        try {
+            const baseTriangleDef = document.getElementById(baseTriangleId)?.outerHTML || '';
+            const maskDef = document.getElementById(maskId)?.outerHTML || '';
+            if (!baseTriangleDef || !maskDef) { throw new Error(`Required SVG definitions not found: ${baseTriangleId}, ${maskId}`); }
+            const uniqueMaskId = `${maskId}-${patternId}`;
+            const uniqueBaseTriangleId = `${baseTriangleId}-${patternId}`;
+            const adjustedMaskDef = maskDef.replace(`id="${maskId}"`, `id="${uniqueMaskId}"`).replace(`href="#${baseTriangleId}"`, `href="#${uniqueBaseTriangleId}"`);
+            const adjustedBaseTriangleDef = baseTriangleDef.replace(`id="${baseTriangleId}"`, `id="${uniqueBaseTriangleId}"`);
+            const svgString = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='${viewBox}'>
+                <defs>${adjustedBaseTriangleDef}${adjustedMaskDef}</defs>
+                <g fill='${color}' mask='url(#${uniqueMaskId})' ${transform ? `transform='${transform}'` : ''}>
+                    <use href='#${uniqueBaseTriangleId}'/>
+                </g>
+                </svg>`.replace(/\s{2,}/g, ' ').replace(/> </g, '><');
+            const dataUri = `data:image/svg+xml,${encodeURIComponent(svgString)}`;
+            try { sessionStorage.setItem(cacheKey, dataUri); console.log(`Data URI generated and cached for: ${patternId}`); } catch (e) { console.warn(`Failed to cache Data URI in sessionStorage for ${patternId}:`, e); }
+            return dataUri;
+        } catch (error) { console.error(`Failed to generate Data URI for ${patternId}:`, error); return null; }
+    }
+}
+
+/**
+ * BackgroundContainer Web Component
+ */
+class BackgroundContainer extends HTMLElement {
+    #shadowRoot;
+
+    constructor() {
+        super();
+        this.#shadowRoot = this.attachShadow({ mode: 'open' });
+
+        // スタイルとスロットを Shadow DOM に追加
+        const style = document.createElement('style');
+        style.textContent = `
+            :host {
+                display: block; /* デフォルトでブロック要素に */
+                position: relative; /* コンテンツ配置の基準 */
+                overflow: hidden; /* はみ出し防止 */
+                background-color: #fff; /* 背景色 (ブレンドの基点) */
+                /* 背景スタイルは connectedCallback で適用 */
+            }
+            /* スロットのスタイル (任意) */
+            ::slotted(*) { /* スロットに入れられた全ての要素 */
+                position: relative; /* 背景の上に配置 */
+                z-index: 1; /* 背景より手前に */
+            }
+            /* 必要であれば ::slotted(.content-area) などで特定のクラスにスタイルを適用 */
+        `;
+        this.#shadowRoot.appendChild(style);
+
+        // コンテンツを挿入するスロットを作成
+        const slot = document.createElement('slot');
+        this.#shadowRoot.appendChild(slot);
+    }
+
+    // 背景スタイルを適用するメソッド
+    #applyBackgroundStyles() {
+        // パターン1 のData URIを取得/生成
+        const pattern1Uri = SvgDataUriGenerator.getPatternDataUri(
+            'pattern1-blue',
+            'dataUriBaseTriangle',
+            'dataUriTriangleCornerMask',
+            'dodgerblue'
+        );
+        // パターン2 のData URIを取得/生成
+        const pattern2Uri = SvgDataUriGenerator.getPatternDataUri(
+            'pattern2-coral',
+            'dataUriBaseTriangle',
+            'dataUriTriangleCornerMask',
+            'lightcoral',
+            'translate(0 86.6)'
+        );
+
+        if (pattern1Uri && pattern2Uri) {
+            // :host (コンポーネント自身) に背景スタイルを適用
+            this.style.backgroundImage = `url("${pattern2Uri}"), url("${pattern1Uri}")`;
+            this.style.backgroundRepeat = 'repeat, repeat';
+            this.style.backgroundSize = '100px 173.2px, 100px 173.2px';
+            this.style.backgroundPosition = '50px 0, 0 0';
+            this.style.backgroundBlendMode = 'multiply';
+            console.log("Background styles applied to :host using Data URIs.");
+        } else {
+            console.error("Failed to get one or both Data URIs. Cannot apply background styles.");
+            this.style.backgroundColor = '#eee'; // エラー時の代替背景
+        }
+    }
+
+    connectedCallback() {
+        // コンポーネントがDOMに追加されたときに背景を適用
+        this.#applyBackgroundStyles();
+    }
+
+    // 必要であれば監視する属性や attributeChangedCallback を追加
+    // static get observedAttributes() { return []; }
+    // attributeChangedCallback(name, oldValue, newValue) { ... }
+}
+
+// カスタム要素を登録
+customElements.define('background-container', BackgroundContainer);
+
+// 以前の applyBackgroundStyles 関数と DOMContentLoaded リスナーは不要になったため削除
+
+</script>
+
+</body>
+</html>

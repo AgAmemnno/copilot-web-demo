@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS値操作スライダー (SF風強化版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+    <style>
+        /* カスタムスタイル */
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #0a0f1f; /* Dark blue/purple background */
+            /* Add some padding to body to prevent container touching edges */
+            padding: 2rem; /* Tailwind p-8 */
+        }
+
+        /* グロー効果のアニメーション */
+        @keyframes pulse-glow {
+          0% {
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), 0 0 5px rgba(0, 255, 255, 0.7);
+          }
+          50% {
+            /* Make the glow slightly larger and brighter */
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.8), 0 0 10px rgba(0, 255, 255, 1);
+          }
+          100% {
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), 0 0 5px rgba(0, 255, 255, 0.7);
+          }
+        }
+
+        /* コンテナのスタイリング */
+        .sci-fi-container {
+            position: relative; /* 疑似要素の配置基準 */
+            background-color: rgba(15, 23, 42, 0.85); /* Slightly more opaque background */
+            /* ネオンボーダー (少し太く) */
+            border: 2px solid #00ffff; /* Cyan border */
+            border-radius: 0.75rem; /* Tailwind rounded-xl */
+            /* アニメーション化されたネオングロー効果を適用 */
+            animation: pulse-glow 3s infinite ease-in-out;
+            /* 内側のパディング */
+            padding: 1.5rem; /* Tailwind p-6 */
+            /* Add margin to prevent corner elements hitting edge on small screens */
+            margin: 1rem 0;
+        }
+
+        /* コーナー装飾用の疑似要素 */
+        .sci-fi-container::before,
+        .sci-fi-container::after {
+            content: '';
+            position: absolute;
+            width: 25px; /* コーナーラインのサイズ */
+            height: 25px;
+            border-color: #00ffff; /* ネオンカラー */
+            border-style: solid;
+            border-radius: 4px; /* 少し角丸に */
+            opacity: 0.9;
+            /* Animate corners subtly? Maybe later. */
+        }
+
+        /* 左上コーナー */
+        .sci-fi-container::before {
+            top: -8px; /* メインボーダーの外側に配置 */
+            left: -8px;
+            border-width: 3px 0 0 3px; /* 上と左のボーダー */
+            border-top-left-radius: 8px;
+        }
+
+        /* 右下コーナー */
+        .sci-fi-container::after {
+            bottom: -8px;
+            right: -8px;
+            border-width: 0 3px 3px 0; /* 下と右のボーダー */
+            border-bottom-right-radius: 8px;
+        }
+
+
+        /* テキストカラー */
+        .neon-text {
+            color: #00ffff; /* Cyan text */
+            text-shadow: 0 0 7px rgba(0, 255, 255, 0.8); /* Slightly stronger text glow */
+        }
+        .label-text {
+             color: #e0e0e0; /* Light gray for labels */
+        }
+        .value-text {
+             color: #00ffff; /* Cyan for value */
+             font-weight: 700; /* Make value bolder */
+        }
+
+
+        /* スライダートラックのスタイリング */
+        input[type=range].sci-fi-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px; /* Slightly thicker track */
+            background: linear-gradient(to right, #00ffff, #ff00ff); /* Cyan to Magenta gradient */
+            border-radius: 4px;
+            outline: none;
+            opacity: 0.8;
+            transition: opacity .2s;
+            border: 1px solid rgba(0, 255, 255, 0.4); /* Slightly more visible border */
+            cursor: pointer;
+        }
+
+        input[type=range].sci-fi-slider:hover {
+            opacity: 1;
+        }
+
+        /* スライダーつまみのスタイリング (Webkit) */
+        input[type=range].sci-fi-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px; /* Slightly larger thumb */
+            height: 24px;
+            background: #00ffff; /* Bright cyan thumb */
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #0a0f1f; /* Thicker border matching body background */
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.9); /* Stronger thumb glow */
+        }
+
+        /* スライダーつまみのスタイリング (Firefox) */
+        input[type=range].sci-fi-slider::-moz-range-thumb {
+            width: 18px; /* Keep size difference for border */
+            height: 18px;
+            background: #00ffff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #0a0f1f;
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.9);
+        }
+
+        /* ターゲット要素のスタイリング */
+        #target-element.sci-fi-target {
+            background-color: rgba(0, 255, 255, 0.1); /* Slightly less opaque background */
+            border: 1px solid #00ffff; /* Cyan border */
+            color: #e0e0e0; /* Light text color */
+            box-shadow: inset 0 0 12px rgba(0, 255, 255, 0.4); /* Enhanced inner glow */
+            border-radius: 0.5rem; /* Tailwind rounded-lg */
+            height: 8rem; /* Tailwind h-32 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500; /* Tailwind font-medium */
+            transition: all 150ms ease-linear; /* Tailwind transition classes */
+        }
+    </style>
+</head>
+<body> <div class="sci-fi-container">
+        <h1 class="text-2xl font-bold neon-text text-center mb-6">CSS プロパティオペレーター</h1>
+
+        <div class="control-group space-y-3"> <label for="width-slider" class="block text-sm font-medium label-text">
+                幅 (Width): <span id="width-value" class="value-text">150</span> px
+            </label>
+            <input type="range" id="width-slider" min="50" max="500" value="150" class="w-full sci-fi-slider">
+        </div>
+
+        <div id="target-element" class="sci-fi-target mt-6" style="width: 150px;">
+            ターゲットエレメント
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 要素を取得 ---
+            const widthSlider = document.getElementById('width-slider'); // 幅スライダー
+            const widthValueSpan = document.getElementById('width-value'); // 幅の値を表示するspan
+            const targetElement = document.getElementById('target-element'); // 操作対象のdiv
+
+            // --- 初期値を設定 ---
+            const initialWidth = widthSlider.value; // スライダーの初期値を取得
+            targetElement.style.width = `${initialWidth}px`; // ターゲット要素に初期幅を適用
+            widthValueSpan.textContent = initialWidth;       // spanに初期値を表示
+
+            // --- スライダー操作時のイベントリスナー ---
+            widthSlider.addEventListener('input', () => {
+                const newWidth = widthSlider.value; // スライダーの現在の値を取得
+                targetElement.style.width = `${newWidth}px`; // ターゲット要素の幅を更新
+                widthValueSpan.textContent = newWidth;       // spanの表示を更新
+            });
+
+            // --- 他のCSSプロパティ用スライダーのコードをここに追加できます ---
+        });
+    </script>
+</body>
+</html>

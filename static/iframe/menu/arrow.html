@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVGborder</title>
+    <style>
+        /* ページの基本スタイル */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+
+        }
+
+   
+        /* SVGコンテナ */
+        svg#illusion-canvas {
+            width: 100%; /* コントローラー分少し小さく */
+            height: 100%;
+            max-width: 400px;
+            max-height: 400px;
+            overflow: visible;
+            border: 1px solid #333;
+            transform-style: preserve-3d;
+            transform-origin: 0vw 0vw;
+        }
+
+        /* SVG内の線と矢印の基本スタイル */
+        .illusion-line, .arrowhead {
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        /* ネオンシアンの色と効果 */
+        .neon-cyan {
+            stroke: #00ffff;
+            filter: drop-shadow(0 0 4px #00ffff) drop-shadow(0 0 8px #00ffff);
+        }
+
+        /* ネオンマゼンタの色と効果 */
+        .neon-magenta {
+            stroke: #ff00ff;
+            filter: drop-shadow(0 0 4px #ff00ff) drop-shadow(0 0 8px #ff00ff);
+        }
+
+    </style>
+</head>
+<body>
+<svg id="illusion-canvas" viewBox="0 0 400 400">
+    <defs>
+        <symbol id="arrow-outward" overflow="visible">
+            <path d="M 10 0 L 50 40" class="arrowhead neon-cyan"></path>
+            <line x1="50" y1="40" x2="350" y2="40" class="illusion-line neon-cyan"></line>
+            <path d="M 350 40 L 390 0" class="arrowhead neon-cyan"></path>
+        </symbol>
+
+    </defs>
+
+    <g id="arrow-container2">
+        <use href="#arrow-outward" > </use>
+        <use href="#arrow-outward" transform="translate(0, 400) rotate(-90)"> </use>
+        <use href="#arrow-outward" transform="translate(400, 0) rotate(90) scale(1)"> </use>
+        <use href="#arrow-outward" transform="translate(400, 400) rotate(180) scale(1)"> </use>
+    </g>
+</svg>
+</body>
+</html>

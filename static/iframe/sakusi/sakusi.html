@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>色彩とマージンの関係デモ（ハーマン格子風）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Interフォントの読み込み */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* CSSカスタムプロパティの定義 */
+        :root {
+            --grid-bg-color: #000000; /* 格子線の色 (初期値: 黒) */
+            --square-color: #ffffff; /* 正方形の色 (初期値: 白) */
+            --grid-gap: 1rem;        /* 格子の隙間 (初期値 16px) */
+        }
+        /* グリッドコンテナ */
+        .hermann-grid-container {
+            background-color: var(--grid-bg-color); /* 背景が格子線の色になる */
+            padding: 1rem; /* コンテナ自体のパディング */
+            transition: background-color 0.3s ease;
+            min-height: 450px;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            display: grid; /* Grid Layoutを使用 */
+            /* 4列のグリッド、各列は同じ幅 */
+            grid-template-columns: repeat(4, 1fr);
+            /* グリッド間の隙間をカスタムプロパティで制御 */
+            gap: var(--grid-gap);
+            transition: background-color 0.3s ease, gap 0.3s ease; /* Gapのトランジションも追加 */
+            width: 100%;
+            max-width: 450px; /* 最大幅を設定 */
+            margin: 0 auto; /* 中央揃え */
+            aspect-ratio: 1 / 1; /* 正方形に近づける */
+        }
+        /* グリッド内の正方形要素 */
+        .hermann-square {
+            background-color: var(--square-color);
+            /* 幅と高さはGridが自動調整するので不要 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333; /* テキスト色 (JSで動的に変更) */
+            font-weight: bold;
+            border-radius: 0.1rem; /* 格子感を出すため角丸を小さく */
+            transition: background-color 0.3s ease;
+            font-size: 0.75rem; /* 文字を小さく */
+            /* マージンはgapで制御するため不要 */
+        }
+        /* コントロール内のボタンスタイル */
+        .control-button {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
+            border-radius: 0.25rem;
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-left: 0.5rem;
+        }
+        .control-button:hover {
+            background-color: #f3f4f6;
+        }
+        /* 色選択のプレビュー用スウォッチ */
+        .color-swatch {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 1px solid #ccc;
+            border-radius: 0.25rem;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+
+    <div class="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-4 text-center">色彩とマージンの関係デモ（ハーマン格子風）</h1>
+        <p class="mb-6 text-gray-700 text-center">
+            ハーマン格子風のレイアウトで、格子の色（背景）と正方形の色、格子の隙間（Gap）を変更できます。<br>
+            色の組み合わせや隙間の太さが、交差点に見える錯視（灰色の点など）や色の知覚にどう影響するか観察します。
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 p-4 bg-gray-50 rounded-lg border">
+
+            <div class="space-y-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">格子の色 (背景)</label>
+                <div class="flex items-center">
+                    <span id="gridBgSwatch" class="color-swatch"></span>
+                    <select id="gridBgColorSelect" class="flex-grow p-2 border border-gray-300 rounded-md text-sm">
+                        <option value="#000000">Black</option>
+                        <option value="#FFFFFF">White</option>
+                        <option value="#808080">Gray</option>
+                        <optgroup label="後退色 (Receding)">
+                            <option value="#ADD8E6">Light Blue</option>
+                            <option value="#90EE90">Light Green</option>
+                            <option value="#4682B4">Steel Blue</option>
+                            <option value="#2E8B57">Sea Green</option>
+                        </optgroup>
+                        <optgroup label="進出色 (Advancing)">
+                            <option value="#FFC0CB">Pink</option>
+                            <option value="#FFA07A">Light Salmon</option>
+                            <option value="#FF6347">Tomato</option>
+                            <option value="#FFA500">Orange</option>
+                        </optgroup>
+                    </select>
+                </div>
+                 <div class="flex justify-end items-center mt-1">
+                     <button id="randomGridBgLightness" class="control-button">明度ランダム</button>
+                     <button id="randomGridBgSaturation" class="control-button">彩度ランダム</button>
+                 </div>
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">正方形の色</label>
+                 <div class="flex items-center">
+                    <span id="squareSwatch" class="color-swatch"></span>
+                    <select id="squareColorSelect" class="flex-grow p-2 border border-gray-300 rounded-md text-sm">
+                        <option value="#FFFFFF">White</option>
+                        <option value="#000000">Black</option>
+                        <option value="#CCCCCC">Light Gray</option>
+                         <optgroup label="進出色 (Advancing)">
+                            <option value="#FFA500">Orange</option>
+                            <option value="#FF6347">Tomato</option>
+                            <option value="#FFD700">Gold</option>
+                            <option value="#FF0000">Red</option>
+                        </optgroup>
+                        <optgroup label="後退色 (Receding)">
+                             <option value="#ADD8E6">Light Blue</option>
+                            <option value="#90EE90">Light Green</option>
+                            <option value="#E6E6FA">Lavender</option>
+                            <option value="#483D8B">Dark Slate Blue</option>
+                        </optgroup>
+                    </select>
+                 </div>
+                 <div class="flex justify-end items-center mt-1">
+                     <button id="randomSquareLightness" class="control-button">明度ランダム</button>
+                     <button id="randomSquareSaturation" class="control-button">彩度ランダム</button>
+                 </div>
+            </div>
+
+            <div class="flex flex-col justify-center">
+                <label for="gapSlider" class="block text-sm font-medium text-gray-700 mb-2 text-center">格子の隙間 (Gap): <span id="gapValueDisplay">1</span> rem</label>
+                <input type="range" id="gapSlider" min="0.1" max="3" step="0.1" value="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+            </div>
+        </div>
+
+        <div id="demoArea" class="hermann-grid-container">
+            <div class="hermann-square">1</div> <div class="hermann-square">2</div> <div class="hermann-square">3</div> <div class="hermann-square">4</div>
+            <div class="hermann-square">5</div> <div class="hermann-square">6</div> <div class="hermann-square">7</div> <div class="hermann-square">8</div>
+            <div class="hermann-square">9</div> <div class="hermann-square">10</div><div class="hermann-square">11</div><div class="hermann-square">12</div>
+            <div class="hermann-square">13</div><div class="hermann-square">14</div><div class="hermann-square">15</div><div class="hermann-square">16</div>
+        </div>
+
+        <div class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h2 class="text-lg font-semibold mb-2 text-blue-800">観察のポイント</h2>
+            <ul class="list-disc list-inside text-sm text-blue-700 space-y-1">
+                <li><strong>ハーマン格子錯視:</strong> 白い正方形と黒い格子（またはその逆）のとき、交差点に灰色の点が見えるか？ 格子の色や正方形の色を変えると、錯視の強さや色は変わるか？</li>
+                <li><strong>格子の隙間 (Gap) の影響:</strong> 隙間を広げたり狭めたりすると、錯視の見え方はどう変わるか？</li>
+                <li><strong>色の対比:</strong> 格子と正方形の色の組み合わせ（明度、彩度、色相）によって、それぞれの色の見え方（明るさ、鮮やかさ）はどう変わるか？（同時対比）</li>
+                <li><strong>色のにじみ:</strong> 明るい正方形は大きく、暗い正方形は小さく見えるか？ 特に隙間が狭い場合に顕著か？</li>
+                <li><strong>進出/後退色:</strong> 格子や正方形の色カテゴリ（進出/後退）によって、全体の奥行き感や正方形の目立ち方は変わるか？</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // DOM要素の取得
+        const gridBgColorSelect = document.getElementById('gridBgColorSelect');
+        const squareColorSelect = document.getElementById('squareColorSelect');
+        const gapSlider = document.getElementById('gapSlider');
+        const gapValueDisplay = document.getElementById('gapValueDisplay');
+        const demoArea = document.getElementById('demoArea');
+        const squares = document.querySelectorAll('.hermann-square'); // 正方形要素
+        const gridBgSwatch = document.getElementById('gridBgSwatch');
+        const squareSwatch = document.getElementById('squareSwatch');
+        const randomGridBgLightnessBtn = document.getElementById('randomGridBgLightness');
+        const randomGridBgSaturationBtn = document.getElementById('randomGridBgSaturation');
+        const randomSquareLightnessBtn = document.getElementById('randomSquareLightness');
+        const randomSquareSaturationBtn = document.getElementById('randomSquareSaturation');
+        const root = document.documentElement; // :root要素
+
+        // --- 色変換ヘルパー関数 (変更なし) ---
+        function hexToHsl(hex) { /* ... 実装は省略 ... */
+            let { r, g, b } = hexToRgb(hex);
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            if (max === min) { h = s = 0; } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return { h: h * 360, s: s * 100, l: l * 100 };
+        }
+        function hslToHex(h, s, l) { /* ... 実装は省略 ... */
+             h /= 360; s /= 100; l /= 100;
+            let r, g, b;
+            if (s === 0) { r = g = b = l; } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1; if (t > 1) t -= 1;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1 / 3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1 / 3);
+            }
+            const toHex = x => { const hex = Math.round(x * 255).toString(16); return hex.length === 1 ? '0' + hex : hex; };
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+        function hexToRgb(hex) { /* ... 実装は省略 ... */
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 0, b: 0 };
+        }
+
+        // --- スタイル更新関数 ---
+        function updateStyles(updateGridBg = true, updateSquare = true) {
+            const gapValue = gapSlider.value;
+            let gridBgColor = root.style.getPropertyValue('--grid-bg-color').trim();
+            let squareColor = root.style.getPropertyValue('--square-color').trim();
+
+            // 色選択が変更された場合、CSSカスタムプロパティを更新
+            if (updateGridBg) {
+                 gridBgColor = gridBgColorSelect.value;
+                 root.style.setProperty('--grid-bg-color', gridBgColor);
+            }
+             if (updateSquare) {
+                 squareColor = squareColorSelect.value;
+                 root.style.setProperty('--square-color', squareColor);
+            }
+
+            // 格子の隙間 (Gap) を更新
+            root.style.setProperty('--grid-gap', `${gapValue}rem`);
+            gapValueDisplay.textContent = gapValue;
+
+            // スウォッチの色を更新
+            gridBgSwatch.style.backgroundColor = gridBgColor;
+            squareSwatch.style.backgroundColor = squareColor;
+
+            // 正方形要素のテキスト色をコントラストに基づいて更新
+            updateSquareTextColor(squareColor);
+        }
+
+        // 正方形要素のテキスト色更新関数
+        function updateSquareTextColor(squareHexColor) {
+            const squareRgb = hexToRgb(squareHexColor);
+            const brightness = (squareRgb.r * 299 + squareRgb.g * 587 + squareRgb.b * 114) / 1000;
+            const textColor = brightness > 128 ? '#000000' : '#ffffff';
+            squares.forEach(sq => {
+                sq.style.color = textColor;
+            });
+        }
+
+         // --- ランダム化関数 ---
+        function randomizeColor(colorType, property) {
+            // colorType: 'gridBg' または 'square'
+            const targetVar = colorType === 'gridBg' ? '--grid-bg-color' : '--square-color';
+            const currentHex = root.style.getPropertyValue(targetVar).trim();
+            let { h, s, l } = hexToHsl(currentHex);
+
+            if (property === 'lightness') {
+                l = Math.random() * 80 + 10; // 10% - 90%
+            } else if (property === 'saturation') {
+                s = Math.random() * 80 + 20; // 20% - 100%
+            }
+
+            const newHex = hslToHex(h, s, l);
+
+            // CSSカスタムプロパティと対応するスウォッチを更新
+            root.style.setProperty(targetVar, newHex);
+            if (colorType === 'gridBg') {
+                gridBgSwatch.style.backgroundColor = newHex;
+            } else {
+                squareSwatch.style.backgroundColor = newHex;
+                updateSquareTextColor(newHex); // 正方形の色が変わったのでテキスト色も更新
+            }
+        }
+
+        // --- イベントリスナーの設定 ---
+        gridBgColorSelect.addEventListener('change', () => updateStyles(true, false));
+        squareColorSelect.addEventListener('change', () => updateStyles(false, true));
+        gapSlider.addEventListener('input', () => updateStyles(false, false)); // 色は変更しない
+
+        // ランダム化ボタンのリスナー
+        randomGridBgLightnessBtn.addEventListener('click', () => randomizeColor('gridBg', 'lightness'));
+        randomGridBgSaturationBtn.addEventListener('click', () => randomizeColor('gridBg', 'saturation'));
+        randomSquareLightnessBtn.addEventListener('click', () => randomizeColor('square', 'lightness'));
+        randomSquareSaturationBtn.addEventListener('click', () => randomizeColor('square', 'saturation'));
+
+        // --- 初期化 ---
+        // 初期値を設定 (黒背景、白正方形)
+        gridBgColorSelect.value = '#000000';
+        squareColorSelect.value = '#FFFFFF';
+        // 初期スタイルを適用
+        updateStyles();
+
+    </script>
+
+</body>
+</html>

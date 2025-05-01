@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マルコフ連鎖風配置ミュラー・リヤー錯視（ネオンSVG）</title>
+    <style>
+        /* ページの基本スタイル */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column; /* コントローラーを上に配置 */
+            justify-content: center;
+            align-items: center;
+            background-color: #1a1a2e; /* 暗い背景色 */
+            overflow: hidden;
+            font-family: sans-serif;
+            color: #eee;
+            perspective:100vw;
+        }
+
+        /* コントローラーエリア */
+        #controls {
+            padding: 15px;
+            background-color: rgba(40, 40, 60, 0.8);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: auto 1fr auto; /* ラベル、スライダー、値表示 */
+            gap: 5px 10px; /* 縦、横のギャップ */
+            align-items: center;
+            font-size: 12px;
+        }
+        #controls label {
+            text-align: right;
+        }
+        #controls input[type="range"] {
+            width: 150px;
+        }
+        #controls span {
+            min-width: 35px; /* 値表示の幅を確保 */
+            text-align: left;
+            font-family: monospace;
+        }
+
+        /* SVGコンテナ */
+        svg#illusion-canvas {
+            width: 85%; /* コントローラー分少し小さく */
+            height: 75%;
+            max-width: 800px;
+            max-height: 600px;
+            overflow: visible;
+            border: 1px solid #333;
+            transform-style: preserve-3d;
+            transform-origin: 0vw 0vw;
+        }
+
+        /* SVG内の線と矢印の基本スタイル */
+        .illusion-line, .arrowhead {
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        /* ネオンシアンの色と効果 */
+        .neon-cyan {
+            stroke: #00ffff;
+            filter: drop-shadow(0 0 4px #00ffff) drop-shadow(0 0 8px #00ffff);
+        }
+
+        /* ネオンマゼンタの色と効果 */
+        .neon-magenta {
+            stroke: #ff00ff;
+            filter: drop-shadow(0 0 4px #ff00ff) drop-shadow(0 0 8px #ff00ff);
+        }
+
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <label for="numArrows">矢印の数:</label>
+        <input type="range" id="numArrows" min="5" max="100" value="30">
+        <span id="numArrowsValue">30</span>
+
+        <label for="translateX">相対X移動:</label>
+        <input type="range" id="translateX" min="-50" max="50" value="10" step="1">
+        <span id="translateXValue">10</span>
+
+        <label for="translateY">相対Y移動:</label>
+        <input type="range" id="translateY" min="-50" max="50" value="5" step="1">
+        <span id="translateYValue">5</span>
+
+        <label for="rotate">相対回転(度):</label>
+        <input type="range" id="rotate" min="-45" max="45" value="15" step="1">
+        <span id="rotateValue">15</span>
+
+        <label for="scale">相対スケール:</label>
+        <input type="range" id="scale" min="0.8" max="1.2" value="0.98" step="0.01">
+        <span id="scaleValue">0.98</span>
+    </div>
+
+    <svg id="illusion-canvas" viewBox="0 0 600 400">
+        <defs>
+            <symbol id="arrow-outward" overflow="visible">
+                <line x1="-100" y1="0" x2="100" y2="0" class="illusion-line neon-cyan" />
+                <path d="M -100 0 L -80 -15" class="arrowhead neon-cyan" />
+                <path d="M -100 0 L -80 15" class="arrowhead neon-cyan" />
+                <path d="M 100 0 L 80 -15" class="arrowhead neon-cyan" />
+                <path d="M 100 0 L 80 15" class="arrowhead neon-cyan" />
+            </symbol>
+            <symbol id="arrow-inward" overflow="visible">
+                <line x1="-100" y1="0" x2="100" y2="0" class="illusion-line neon-magenta" />
+                <path d="M -100 0 L -120 -15" class="arrowhead neon-magenta" />
+                <path d="M -100 0 L -120 15" class="arrowhead neon-magenta" />
+                <path d="M 100 0 L 120 -15" class="arrowhead neon-magenta" />
+                <path d="M 100 0 L 120 15" class="arrowhead neon-magenta" />
+            </symbol>
+        </defs>
+        <g id="arrow-container"></g>
+    </svg>
+
+    <script>
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svgCanvas = document.getElementById('illusion-canvas');
+        const arrowContainer = document.getElementById('arrow-container');
+        const viewBox = svgCanvas.viewBox.baseVal;
+
+        // コントローラー要素を取得
+        const controls = {
+            numArrows: document.getElementById('numArrows'),
+            translateX: document.getElementById('translateX'),
+            translateY: document.getElementById('translateY'),
+            rotate: document.getElementById('rotate'),
+            scale: document.getElementById('scale'),
+        };
+
+        // 値表示用span要素を取得
+        const values = {
+            numArrows: document.getElementById('numArrowsValue'),
+            translateX: document.getElementById('translateXValue'),
+            translateY: document.getElementById('translateYValue'),
+            rotate: document.getElementById('rotateValue'),
+            scale: document.getElementById('scaleValue'),
+        };
+
+        // 矢印を生成・配置する関数
+        function generateArrows() {
+            // 既存の矢印をクリア
+            arrowContainer.innerHTML = '';
+
+            // コントローラーから現在の値を取得
+            const numArrows = parseInt(controls.numArrows.value);
+            const deltaX = parseFloat(controls.translateX.value); // 各ステップでの相対X移動量
+            const deltaY = parseFloat(controls.translateY.value); // 各ステップでの相対Y移動量
+            const deltaAngle = parseFloat(controls.rotate.value); // 各ステップでの相対回転角度
+            const deltaScale = parseFloat(controls.scale.value);  // 各ステップでの相対スケール係数
+
+            // 値表示を更新
+            values.numArrows.textContent = numArrows;
+            values.translateX.textContent = deltaX;
+            values.translateY.textContent = deltaY;
+            values.rotate.textContent = deltaAngle;
+            values.scale.textContent = deltaScale.toFixed(2);
+
+            // 最初の矢印のパラメータ (中央に配置)
+            let currentX = viewBox.x + viewBox.width / 2;
+            let currentY = viewBox.y + viewBox.height / 2;
+            let currentAngle = 0; // 初期角度
+            let currentScale = 0.5; // 初期スケール
+
+            for (let i = 0; i < numArrows; i++) {
+                const useElement = document.createElementNS(svgNS, 'use');
+                const arrowType = Math.random() < 0.5 ? '#arrow-outward' : '#arrow-inward';
+                useElement.setAttributeNS(null, 'href', arrowType);
+
+                // 現在のパラメータでtransformを設定
+                useElement.setAttributeNS(null, 'transform',
+                    `translate(${currentX}, ${currentY}) rotate(${currentAngle}) scale(${currentScale})`
+                );
+
+                arrowContainer.appendChild(useElement);
+
+                // --- 次の矢印のためのパラメータを計算 ---
+                // 現在の角度（ラジアン）
+                const rad = currentAngle * (Math.PI / 180);
+
+                // 現在の角度に基づいて相対移動量を回転させる
+                const rotatedDeltaX = deltaX * Math.cos(rad) - deltaY * Math.sin(rad);
+                const rotatedDeltaY = deltaX * Math.sin(rad) + deltaY * Math.cos(rad);
+
+                // 次の位置を計算
+                currentX += rotatedDeltaX;
+                currentY += rotatedDeltaY;
+
+                // 次の角度を計算
+                currentAngle += deltaAngle;
+
+                // 次のスケールを計算
+                currentScale *= deltaScale;
+
+                // スケールが小さくなりすぎたら停止 (オプション)
+                if (currentScale < 0.01) break;
+            }
+        }
+
+        // コントローラーの値が変更されたら再描画
+        Object.values(controls).forEach(input => {
+            input.addEventListener('input', generateArrows);
+        });
+
+        // 初期描画
+        generateArrows();
+    </script>
+
+</body>
+</html>

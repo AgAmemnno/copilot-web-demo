@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Border Image Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Add some custom styles */
+        textarea {
+            font-family: monospace;
+            min-height: 100px;
+        }
+        .preview-box {
+            border-style: solid;
+            border-color: transparent;
+            border-width: 30px; /* Default, controlled by corner-size */
+            border-image-slice: 30; /* Default, controlled by corner-size */
+            border-image-repeat: round; /* Default */
+            background-clip: padding-box;
+            transition: all 0.3s ease-in-out;
+            background-color: #e2e8f0; /* Light gray fallback */
+        }
+        .filtered {
+            filter: drop-shadow(2px 4px 6px black) brightness(1.1);
+        }
+        /* Style for the raw input SVG previews */
+        .raw-input-preview {
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            min-height: 100px; /* Match textarea height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            overflow: hidden; /* Hide overflow */
+            position: relative; /* For potential error messages */
+        }
+        .raw-input-preview svg {
+            max-width: 100%;
+            max-height: 100%;
+            height: auto;
+        }
+         /* Style for the combined 9-slice SVG preview */
+        #raw-svg-preview {
+            border: 1px dashed gray;
+            background-color: #f9f9f9;
+            min-height: 100px;
+            overflow: auto;
+            resize: both;
+            padding: 5px;
+        }
+        #raw-svg-preview svg {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: auto;
+        }
+        .error-text { /* Style for error messages */
+            color: red;
+            font-weight: bold;
+            padding: 10px;
+            font-size: 0.9em;
+            text-align: center;
+            /* Position error inside preview */
+            /* position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); */
+            background-color: rgba(255, 255, 255, 0.8);
+            width: 100%; /* Make error span width */
+            display: block; /* Ensure it takes space */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8 font-sans">
+
+    <div class="container mx-auto max-w-5xl bg-white p-6 rounded-lg shadow-lg">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-700">SVG Border Image Generator</h1>
+
+        {/* Input sections with Raw Previews */}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6 mb-6">
+            {/* Corner SVG Input & Preview */}
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="corner-svg" class="block text-sm font-medium text-gray-700 mb-1">コーナー SVG (左上):</label>
+                    <textarea id="corner-svg" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" rows="6"><path d='M0,30 A30,30 0 0,1 30,0 L0,0 Z' fill='deepskyblue'/>
+                    </textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">コーナーSVGプレビュー:</label>
+                    <div id="raw-corner-preview" class="raw-input-preview rounded-md"></div>
+                </div>
+            </div>
+
+            {/* Edge SVG Input & Preview */}
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="edge-svg" class="block text-sm font-medium text-gray-700 mb-1">辺 SVG (上辺):</label>
+                    {/* Default back to line, assuming it fits within corner-size */}
+                    <textarea id="edge-svg" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" rows="6"><line x1='0' y1='15' x2='60' y2='15' stroke='tomato' stroke-width='5'/>
+                    </textarea>
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">辺SVGプレビュー:</label>
+                    <div id="raw-edge-preview" class="raw-input-preview rounded-md"></div>
+                </div>
+            </div>
+        </div>
+
+        {/* Simplified Size Inputs */}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+             <div>
+                <label for="corner-size" class="block text-sm font-medium text-gray-700 mb-1">コーナーサイズ (px):</label>
+                <input type="number" id="corner-size" value="30" min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                <p class="text-xs text-gray-500 mt-1">角の寸法 & CSSボーダー幅/スライス値</p>
+            </div>
+             <div>
+                <label for="edge-size" class="block text-sm font-medium text-gray-700 mb-1">辺の基本サイズ (px):</label>
+                <input type="number" id="edge-size" value="60" min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                 <p class="text-xs text-gray-500 mt-1">9スライスSVG内での辺部分のサイズ</p>
+            </div>
+        </div>
+
+
+        {/* Buttons */}
+        <div class="mb-6 text-center">
+            <button id="generate-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                生成 & 適用
+            </button>
+             <button id="toggle-filter-btn" class="ml-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                フィルター切替
+            </button>
+        </div>
+
+        {/* Border Image Preview */}
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-2 text-gray-700">ボーダー画像プレビュー:</h2>
+            <div id="preview-div" class="preview-box w-full h-48 flex items-center justify-center text-gray-600 p-4">
+                ここにボーダー画像が適用されます
+            </div>
+        </div>
+
+        {/* Raw Combined SVG Preview */}
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-2 text-gray-700">生成された9スライスSVGプレビュー:</h2>
+            <div id="raw-svg-preview" class="w-full p-2">
+                {/* Generated SVG will be inserted here */}
+            </div>
+        </div>
+
+        {/* Data URI Output */}
+        <div>
+            <h2 class="text-xl font-semibold mb-2 text-gray-700">生成された Data URI:</h2>
+            <textarea id="data-uri-output" class="w-full p-2 border border-gray-300 rounded-md bg-gray-50" rows="4" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get references to elements
+            const cornerSvgInput = document.getElementById('corner-svg');
+            const edgeSvgInput = document.getElementById('edge-svg');
+            // Simplified size inputs
+            const cornerSizeInput = document.getElementById('corner-size');
+            const edgeSizeInput = document.getElementById('edge-size');
+
+            const generateBtn = document.getElementById('generate-btn');
+            const toggleFilterBtn = document.getElementById('toggle-filter-btn');
+            const previewDiv = document.getElementById('preview-div');
+            const dataUriOutput = document.getElementById('data-uri-output');
+            const rawSvgPreviewDiv = document.getElementById('raw-svg-preview');
+            const rawCornerPreviewDiv = document.getElementById('raw-corner-preview');
+            const rawEdgePreviewDiv = document.getElementById('raw-edge-preview');
+
+            // --- Helper Functions ---
+            function displayError(element, message) {
+                // Ensure error message is visible even if element is small
+                element.style.minHeight = '40px';
+                element.innerHTML = `<span class="error-text">${message}</span>`;
+            }
+
+            function updateRawInputPreview(inputElement, previewElement) {
+                const svgString = inputElement.value.trim();
+                previewElement.innerHTML = '';
+                if (!svgString) {
+                    previewElement.innerHTML = '<p class="text-xs text-gray-400 text-center">ここにSVGを入力</p>';
+                    return;
+                }
+                try {
+                    // Use corner-size for preview dimensions
+                    const cSize = parseInt(cornerSizeInput.value, 10) || 30;
+                    // Wrap in SVG, using corner size for viewBox
+                    const wrapperSvg = `<svg width="${cSize}" height="${cSize}" viewBox="0 0 ${cSize} ${cSize}" xmlns="http://www.w3.org/2000/svg">${svgString}</svg>`;
+                    previewElement.innerHTML = wrapperSvg;
+                    if (!previewElement.querySelector('svg')) {
+                         throw new Error("SVG要素の挿入に失敗しました。");
+                    }
+                } catch (e) {
+                    console.error("Error rendering raw input SVG:", e);
+                    displayError(previewElement, `プレビューエラー: ${e.message}`);
+                }
+            }
+
+            // --- SVG Generation Logic ---
+            // Uses cornerSize (C) and edgeSize (E)
+            function createBorderImageSVG(cornerSVG, edgeSVG, C, E) {
+                const cornerSize = parseInt(C, 10);
+                //const edgeSize = parseInt(E, 10);
+
+
+                
+                const eh1 =parseInt( /y1='(\d+)'/g.exec(edgeSVG)[1]);
+                const eh2 =parseInt( /y2='(\d+)'/g.exec(edgeSVG)[1]);
+                const edgeHeight = (eh1+eh2)/2;
+                const edgeWidth = parseInt(/x2='(\d+)'/g.exec(edgeSVG)[1]);
+               
+                // Calculate total SVG dimensions and grid positions
+                const edgeSize = edgeWidth ;
+                const svgDim   = cornerSize * 2 + edgeSize;
+
+                if (isNaN(cornerSize) || cornerSize <= 0 || isNaN(edgeSize) || edgeSize <= 0) {
+                    console.error("Invalid dimensions:", C, E); return null;
+                }
+
+                const rotateCenter  = [edgeSize/2,edgeHeight];
+
+
+                if (!cornerSVG.trim() || !edgeSVG.trim()) {
+                    console.error("Corner or Edge SVG input is empty."); return null;
+                }
+
+                const cornerSVGProcessed = cornerSVG;
+                const edgeSVGProcessed = edgeSVG;
+
+                const x1 = cornerSize+edgeSize/2-rotateCenter[1] ;
+                const x2 = cornerSize+edgeSize/2-rotateCenter[0] ;
+                const y1 = svgDim - rotateCenter[1] - rotateCenter[0] ;
+                const y2 = rotateCenter[1] -rotateCenter[0] ;
+                const y3 = svgDim-2*rotateCenter[1] ;
+                // Construct the 9-slice SVG string based on user's structure but using variables
+                // Added missing x/y attributes and used variables for values
+                const svgString = `
+<svg width='${svgDim}' height='${svgDim}' viewBox='0 0 ${svgDim} ${svgDim}' xmlns='http://www.w3.org/2000/svg'>
+  <defs>
+    <g id='corner'>${cornerSVGProcessed}</g>
+    <g id='edge'>${edgeSVGProcessed}</g>
+  </defs>
+
+  {/* Top Row */}
+  <use href='#corner'/>
+  <use href='#edge' x='${cornerSize}'  />
+  <use href='#corner' transform='scale(-1 1) translate(${-svgDim} 0)' />
+
+  {/* Middle Row */}
+  {/* Note: Rotation origin and translation might need adjustment based on the actual edge pattern's design */}
+  <use href='#edge' transform='rotate(-90 ${rotateCenter[0]} ${rotateCenter[1]}) translate(-${x1} ${y1})' />
+  {/* Middle Center - Intentionally empty, size E x E */}
+  <use href='#edge' transform='rotate(90  ${rotateCenter[0]} ${rotateCenter[1]}) translate(${x1} ${-y2}) ' />
+
+  {/* Bottom Row */}
+  <use href='#corner' transform='scale(1 -1) translate(0 ${-svgDim})' />
+  <use href='#edge'   transform='rotate(180 ${rotateCenter[0]} ${rotateCenter[1]}) translate(${-cornerSize} ${-y3})' />
+  <use href='#corner' transform='scale(-1 -1) translate(${-svgDim} ${-svgDim})' />
+</svg>
+                `.trim().replace(/\{\/\*.*?\*\/\}/g, ''); // Remove comments and extra whitespace
+
+                return svgString;
+            }
+
+
+            function svgToDataURI(svgString) {
+                if (!svgString) return null;
+                try {
+                    let encoded = encodeURIComponent(svgString);
+                    encoded = encoded.replace(/\(/g, '%28').replace(/\)/g, '%29');
+                    return `data:image/svg+xml;charset=utf-8,${encoded}`;
+                } catch (error) {
+                    console.error("Error encoding SVG to Data URI:", error);
+                    return null;
+                }
+            }
+
+            // --- Main Function to Generate and Apply ---
+            function applyBorderImage() {
+                // Clear previous state
+                previewDiv.style.borderImageSource = 'none';
+                dataUriOutput.value = '';
+                rawSvgPreviewDiv.innerHTML = '';
+
+                try {
+                    const cornerSVG = cornerSvgInput.value;
+                    const edgeSVG = edgeSvgInput.value;
+                    // Get simplified size values
+                    const cornerSize = cornerSizeInput.value;
+                    const edgeSize = edgeSizeInput.value;
+
+                    // Update raw input previews first (uses corner size)
+                    updateRawInputPreview(cornerSvgInput, rawCornerPreviewDiv);
+                    updateRawInputPreview(edgeSvgInput, rawEdgePreviewDiv);
+
+                    if (!cornerSVG.trim() || !edgeSVG.trim() || !cornerSize || !edgeSize) {
+                        console.warn('Input missing for border generation.');
+                        displayError(rawSvgPreviewDiv, 'コーナーSVG、辺SVG、および両方のサイズ指定が必要です。');
+                        return;
+                    }
+
+                    const cSizeVal = parseInt(cornerSize, 10);
+                    const eSizeVal = parseInt(edgeSize, 10);
+                     if (isNaN(cSizeVal) || cSizeVal <= 0 || isNaN(eSizeVal) || eSizeVal <= 0) {
+                        displayError(rawSvgPreviewDiv, 'サイズには正の数値を入力してください。');
+                        return;
+                    }
+
+
+                    // 1. Generate the 9-slice SVG using corner and edge sizes
+                    const finalSvg = createBorderImageSVG(cornerSVG, edgeSVG, cSizeVal, eSizeVal);
+                    if (!finalSvg) {
+                       const errorMsg = '9スライスSVGの生成エラー。コンソールを確認してください。';
+                       displayError(rawSvgPreviewDiv, errorMsg); dataUriOutput.value = errorMsg; return;
+                    }
+                    console.log("Generated 9-Slice SVG String:", finalSvg);
+
+                    // 1.5 Display the raw combined SVG
+                    try {
+                        rawSvgPreviewDiv.innerHTML = finalSvg;
+                        if (!rawSvgPreviewDiv.querySelector('svg')) { throw new Error("生成されたSVG要素の挿入に失敗しました。"); }
+                        console.log("9-Slice SVG successfully inserted into raw preview div.");
+                    } catch (e) {
+                        console.error("Error setting innerHTML for raw 9-slice SVG preview:", e);
+                        displayError(rawSvgPreviewDiv, `9スライスSVGプレビューエラー: ${e.message}.`);
+                    }
+
+                    // 2. Convert to Data URI
+                    const dataUri = svgToDataURI(finalSvg);
+                     if (!dataUri) {
+                       const errorMsg = 'Data URIへの変換エラー。コンソールを確認してください。';
+                       displayError(rawSvgPreviewDiv, errorMsg); dataUriOutput.value = errorMsg; return;
+                    }
+                    console.log("Generated Data URI:", dataUri);
+
+                    // 3. Apply border image to the main preview element using cornerSize for CSS
+                    previewDiv.style.borderWidth = `${cSizeVal}px`;
+                    // IMPORTANT: border-image-slice uses the *corner size* from the source SVG dimensions.
+                    previewDiv.style.borderImageSlice = `${cSizeVal}`; // Single value applies to all sides
+                    previewDiv.style.borderImageSource = `url("${dataUri}")`;
+                    console.log(`Applied border-image styles with slice: ${cSizeVal}`);
+
+                    // 4. Display the Data URI
+                    dataUriOutput.value = dataUri;
+
+                } catch (error) { // Catch unexpected errors
+                    console.error("Error in applyBorderImage function:", error);
+                    const errorMsg = `適用中に予期せぬエラーが発生: ${error.message}`;
+                    displayError(rawSvgPreviewDiv, errorMsg); dataUriOutput.value = errorMsg;
+                }
+            }
+
+            // --- Event Listeners ---
+            generateBtn.addEventListener('click', applyBorderImage);
+            toggleFilterBtn.addEventListener('click', () => { previewDiv.classList.toggle('filtered'); });
+
+            // Update previews and re-apply on input change
+            cornerSvgInput.addEventListener('input', () => {
+                updateRawInputPreview(cornerSvgInput, rawCornerPreviewDiv);
+                applyBorderImage();
+            });
+            edgeSvgInput.addEventListener('input', () => {
+                updateRawInputPreview(edgeSvgInput, rawEdgePreviewDiv);
+                applyBorderImage();
+            });
+            cornerSizeInput.addEventListener('input', () => {
+                 updateRawInputPreview(cornerSvgInput, rawCornerPreviewDiv); // Update previews as their size depends on this
+                 updateRawInputPreview(edgeSvgInput, rawEdgePreviewDiv);
+                 applyBorderImage(); // Re-apply border image
+            });
+             edgeSizeInput.addEventListener('input', () => {
+                 applyBorderImage(); // Only affects 9-slice layout and potentially edge pattern scaling (if pattern uses size)
+            });
+
+            // --- Initial Run ---
+            updateRawInputPreview(cornerSvgInput, rawCornerPreviewDiv);
+            updateRawInputPreview(edgeSvgInput, rawEdgePreviewDiv);
+            applyBorderImage();
+        });
+    </script>
+
+</body>
+</html>

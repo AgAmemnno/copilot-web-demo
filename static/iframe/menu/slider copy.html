@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SF風カスケードメニューとスライダー (セグメント化ボーダー)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+    <style>
+        /* カスタムスタイル */
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #0a0f1f; /* Dark blue/purple background */
+            padding: 2rem; /* Tailwind p-8 equivalent */
+            color: #e0e0e0; /* Default light text color */
+        }
+
+        /* --- 共通スタイル --- */
+        .neon-text {
+            color: #00ffff; /* Cyan text */
+            text-shadow: 0 0 7px rgba(0, 255, 255, 0.8);
+        }
+        .sci-fi-border {
+            border: 1px solid #00ffff; /* Cyan border */
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+        }
+        .sci-fi-bg-transparent {
+             background-color: rgba(15, 23, 42, 0.85); /* Tailwind slate-900 with opacity */
+        }
+
+        /* --- カスケードメニュー スタイル (変更なし) --- */
+        .sci-fi-menu-container {
+            position: relative; padding: 0.5rem; margin-bottom: 2rem;
+            background-color: rgba(15, 23, 42, 0.9); border: 1px solid #00ffff;
+            border-radius: 0.5rem; box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+        .sci-fi-menu { list-style: none; padding: 0; margin: 0; display: flex; gap: 0.5rem; }
+        .sci-fi-menu li { position: relative; padding: 0; margin: 0; }
+        .sci-fi-menu a {
+            display: block; padding: 0.75rem 1.25rem; color: #e0e0e0; text-decoration: none;
+            border-radius: 0.375rem; transition: background-color 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
+            white-space: nowrap; border: 1px solid transparent;
+        }
+        .sci-fi-menu li:hover > a, .sci-fi-menu a:hover {
+            background-color: rgba(0, 255, 255, 0.15); color: #00ffff;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.7); border-color: rgba(0, 255, 255, 0.5);
+        }
+        .submenu {
+            list-style: none; padding: 0.5rem; margin: 0; position: absolute; top: 100%; left: 0;
+            min-width: 200px; background-color: rgba(15, 23, 42, 0.95); border: 1px solid #00ffff;
+            border-radius: 0.5rem; box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3); z-index: 10;
+            display: none; opacity: 0; visibility: hidden; transform: translateY(10px);
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+        }
+        .submenu li { width: 100%; }
+        .submenu a { padding: 0.6rem 1rem; color: #b0b0b0; border-radius: 0.25rem; border: none; }
+        .submenu a:hover { background-color: rgba(0, 255, 255, 0.2); color: #00ffff; text-shadow: 0 0 5px rgba(0, 255, 255, 0.7); border: none; }
+        .sci-fi-menu li:hover > .submenu { display: block; opacity: 1; visibility: visible; transform: translateY(0); }
+        .has-submenu > a::after { content: ' ▼'; font-size: 0.7em; margin-left: 0.5em; display: inline-block; vertical-align: middle; }
+
+        /* --- スライダーコンポーネント スタイル (ボーダー装飾変更) --- */
+        @keyframes pulse-glow {
+          0% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), 0 0 5px rgba(0, 255, 255, 0.7); }
+          50% { box-shadow: 0 0 25px rgba(0, 255, 255, 0.8), 0 0 10px rgba(0, 255, 255, 1); }
+          100% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), 0 0 5px rgba(0, 255, 255, 0.7); }
+        }
+        .sci-fi-container {
+            position: relative; /* 子要素の絶対配置の基準 */
+            background-color: rgba(15, 23, 42, 0.85);
+            /* メインのボーダーは少し細くするか、削除しても良い */
+            border: 1px solid rgba(0, 255, 255, 0.3); /* やや薄いボーダー */
+            border-radius: 0.75rem;
+            animation: pulse-glow 3s infinite ease-in-out;
+            /* パディングは装飾が内側に入らないように維持 */
+            padding: 1.5rem;
+            margin: 2rem 0; /* 上下のマージンを増やして装飾スペースを確保 */
+            /* overflow: visible; は不要になる可能性 */
+        }
+
+        /* 削除: 以前のSVGスタイル */
+        /* .muller-lyer-svg, .svg-top-left, .svg-bottom-right { ... } */
+
+        /* ボーダーセグメント共通スタイル */
+        .border-segment {
+            position: absolute;
+            pointer-events: none; /* 装飾がクリックなどを妨げないように */
+        }
+        .border-segment svg {
+            width: 100%;
+            height: 100%;
+            stroke: #00ffff; /* ネオンカラー */
+            stroke-width: 2; /* 線の太さ */
+            fill: none;
+            stroke-linecap: round; /* 線の端を丸める */
+            stroke-linejoin: round; /* 線の接合部を丸める */
+            filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.8)); /* グロー効果 */
+            overflow: visible; /* SVG内の描画がはみ出ても表示 */
+        }
+
+        /* 上部ボーダーセグメント */
+        .segment-top {
+            top: -10px; /* コンテナの上端からのオフセット */
+            left: 10px; /* コンテナの左右からのオフセット */
+            right: 10px;
+            height: 20px; /* SVGの高さ */
+        }
+        /* 下部ボーダーセグメント */
+        .segment-bottom {
+            bottom: -10px; /* コンテナの下端からのオフセット */
+            left: 10px;
+            right: 10px;
+            height: 20px;
+        }
+        /* 左部ボーダーセグメント */
+        .segment-left {
+            left: -10px; /* コンテナの左端からのオフセット */
+            top: 10px; /* コンテナの上下からのオフセット */
+            bottom: 10px;
+            width: 20px; /* SVGの幅 */
+        }
+        /* 右部ボーダーセグメント */
+        .segment-right {
+            right: -10px; /* コンテナの右端からのオフセット */
+            top: 10px;
+            bottom: 10px;
+            width: 20px;
+        }
+
+        /* スライダー本体のスタイル (変更なし) */
+        .label-text { color: #e0e0e0; }
+        .value-text { color: #00ffff; font-weight: 700; }
+        input[type=range].sci-fi-slider {
+            -webkit-appearance: none; appearance: none; width: 100%; height: 8px;
+            background: linear-gradient(to right, #00ffff, #ff00ff); border-radius: 4px;
+            outline: none; opacity: 0.8; transition: opacity .2s;
+            border: 1px solid rgba(0, 255, 255, 0.4); cursor: pointer;
+        }
+        input[type=range].sci-fi-slider:hover { opacity: 1; }
+        input[type=range].sci-fi-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px;
+            background: #00ffff; border-radius: 50%; cursor: pointer;
+            border: 3px solid #0a0f1f; box-shadow: 0 0 12px rgba(0, 255, 255, 0.9);
+        }
+        input[type=range].sci-fi-slider::-moz-range-thumb {
+            width: 18px; height: 18px; background: #00ffff; border-radius: 50%;
+            cursor: pointer; border: 3px solid #0a0f1f; box-shadow: 0 0 12px rgba(0, 255, 255, 0.9);
+        }
+        #target-element.sci-fi-target {
+            background-color: rgba(0, 255, 255, 0.1); border: 1px solid #00ffff; color: #e0e0e0;
+            box-shadow: inset 0 0 12px rgba(0, 255, 255, 0.4); border-radius: 0.5rem; height: 8rem;
+            display: flex; align-items: center; justify-content: center; font-weight: 500;
+            transition: all 150ms ease-linear;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sci-fi-menu-container">
+        <ul class="sci-fi-menu">
+            <li><a href="#">ホーム</a></li>
+            <li class="has-submenu"> <a href="#">ファイル</a>
+                <ul class="submenu">
+                    <li><a href="#">新規作成</a></li>
+                    <li><a href="#">開く</a></li>
+                    <li class="has-submenu"> <a href="#">最近使ったファイル</a>
+                         <ul class="submenu" style="left: 100%; top: 0;"> <li><a href="#">ドキュメントA</a></li>
+                              <li><a href="#">プレゼンテーションB</a></li>
+                              <li><a href="#">設定ファイルC</a></li>
+                         </ul>
+                    </li>
+                    <li><a href="#">保存</a></li>
+                    <li><a href="#">終了</a></li>
+                </ul>
+            </li>
+            <li class="has-submenu"> <a href="#">設定</a>
+                <ul class="submenu">
+                    <li><a href="#">表示設定</a></li>
+                    <li><a href="#">テーマ</a></li>
+                    <li><a href="#">拡張機能</a></li>
+                </ul>
+            </li>
+            <li><a href="#">ヘルプ</a></li>
+        </ul>
+    </nav>
+
+    <div class="sci-fi-container">
+
+        <div class="border-segment segment-top">
+            <svg viewBox="0 0 100 20" preserveAspectRatio="none">
+                <line x1="10" y1="0" x2="0" y2="10" />
+                <line x1="10" y1="10" x2="90" y2="10" />
+                <line x1="90" y1="10" x2="100" y2="0" />
+            </svg>
+        </div>
+
+        <div class="border-segment segment-bottom">
+             <svg viewBox="0 0 100 20" preserveAspectRatio="none">
+                 <line x1="0" y1="10" x2="10" y2="20" />
+                 <line x1="10" y1="10" x2="90" y2="10" />
+                 <line x1="100" y1="10" x2="90" y2="20" />
+             </svg>
+        </div>
+
+        <div class="border-segment segment-left">
+             <svg viewBox="0 0 20 100" preserveAspectRatio="none">
+                 <line x1="10" y1="0" x2="10" y2="100" />
+             </svg>
+        </div>
+
+        <div class="border-segment segment-right">
+             <svg viewBox="0 0 20 100" preserveAspectRatio="none">
+                 <line x1="10" y1="0" x2="10" y2="100" />
+             </svg>
+        </div>
+
+
+        <h1 class="text-2xl font-bold neon-text text-center mb-6">CSS プロパティオペレーター</h1>
+        <div class="control-group space-y-3">
+            <label for="width-slider" class="block text-sm font-medium label-text">
+                幅 (Width): <span id="width-value" class="value-text">150</span> px
+            </label>
+            <input type="range" id="width-slider" min="50" max="500" value="150" class="w-full sci-fi-slider">
+        </div>
+        <div id="target-element" class="sci-fi-target mt-6" style="width: 150px;">
+            ターゲットエレメント
+        </div>
+    </div>
+
+    <script>
+        // --- スライダー用JavaScript (変更なし) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const widthSlider = document.getElementById('width-slider');
+            const widthValueSpan = document.getElementById('width-value');
+            const targetElement = document.getElementById('target-element');
+
+            if (widthSlider && widthValueSpan && targetElement) {
+                const initialWidth = widthSlider.value;
+                targetElement.style.width = `${initialWidth}px`;
+                widthValueSpan.textContent = initialWidth;
+
+                widthSlider.addEventListener('input', () => {
+                    const newWidth = widthSlider.value;
+                    targetElement.style.width = `${newWidth}px`;
+                    widthValueSpan.textContent = newWidth;
+                });
+            }
+
+            // --- メニュー用JavaScript (変更なし) ---
+             const nestedSubmenus = document.querySelectorAll('.submenu .has-submenu > .submenu');
+             nestedSubmenus.forEach(submenu => {
+                 submenu.style.left = '100%';
+                 submenu.style.top = '0';
+             });
+        });
+    </script>
+</body>
+</html>

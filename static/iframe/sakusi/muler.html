@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVGグリッドレイアウトのWeb Component</title>
+    <style>
+        /* グローバルスタイル (必要に応じて) */
+        body {
+            margin: 0;
+            background-color: #f0f0f0; /* 背景色 */
+            padding: 20px;
+        }
+
+        /* triangle-grid コンポーネントの配置スタイル */
+
+    </style>
+</head>
+<body>
+
+<template id="triangle-icon-template">
+    <style>
+        /* Shadow DOM 内部のスタイル */
+        :host { /* コンポーネント自体 (triangle-icon) */
+            display: block; /* レイアウトのため */
+            line-height: 0; /* SVG下の余白対策 */
+            width: 100%;   /* グリッドセル幅に合わせる (親のグリッドに依存) */
+            height: auto;  /* アスペクト比を維持 */
+            max-width: 100%; /* 親要素を超えないように */
+            cursor: pointer; /* アニメーション制御用 */
+            position: relative; /* transform の基準 */
+            /* 三角形の高さ/幅の比率を変数として保持 (約 sqrt(3)/2) */
+            --triangle-height-ratio: 0.866;
+        }
+
+        /* 偶数番目の triangle-icon (:host) に transform を適用 */
+        /* 注意: このセレクタは親要素のコンテキストに依存するため、 */
+        /* TriangleGrid 側で適用する方がより堅牢です。 */
+        /* しかし、要求通りこちらに移動します。 */
+        :host(:nth-child(even)) {
+            transform: translate(
+                calc(50% + 5px), /* gapが10pxであることを前提とする */
+                calc(-1 * 100% * var(--triangle-height-ratio) * 0.25)
+            );
+             /* z-index: 1; */
+        }
+
+        svg { /* Shadow DOM 内の SVG */
+            display: block;
+            width: 100%;
+            height: auto; /* アスペクト比を維持 */
+        }
+    </style>
+    <svg id="svgRoot" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <polygon id="baseTriangle" points="50,0 0,86.6 100,86.6" />
+            <mask id="triangleCornerMask">
+                <rect width="100%" height="100%" fill="white"/>
+                <use id="maskUseElement" href="#baseTriangle" fill="black"/>
+            </mask>
+            <g id="maskedTriangle" fill="dodgerblue" mask="url(#triangleCornerMask)">
+                <use href="#baseTriangle"/>
+            </g>
+        </defs>
+        <use href="#maskedTriangle"/>
+    </svg>
+</template>
+
+<template id="triangle-grid-template">
+    <style>
+        :host{
+            display: block; /* コンポーネントをブロック要素として扱う */
+            width: 100%;
+            max-width: 800px; /* グリッド全体の最大幅 */
+            margin: 0 auto; /* 中央揃え */
+
+        }
+        /* グリッドコンテナのスタイル */
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px; /* この gap の値が triangle-icon の transform 計算に影響 */
+            width: 100%; /* コンポーネントの幅に追従 */
+            align-items: center;
+            justify-items: center;
+            overflow: hidden;
+            padding-bottom: 10%;
+            padding-left: 5%;
+            padding-right: 5%;
+        }
+        /* triangle-icon 自体のスタイルは TriangleIcon 内部に定義済み */
+    </style>
+    <div class="container">
+        </div>
+</template>
+
+
+<triangle-grid count="12"></triangle-grid> 
+
+<script>
+//==================================================
+// 1. SvgAnimator クラス (変更なし)
+//==================================================
+class SvgAnimator {
+    constructor(element, keyframes, options) {
+        this.element = element;
+        this.keyframes = keyframes;
+        this.options = options;
+        this.animation = null;
+    }
+    play() {
+        if (!this.element) return;
+        if (this.animation && this.animation.playState === 'paused') {
+            this.animation.play();
+        } else if (!this.animation || this.animation.playState === 'finished' || this.animation.playState === 'idle') {
+             try {
+                this.animation = this.element.animate(this.keyframes, this.options);
+                console.log(`Animation started/restarted` ,this.keyframes,this.options);
+            } catch (e) {
+                console.error("Animation failed:", e);
+                console.error("Keyframes:", this.keyframes);
+                console.error("Options:", this.options);
+            }
+        }
+    }
+    pause() {
+        if (this.animation && this.animation.playState === 'running') {
+            this.animation.pause();
+            console.log('Animation paused');
+        }
+    }
+    togglePlay() {
+         if (!this.animation || this.animation.playState === 'finished' || this.animation.playState === 'idle') {
+            this.play();
+        } else if (this.animation.playState === 'paused') {
+            this.play();
+        } else if (this.animation.playState === 'running') {
+            this.pause();
+        }
+    }
+}
+
+//==================================================
+// 2. TriangleIcon Web Component (変更なし)
+//==================================================
+class TriangleIcon extends HTMLElement {
+    #shadowRoot;
+    #animator = null;
+    constructor() {
+        super();
+        this.#shadowRoot = this.attachShadow({ mode: 'open' });
+        const template = document.getElementById('triangle-icon-template');
+        if (!template) { console.error('Template #triangle-icon-template not found.'); return; }
+        const templateContent = template.content.cloneNode(true);
+        this.#shadowRoot.appendChild(templateContent);
+        this.#updateViewBox();
+    }
+    #updateViewBox() {
+        const svgElement = this.#shadowRoot.getElementById('svgRoot');
+        if (svgElement) {
+            const viewBoxValue = this.getAttribute('view-box') || '0 0 100 86.6';
+            svgElement.setAttribute('viewBox', viewBoxValue);
+        }
+    }
+    #initAnimation() {
+        const maskUseElement = this.#shadowRoot.getElementById('maskUseElement');
+        if (maskUseElement && !this.#animator) {
+            const rawCentroidY = (0 + 86.6 + 86.6) / 3;
+            const centroidY = parseFloat(rawCentroidY.toFixed(3));
+            const baseTranslate = `translate(50px, ${centroidY}px)`; // 単位なし
+            const baseRotateOrigin = `translate(-50px, -${centroidY}px)`; // 単位なし
+            const keyframes = [
+                { transform: `${baseTranslate} rotate(180deg) ${baseRotateOrigin}` },
+                { transform: `${baseTranslate} rotate(540deg) ${baseRotateOrigin}` }
+            ];
+            const options = { duration: 3000, iterations: Infinity, easing: 'linear' };
+            this.#animator = new SvgAnimator(maskUseElement, keyframes, options);
+            this.#animator.play();
+            this.addEventListener('click', () => { if (this.#animator) { this.#animator.togglePlay(); } });
+        } else if (!maskUseElement) {
+             requestAnimationFrame(() => this.#initAnimation());
+        }
+    }
+    static get observedAttributes() { return ['view-box']; }
+    attributeChangedCallback(name, oldValue, newValue) { if (name === 'view-box' && oldValue !== newValue) { this.#updateViewBox(); } }
+    connectedCallback() {
+        if (!this.#shadowRoot.getElementById('svgRoot')?.getAttribute('viewBox') && this.hasAttribute('view-box')) { this.#updateViewBox(); }
+        this.#initAnimation();
+    }
+}
+customElements.define('triangle-icon', TriangleIcon); // triangle-icon を先に定義
+
+//==================================================
+// 3. TriangleGrid Web Component (テンプレートを使用するように修正)
+//==================================================
+class TriangleGrid extends HTMLElement {
+    #shadowRoot;
+    #gridContainer; // グリッドコンテナへの参照を保持
+
+    constructor() {
+        super();
+        this.#shadowRoot = this.attachShadow({ mode: 'open' });
+
+        // テンプレートを取得
+        const template = document.getElementById('triangle-grid-template');
+        if (!template) {
+            console.error('Template #triangle-grid-template not found.');
+            return;
+        }
+        // テンプレートの内容を複製して Shadow DOM に追加
+        const templateContent = template.content.cloneNode(true);
+        this.#shadowRoot.appendChild(templateContent);
+
+        // Shadow DOM 内のグリッドコンテナへの参照を取得
+        this.#gridContainer = this.#shadowRoot.querySelector('.container');
+        if (!this.#gridContainer) {
+             console.error('.container element not found in triangle-grid template.');
+        }
+    }
+
+    // アイコンを追加するメソッド (変更なし)
+    #addIcons(count) {
+        if (!this.#gridContainer) return; // コンテナが見つからない場合は何もしない
+        this.#gridContainer.innerHTML = ''; // 既存のアイコンをクリア
+        for (let i = 0; i < count; i++) {
+            const icon = document.createElement('triangle-icon');
+            icon.setAttribute('view-box', '0 0 100 86.6');
+            this.#gridContainer.appendChild(icon);
+        }
+    }
+
+    // 監視する属性 (変更なし)
+    static get observedAttributes() {
+        return ['count'];
+    }
+
+    // 属性変更時のコールバック (変更なし)
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'count' && oldValue !== newValue) {
+            const count = parseInt(newValue, 10) || 0;
+            this.#addIcons(count);
+        }
+    }
+
+    // DOM接続時のコールバック (変更なし)
+    connectedCallback() {
+        // コンテナが正しく取得できているか確認してからアイコンを追加
+        if (this.#gridContainer) {
+            const initialCount = parseInt(this.getAttribute('count') || '12', 10);
+            this.#addIcons(initialCount);
+        } else {
+            // もしコンテナが見つからない場合（タイミングの問題など）、少し待って再試行
+            requestAnimationFrame(() => {
+                this.#gridContainer = this.#shadowRoot.querySelector('.container');
+                 if (this.#gridContainer) {
+                    const initialCount = parseInt(this.getAttribute('count') || '12', 10);
+                    this.#addIcons(initialCount);
+                 } else {
+                     console.error('.container still not found after delay.');
+                 }
+            });
+        }
+    }
+}
+customElements.define('triangle-grid', TriangleGrid); // triangle-grid を定義
+
+</script>
+
+</body>
+</html>

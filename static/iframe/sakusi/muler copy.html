@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVGグリッドレイアウトのWeb Component (外部テンプレートフェッチ)</title>
+    <style>
+        /* グローバルスタイル */
+        body {
+            margin: 0;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        /* triangle-grid コンポーネントの配置スタイル */
+        triangle-grid {
+            display: block;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 100px; /* テンプレート読み込み中の仮の高さ */
+            border: 1px dashed #ccc; /* 読み込み中の境界線（任意） */
+        }
+        triangle-grid:not(:defined) { /* 未定義状態のスタイル（任意） */
+            display: block;
+            text-align: center;
+            padding: 20px;
+            color: #aaa;
+            content: "Loading Grid...";
+        }
+    </style>
+
+    <template id="triangle-icon-template">
+
+    </template>
+
+    </head>
+<body>
+
+<triangle-grid count="12" template-id="triangle-grid-template" template-src="triangle-grid-template.html"></triangle-grid>
+
+
+<script>
+//==================================================
+// 0. TemplateFetcher クラス (Head -> Storage -> Fetch)
+//==================================================
+class TemplateFetcher {
+    static #pendingFetches = new Map();
+
+    /**
+     * 指定されたIDのテンプレートを Head, sessionStorage, または Fetch で取得し、キャッシュする
+     * @param {string} templateId - 取得/復元するテンプレート要素のID
+     * @param {string | null} [templateUrl=null] - Fetch する場合のURL (任意)
+     * @returns {Promise<string | null>} テンプレートのHTML文字列、または失敗した場合は null
+     */
+    static async getTemplateHtml(templateId, templateUrl = null) {
+        const idCacheKey = `template-id-${templateId}`;    // ID保存用キー
+        const htmlCacheKey = `template-html-${templateId}`; // HTML保存用キー
+
+        // 1. Head 内を検索
+        let templateElement = document.getElementById(templateId);
+        if (templateElement && templateElement.tagName === 'TEMPLATE') {
+            console.log(`Template found in <head>: ${templateId}`);
+            return templateElement;
+        }
+
+        // 2. Head にない場合、sessionStorage を確認
+        console.log(`Template not found in <head>, checking sessionStorage for: ${templateId}`);
+        try {
+            const cachedId = sessionStorage.getItem(idCacheKey);
+            if (cachedId === templateId) {
+                console.log(`Template found in sessionStorage for: ${templateId}. Restoring to <head>.`);
+                // <head> 内にテンプレート要素を復元
+                templateElement = document.createElement('template');
+                templateElement.id = templateId;
+                templateElement.innerHTML = sessionStorage.getItem(htmlCacheKey);
+                document.head.appendChild(templateElement);
+                console.log(`Template restored to <head> for: ${templateId}`);
+                return templateElement;
+            } else {
+                 console.log(`Template not found in sessionStorage for: ${templateId}`);
+            }
+        } catch (e) { console.warn('Failed to access sessionStorage:', e); }
+
+        // 3. Head にも sessionStorage にもない場合、Fetch を試みる
+        if (!templateUrl) {
+             console.error(`Template "${templateId}" not found in <head> or sessionStorage, and no template-src provided.`);
+             return null;
+        }
+
+        if (TemplateFetcher.#pendingFetches.has(templateUrl)) {
+            console.log(`Fetch already pending for: ${templateUrl}. Waiting for existing fetch to complete.`);
+            // 進行中の fetch Promise が解決されるのを待つ
+            return TemplateFetcher.#pendingFetches.get(templateUrl);
+        }
+        // 新しい fetch を開始し、その Promise を pendingFetches に登録
+        const fetchPromise = (async () => {
+            console.log(`Fetching template from server: ${templateUrl}`);
+            try {
+                const response = await fetch(templateUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} for ${templateUrl}`);
+                }
+                const htmlString = await response.text();
+                console.log(`Template fetched successfully from: ${templateUrl}`);
+
+                // <head> 内にテンプレート要素を作成・追加
+                templateElement = document.createElement('template');
+                templateElement.id = templateId;
+                templateElement.innerHTML = htmlString;
+                document.head.appendChild(templateElement);
+                console.log(`Template added to <head> after fetch for: ${templateId}`);
+
+                // sessionStorage にキャッシュ
+                try {
+                    sessionStorage.setItem(idCacheKey, templateId);
+                    sessionStorage.setItem(htmlCacheKey, htmlString);
+                    console.log(`Template cached in sessionStorage after fetch for: ${templateId}`);
+                } catch (e) { console.warn(`Failed to cache template in sessionStorage for ${templateId}:`, e); }
+
+                return templateElement; // 成功したらHTML文字列を返す
+            } catch (error) {
+                console.error(`Failed to fetch template from ${templateUrl}:`, error);
+                return null; // 失敗したら null を返す
+            } finally {
+                // 成功・失敗に関わらず、完了したら pendingFetches から削除
+                TemplateFetcher.#pendingFetches.delete(templateUrl);
+                console.log(`Fetch completed (success/failure) for: ${templateUrl}`);
+            }
+        })(); // 即時実行関数で Promise を作成
+
+        TemplateFetcher.#pendingFetches.set(templateUrl, fetchPromise); // Promise を Map に保存
+        return fetchPromise; // この Promise を返す
+    }
+}
+
+//==================================================
+// 1. SvgAnimator クラス (変更なし)
+//==================================================
+class SvgAnimator {
+    constructor(element, keyframes, options) { this.element = element; this.keyframes = keyframes; this.options = options; this.animation = null; }
+    play() { if (!this.element) return; if (this.animation && this.animation.playState === 'paused') { this.animation.play(); } else if (!this.animation || this.animation.playState === 'finished' || this.animation.playState === 'idle') { try { this.animation = this.element.animate(this.keyframes, this.options); console.log(`Animation started/restarted`, this.keyframes, this.options); } catch (e) { console.error("Animation failed:", e); console.error("Keyframes:", this.keyframes); console.error("Options:", this.options); } } }
+    pause() { if (this.animation && this.animation.playState === 'running') { this.animation.pause(); console.log('Animation paused'); } }
+    togglePlay() { if (!this.animation || this.animation.playState === 'finished' || this.animation.playState === 'idle') { this.play(); } else if (this.animation.playState === 'paused') { this.play(); } else if (this.animation.playState === 'running') { this.pause(); } }
+}
+
+//==================================================
+// 2. TriangleIcon Web Component (変更なし)
+//==================================================
+class TriangleIcon extends HTMLElement {
+    #templateId = '';
+    #templateSrc = ''; // template-src も保持
+    #shadowRoot; #animator = null;
+    constructor() { 
+        super(); 
+        this.#shadowRoot = this.attachShadow({ mode: 'open' });
+    }
+
+    async ishadow(){
+        const template = await TemplateFetcher.getTemplateHtml("triangle-icon-template", "triangle-icon-template.html");
+        if (!templateContent) { console.error('TriangleIcon: Template content not found.'); return; }
+        this.#shadowRoot.appendChild(templateContent);
+        this.#updateViewBox();
+    }
+    #updateViewBox() { 
+        const svgElement = this.#shadowRoot.getElementById('svgRoot'); 
+        if (svgElement) { 
+            const viewBoxValue = this.getAttribute('view-box') || '0 0 100 86.6'; 
+            svgElement.setAttribute('viewBox', viewBoxValue); 
+        } 
+    }
+    #initAnimation() { 
+        const maskUseElement = this.#shadowRoot.getElementById('maskUseElement'); 
+        if (maskUseElement && !this.#animator) { 
+            const rawCentroidY = (0 + 86.6 + 86.6) / 3; 
+            const centroidY = parseFloat(rawCentroidY.toFixed(3)); 
+            const baseTranslate = `translate(50, ${centroidY})`; 
+            const baseRotateOrigin = `translate(-50, -${centroidY})`; 
+            const keyframes = [ { transform: `${baseTranslate} rotate(180deg) ${baseRotateOrigin}` }, { transform: `${baseTranslate} rotate(540deg) ${baseRotateOrigin}` } ]; 
+            const options = { duration: 3000, iterations: Infinity, easing: 'linear' }; 
+            this.#animator = new SvgAnimator(maskUseElement, keyframes, options); 
+            this.#animator.play(); 
+            this.addEventListener('click', () => { 
+                if (this.#animator) { 
+                    this.#animator.togglePlay(); } });
+                } 
+                else if (!maskUseElement) { 
+                    requestAnimationFrame(() => this.#initAnimation()); 
+                } 
+            }
+
+    static get observedAttributes() { return ['view-box']; }
+    attributeChangedCallback(name, oldValue, newValue) { 
+        if (name === 'view-box' && oldValue !== newValue) 
+        { 
+            this.#updateViewBox(); 
+        } 
+    }
+    connectedCallback() 
+    { 
+        if (!this.#shadowRoot.getElementById('svgRoot')?.getAttribute('viewBox') && this.hasAttribute('view-box')) 
+        { 
+            this.#updateViewBox(); 
+        } 
+        this.#initAnimation(); 
+    }
+}
+customElements.define('triangle-icon', TriangleIcon);
+
+class TriangleGrid extends HTMLElement {
+    #shadowRoot;
+    #gridContainer = null;
+    #templateId = '';
+    #templateSrc = ''; // template-src も保持
+
+    constructor() {
+        super();
+        this.#shadowRoot = this.attachShadow({ mode: 'open' });
+        this.#shadowRoot.innerHTML = `<style>:host{display:block;text-align:center;padding:20px;color:#aaa;border:1px dashed #ccc;min-height:50px;}</style><p>Initializing grid...</p>`;
+    }
+
+    // テンプレートを非同期で適用するメソッド
+    async #applyTemplate() {
+        this.#templateId = this.getAttribute('template-id');
+        this.#templateSrc = this.getAttribute('template-src'); // template-src も取得
+
+        if (!this.#templateId) {
+            console.error('TriangleGrid: template-id attribute is missing.');
+            this.#shadowRoot.innerHTML = '<p style="color: red;">Error: template-id attribute is missing.</p>';
+            return;
+        }
+
+        // TemplateFetcher を使用 (IDとURLを渡す)
+        const template = await TemplateFetcher.getTemplateHtml(this.#templateId, this.#templateSrc);
+
+        if (template) {
+
+            this.#shadowRoot.appendChild(template.content.cloneNode(true));
+
+            // グリッドコンテナへの参照を取得
+            this.#gridContainer = this.#shadowRoot.querySelector('.container');
+            if (!this.#gridContainer) {
+                console.error('TriangleGrid: .container element not found in template.');
+                this.#shadowRoot.innerHTML = '<p style="color: red;">Error: .container not found in template.</p>';
+                return;
+            }
+            console.log(`TriangleGrid: Template "${this.#templateId}" applied successfully.`);
+
+            // テンプレート適用後にアイコンを追加
+            this.#addIconsBasedOnAttribute();
+
+        } else {
+            // テンプレート取得失敗時のエラー表示
+            this.#shadowRoot.innerHTML = `<p style="color: red;">Error applying template "${this.#templateId}".</p>`;
+            console.error(`TriangleGrid: Failed to apply template content for id "${this.#templateId}".`);
+        }
+    }
+
+    // アイコンを追加するメソッド (変更なし)
+    #addIcons(count) {
+        if (!this.#gridContainer) {
+            console.warn('#addIcons called but grid container is not available.');
+            return;
+        }
+        this.#gridContainer.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+            const icon = document.createElement('triangle-icon');
+            icon.setAttribute('view-box', '0 0 100 86.6');
+            this.#gridContainer.appendChild(icon);
+        }
+        console.log(`Added ${count} icons.`);
+    }
+
+    // count 属性に基づいてアイコンを追加するヘルパー (変更なし)
+    #addIconsBasedOnAttribute() {
+        const count = parseInt(this.getAttribute('count') || '12', 10);
+        this.#addIcons(count);
+    }
+
+    // 監視する属性 (template-src を追加)
+    static get observedAttributes() {
+        return ['count', 'template-id', 'template-src'];
+    }
+
+    // 属性変更時のコールバック
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue === newValue) return;
+
+        if (name === 'count') {
+            // コンテナが準備できていればアイコン数を更新
+            if (this.#gridContainer) {
+                const count = parseInt(newValue, 10) || 0;
+                this.#addIcons(count);
+            }
+        } else if (name === 'template-id')
+        {
+            let templateId = this.getAttribute('template-id');
+            if( this.#templateId  == templateId ){
+                // template-id または template-src が変更された場合、再度テンプレートを適用
+                this.#gridContainer = null; // コンテナ参照をリセット
+                this.#applyTemplate(); // 新しいID/SRCでテンプレートを適用
+            }
+        }else if(name === 'template-src') {
+            let templateSrc = this.getAttribute('template-src');
+            if( this.#templateSrc  == templateSrc ){
+                // template-id または template-src が変更された場合、再度テンプレートを適用
+                this.#gridContainer = null; // コンテナ参照をリセット
+                this.#applyTemplate(); // 新しいID/SRCでテンプレートを適用
+            }
+        }
+    }
+
+    // DOM接続時のコールバック
+    connectedCallback() {
+        // テンプレートを非同期で適用
+        this.#applyTemplate();
+    }
+}
+customElements.define('triangle-grid', TriangleGrid);
+</script>
+
+</body>
+</html>

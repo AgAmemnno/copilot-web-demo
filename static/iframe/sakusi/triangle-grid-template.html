@@ -1,0 +1,25 @@
+<style>
+    :host{
+        display: block; /* コンポーネントをブロック要素として扱う */
+        width: 100%;
+        max-width: 800px; /* グリッド全体の最大幅 */
+        margin: 0 auto; /* 中央揃え */
+
+    }
+    /* グリッドコンテナのスタイル */
+    .container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px; /* この gap の値が triangle-icon の transform 計算に影響 */
+        width: 100%; /* コンポーネントの幅に追従 */
+        align-items: center;
+        justify-items: center;
+        overflow: hidden;
+        padding-bottom: 10%;
+        padding-left: 5%;
+        padding-right: 5%;
+    }
+    /* triangle-icon 自体のスタイルは TriangleIcon 内部に定義済み */
+</style>
+<div class="container">
+</div>

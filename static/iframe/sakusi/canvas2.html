@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Worker Canvas背景とコンテンツ (Canvas非表示)</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #f0f0f0; /* 背景色 */
+            display: flex;
+            flex-direction: column; /* 要素を縦に並べる */
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+            font-family: sans-serif;
+        }
+        /* メインキャンバスを非表示にする */
+        #tilingCanvas {
+            display: none; /* Canvas要素を表示しない */
+            /* 以下のスタイルは不要になるが、念のためコメントアウト */
+            /*
+            display: block;
+            border: 1px dashed lightgray;
+            margin-bottom: 20px;
+            */
+        }
+        /* 背景とコンテンツを表示するDIV */
+        #backgroundDiv {
+            width: 80%;
+            max-width: 700px;
+            height: 400px;
+            border: 1px solid #aaa;
+            position: relative; /* コンテンツ配置の基準 */
+            overflow: hidden; /* はみ出し防止 */
+            background-color: #eee; /* デフォルト背景色 */
+            background-size: cover; /* 背景画像をカバー */
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s ease-in-out; /* 背景変更を滑らかに */
+            padding: 20px; /* コンテンツ用余白 */
+            box-sizing: border-box;
+            color: #333;
+        }
+         #backgroundDiv h2 {
+             margin-top: 0;
+         }
+         #backgroundDiv p {
+             background-color: rgba(255, 255, 255, 0.7); /* テキスト背景を少し白く */
+             padding: 5px;
+             border-radius: 3px;
+             display: inline-block; /* 背景をテキスト幅に合わせる */
+         }
+         .controls {
+             margin-bottom: 20px;
+             padding: 10px;
+             background-color: #fff;
+             border-radius: 5px;
+             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+         }
+         .controls label {
+             margin-right: 10px;
+         }
+    </style>
+</head>
+<body>
+
+<h1>Web WorkerによるCanvas背景</h1>
+
+<canvas id="tilingCanvas"></canvas>
+<div class="controls">
+    <label for="colorSpaceSelect">カラースペース:</label>
+    <select id="colorSpaceSelect">
+        <option value="srgb" selected>sRGB (標準)</option>
+        <option value="display-p3">Display P3 (広色域)</option>
+        </select>
+</div>
+<div id="backgroundDiv">
+    <h2>コンテンツエリア</h2>
+    <p>このDIVの背景は、Web WorkerがCanvasに描画した内容です。</p>
+    <p>ウィンドウサイズを変更すると、背景も更新されます。</p>
+    </div>
+
+<script>
+    const canvas = document.getElementById('tilingCanvas');
+    const backgroundDiv = document.getElementById('backgroundDiv');
+    const colorSpaceSelect = document.getElementById('colorSpaceSelect');
+    let worker = null; // Workerへの参照を保持
+        // OffscreenCanvas と Worker のサポート確認
+    const supportsOffscreen = typeof canvas?.transferControlToOffscreen === 'function';
+    const supportsWorker = typeof window.Worker !== 'undefined';
+    // OffscreenCanvas がサポートされているか確認
+    if (supportsOffscreen && supportsWorker) { // canvasの存在も確認
+        try {
+            // 1. OffscreenCanvas を作成
+            const offscreen = canvas.transferControlToOffscreen();
+
+            // 2. Web Worker を作成
+            const worker = new Worker('tiling.worker3.js'); // Workerファイル名を指定
+
+            // 3. Workerからのメッセージを受信
+            worker.onmessage = (event) => {
+                const data = event.data;
+                if (data.type === 'dataUrl' && data.url) {
+                    // Data URL を受け取ったらDIVの背景に設定
+                    console.log("Main: Received Data URL from worker.");
+                    if (backgroundDiv) {
+                        backgroundDiv.style.backgroundImage = `url(${data.url})`;
+                    }
+                } else {
+                     console.log("Main: Received message from worker:", data);
+                }
+            };
+
+            // Workerでエラーが発生した場合
+            worker.onerror = (error) => {
+                console.error("Main: Error in Web Worker:", error.message, error);
+                if (backgroundDiv) {
+                    backgroundDiv.innerHTML = `<p style="color:red;">Worker Error: ${error.message}</p>`;
+                }
+            };
+
+            // 4. OffscreenCanvas を Worker に転送
+            worker.postMessage({ canvas: offscreen }, [offscreen]);
+            console.log("Main: OffscreenCanvas transferred to worker.");
+
+            // 5. ウィンドウリサイズ時に Worker に新しいサイズを通知
+            function sendResizeMessage() {
+                // 表示用Canvasのスタイル更新は不要になった
+
+                // Workerに実際の描画サイズを送信
+                worker.postMessage({
+                    type: 'resize',
+                    width: window.innerWidth, // Workerにはフルサイズを渡す
+                    height: window.innerHeight
+                });
+                console.log("Main: Resize message sent to worker.");
+            }
+            function sendColorSpaceMessage() {
+                 if (!worker) return;
+                 const selectedColorSpace = colorSpaceSelect.value;
+                 worker.postMessage({
+                     type: 'setColorSpace',
+                     colorSpace: selectedColorSpace
+                 });
+                 console.log(`Main: Color space '${selectedColorSpace}' sent to worker.`);
+            }
+            // リサイズイベントリスナー (debounceを追加するとより良い)
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(sendResizeMessage, 100); // 100ms待ってから実行
+            });
+
+            // 初期サイズを送信
+            sendResizeMessage();
+            colorSpaceSelect.addEventListener('change', sendColorSpaceMessage);
+        } catch (e) {
+             console.error("Main: Error initializing OffscreenCanvas or Worker:", e);
+             if (backgroundDiv) {
+                 backgroundDiv.innerHTML = `<p style="color:red;">Initialization Error: ${e.message}</p>`;
+             }
+        }
+
+    } else {
+        // OffscreenCanvas または Worker 非対応の場合
+        console.error("OffscreenCanvas or Web Workers are not supported in this browser.");
+        if (!canvas) {
+             console.error("Canvas element #tilingCanvas not found.");
+        }
+        if (backgroundDiv) {
+            backgroundDiv.innerHTML = "<p style='color:red;'>必要な機能がサポートされていないか、Canvas要素が見つかりません。</p>";
+        }
+        // 必要であれば、メインスレッドでCanvasに描画するフォールバック処理をここに追加
+    }
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+<style>
+    :host { display: block; line-height: 0; width: 100%; height: auto; max-width: 100%; cursor: pointer; position: relative; --triangle-height-ratio: 0.866; }
+    /*:host(:nth-child(even)) { transform: translate( calc(50% + 5px), calc(-1 * 100% * var(--triangle-height-ratio) * 0.25) ); }*/
+    svg { display: block; width: 100%; height: auto; }
+</style>
+<svg id="svgRoot" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <polygon id="baseTriangle" points="50,0 0,86.6 100,86.6" />
+        <mask id="triangleCornerMask">
+            <rect width="100%" height="100%" fill="white"/>
+            <use id="maskUseElement" href="#baseTriangle" fill="black"/>
+        </mask>
+        <g id="maskedTriangle" fill="dodgerblue" mask="url(#triangleCornerMask)">
+            <use href="#baseTriangle"/>
+        </g>
+    </defs>
+    <use href="#maskedTriangle"/>
+</svg>

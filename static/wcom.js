@@ -7,6 +7,8 @@ import { ButtonComponent } from './components/ButtonComponent.js';
 import { GoogleDriveManager } from './components/GoogleDriver.js';
 import { Task1ManagerComponent } from './components/Task1ManagerComponent.js';
 import { GridLayoutComponent } from './components/GridLayoutComponent.js';
+import {PolyhendronComponent} from './components/PolyhendronComponent.js';
+
 
 customElements.define('virtual-textarea-component', VirtualTextareaComponent);
 customElements.define('virtual-keyboard-component',VirtualKeyboardComponent);
@@ -17,6 +19,8 @@ customElements.define('grid-layout-component', GridLayoutComponent);
 
 customElements.define('collapsible-panel', CollapsiblePanel);
 customElements.define('button-component', ButtonComponent);
+customElements.define('polyhedotn-component', PolyhendronComponent);
+
 const wcomponents = {
     VirtualTextareaComponent,
     VirtualKeyboardComponent,
@@ -27,6 +31,7 @@ const wcomponents = {
     GoogleDriveManager,
     Task1ManagerComponent,
     GridLayoutComponent,
+    PolyhendronComponent
 };
 
 Object.keys(wcomponents).forEach(key => {

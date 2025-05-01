@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>論理関係とマージン表現</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Interフォントの読み込み */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* カスタムプロパティでマージンサイズを定義 */
+        :root {
+            --margin-and: 0.5rem; /* 初期値: 小さい */
+            --margin-or: 1.5rem;  /* 初期値: 中 */
+            --margin-not: 3rem;   /* 初期値: 大きい */
+            --margin-implies: 1rem; /* 初期値: 中 (方向性を示すため別途調整) */
+            --margin-equivalent: 1.5rem; /* 初期値: 中 (対称性) */
+            --margin-xor: 1.5rem;  /* 初期値: 中 (ORに似ているが区別) */
+        }
+        /* 各論理関係のコンテナスタイル */
+        .logic-container {
+            border: 1px solid #ccc;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px; /* 角丸 */
+            background-color: #f9fafb; /* 背景色 */
+        }
+        /* 要素A, Bの基本スタイル */
+        .element {
+            display: inline-flex; /* 中央揃えのため */
+            align-items: center;
+            justify-content: center;
+            width: 4rem;
+            height: 4rem;
+            border: 1px solid #9ca3af;
+            background-color: #e5e7eb;
+            font-weight: bold;
+            border-radius: 4px; /* 角丸 */
+        }
+        /* NOT関係用のスタイル */
+        .element-not {
+             background-color: #fecaca; /* 否定的な色合い */
+             border-color: #f87171;
+        }
+        /* EQUIVALENT用のスタイル */
+        .element-equivalent {
+            background-color: #a5f3fc;
+            border-color: #22d3ee;
+        }
+         /* XOR用のスタイル */
+        .element-xor-a {
+             background-color: #bfdbfe;
+             border-color: #60a5fa;
+        }
+        .element-xor-b {
+             background-color: #e5e7eb; /* 非選択状態 */
+             border-color: #9ca3af;
+             opacity: 0.6;
+        }
+
+    </style>
+</head>
+<body class="p-8 bg-gray-50">
+
+    <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">論理関係のマージンによる視覚的表現</h1>
+
+    <div class="text-center mb-8">
+        <button id="randomizeButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 ease-in-out">
+            マージンをランダムに変更
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <div class="logic-container">
+            <h2 class="text-lg font-semibold mb-3 text-gray-700">AND (A ∧ B) - 連言</h2>
+            <p class="text-sm text-gray-500 mb-3">強い関連性、一体感</p>
+            <div id="and-container" class="flex items-center justify-center" style="gap: var(--margin-and);">
+                <div class="element">A</div>
+                <div class="element">B</div>
+            </div>
+        </div>
+
+        <div class="logic-container">
+            <h2 class="text-lg font-semibold mb-3 text-gray-700">OR (A ∨ B) - 選言</h2>
+            <p class="text-sm text-gray-500 mb-3">選択肢、並列関係</p>
+            <div id="or-container" class="flex items-center justify-center" style="gap: var(--margin-or);">
+                <div class="element">A</div>
+                <div class="element">B</div>
+            </div>
+        </div>
+
+        <div class="logic-container">
+            <h2 class="text-lg font-semibold mb-3 text-gray-700">NOT (¬A) - 否定</h2>
+            <p class="text-sm text-gray-500 mb-3">孤立、対比、区別</p>
+            <div id="not-container" class="flex items-center justify-center" style="gap: var(--margin-not);">
+                 <div class="element element-not">¬A</div>
+                 <div class="element opacity-50">Context</div> </div>
+             </div>
+
+        <div class="logic-container">
+            <h2 class="text-lg font-semibold mb-3 text-gray-700">IMPLIES (A → B) - 含意</h2>
+            <p class="text-sm text-gray-500 mb-3">順序、流れ、依存関係</p>
+            <div id="implies-container" class="flex items-center justify-center" style="gap: var(--margin-implies);">
+                 <div class="element">A</div>
+                 <div class="text-2xl mx-1 text-gray-400">&rarr;</div> <div class="element">B</div>
+            </div>
+             </div>
+
+        <div class="logic-container">
+            <h2 class="text-lg font-semibold mb-3 text-gray-700">EQUIVALENT (A ↔ B) - 同値</h2>
+            <p class="text-sm text-gray-500 mb-3">等価、対称性</p>
+            <div id="equivalent-container" class="flex items-center justify-center" style="gap: var(--margin-equivalent);">
+                 <div class="element element-equivalent">A</div>
+                 <div class="element element-equivalent">B</div>
+            </div>
+        </div>
+
+        <div class="logic-container">
+            <h2 class="text-lg font-semibold mb-3 text-gray-700">XOR (A ⊕ B) - 排他的論理和</h2>
+            <p class="text-sm text-gray-500 mb-3">排他的な選択</p>
+             <div id="xor-container" class="flex items-center justify-center" style="gap: var(--margin-xor);">
+                 <div class="element element-xor-a">A</div> <div class="element element-xor-b">B</div> </div>
+        </div>
+
+    </div>
+
+    <script>
+        // マージンをランダムに変更する関数
+        function randomizeMargins() {
+            const root = document.documentElement;
+
+            // 各論理関係に対応するマージンのランダムな値を設定 (rem単位)
+            // AND: 小さい範囲 (0.2rem - 0.8rem)
+            root.style.setProperty('--margin-and', `${(Math.random() * 0.6 + 0.2).toFixed(2)}rem`);
+
+            // OR: 中程度の範囲 (1rem - 2rem)
+            root.style.setProperty('--margin-or', `${(Math.random() * 1 + 1).toFixed(2)}rem`);
+
+            // NOT: 大きい範囲 (2.5rem - 4rem)
+            root.style.setProperty('--margin-not', `${(Math.random() * 1.5 + 2.5).toFixed(2)}rem`);
+
+            // IMPLIES: 中程度の範囲 (0.8rem - 1.8rem)
+            root.style.setProperty('--margin-implies', `${(Math.random() * 1 + 0.8).toFixed(2)}rem`);
+
+            // EQUIVALENT: 中程度の範囲 (1rem - 2rem) - ORと同じ範囲だが意味合いが異なる
+            root.style.setProperty('--margin-equivalent', `${(Math.random() * 1 + 1).toFixed(2)}rem`);
+
+            // XOR: 中程度の範囲 (1rem - 2rem) - ORと同じ範囲だが視覚スタイルで区別
+            root.style.setProperty('--margin-xor', `${(Math.random() * 1 + 1).toFixed(2)}rem`);
+
+            console.log("Margins updated:");
+            console.log("--margin-and:", root.style.getPropertyValue('--margin-and'));
+            console.log("--margin-or:", root.style.getPropertyValue('--margin-or'));
+            console.log("--margin-not:", root.style.getPropertyValue('--margin-not'));
+            console.log("--margin-implies:", root.style.getPropertyValue('--margin-implies'));
+            console.log("--margin-equivalent:", root.style.getPropertyValue('--margin-equivalent'));
+            console.log("--margin-xor:", root.style.getPropertyValue('--margin-xor'));
+        }
+
+        // ボタンにイベントリスナーを追加
+        const randomizeButton = document.getElementById('randomizeButton');
+        randomizeButton.addEventListener('click', randomizeMargins);
+
+        // 初期読み込み時にも一度ログ出力（任意）
+        // console.log("Initial margins loaded.");
+    </script>
+
+</body>
+</html>

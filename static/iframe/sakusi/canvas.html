@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web WorkerとOffscreenCanvasによる三角形タイリング</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #f0f0f0; /* 背景色 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* キャンバス外のスクロールバーを隠す */
+        }
+        canvas {
+            display: block; /* デフォルトのインライン下の余白を防ぐ */
+            border: 1px solid #ccc; /* キャンバスの境界線（任意） */
+            background-color: #fff; /* キャンバスの背景色 */
+            /* サイズはJSで設定 */
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="tilingCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('tilingCanvas');
+
+    // OffscreenCanvas がサポートされているか確認
+    if (canvas.transferControlToOffscreen) {
+        // 1. OffscreenCanvas を作成
+        const offscreen = canvas.transferControlToOffscreen();
+
+        // 2. Web Worker を作成
+        // 'tiling.worker.js' ファイルへのパスを指定
+        const worker = new Worker('tiling.worker.js');
+
+        // 3. OffscreenCanvas を Worker に転送
+        // 第二引数に転送するオブジェクトを指定
+        worker.postMessage({ canvas: offscreen }, [offscreen]);
+
+        // 4. ウィンドウリサイズ時に Worker に新しいサイズを通知
+        function sendResizeMessage() {
+            worker.postMessage({
+                type: 'resize', // メッセージタイプ
+                width: window.innerWidth,
+                height: window.innerHeight
+            });
+             // メインキャンバスの表示サイズも更新 (重要)
+             canvas.style.width = `${window.innerWidth}px`;
+             canvas.style.height = `${window.innerHeight}px`;
+        }
+
+        window.addEventListener('resize', sendResizeMessage);
+
+        // 初期サイズを送信
+        sendResizeMessage();
+
+        console.log("OffscreenCanvas rendering initiated in Web Worker.");
+
+    } else {
+        // OffscreenCanvas 非対応の場合のフォールバック (ここではエラー表示)
+        console.error("OffscreenCanvas is not supported in this browser.");
+        canvas.getContext('2d').fillText("OffscreenCanvas is not supported.", 10, 20);
+    }
+
+</script>
+
+</body>
+</html>

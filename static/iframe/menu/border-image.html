@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Border Image Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Add some custom styles */
+        textarea {
+            font-family: monospace;
+            min-height: 100px;
+        }
+        .preview-box {
+            /* Ensure border-image has space */
+            border-style: solid;
+            border-color: transparent; /* Hide the underlying solid border */
+            /* Default border width, will be updated by JS */
+            border-width: 30px;
+            /* Default slice, will be updated by JS */
+            border-image-slice: 30;
+            border-image-repeat: round; /* Default repeat */
+            background-clip: padding-box; /* Ensure background doesn't go under border */
+            transition: all 0.3s ease-in-out; /* Added transition for smoother updates */
+        }
+        /* Add filter example */
+        .filtered {
+            filter: drop-shadow(2px 4px 6px black) brightness(1.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8 font-sans">
+
+    <div class="container mx-auto max-w-4xl bg-white p-6 rounded-lg shadow-lg">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-700">SVG Border Image Generator</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label for="corner-svg" class="block text-sm font-medium text-gray-700 mb-1">コーナー SVG (左上):</label>
+                <textarea id="corner-svg" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" rows="6"><path d='M0,30 A30,30 0 0,1 30,0 L0,0 Z' fill='deepskyblue'/>
+                </textarea>
+            </div>
+            <div>
+                <label for="edge-svg" class="block text-sm font-medium text-gray-700 mb-1">辺 SVG (上辺):</label>
+                <textarea id="edge-svg" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" rows="6"><line x1='0' y1='15' x2='30' y2='15' stroke='tomato' stroke-width='5'/>
+                </textarea>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label for="slice-size" class="block text-sm font-medium text-gray-700 mb-1">スライスサイズ (px):</label>
+            <input type="number" id="slice-size" value="30" min="1" class="w-full md:w-1/4 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+
+        <div class="mb-6 text-center">
+            <button id="generate-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                生成 & 適用
+            </button>
+             <button id="toggle-filter-btn" class="ml-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                フィルター切替
+            </button>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-2 text-gray-700">プレビュー:</h2>
+            <div id="preview-div" class="preview-box w-full h-48 bg-gray-200 flex items-center justify-center text-gray-600 p-4">
+                ここにボーダー画像が適用されます
+            </div>
+        </div>
+
+        <div>
+            <h2 class="text-xl font-semibold mb-2 text-gray-700">生成された Data URI:</h2>
+            <textarea id="data-uri-output" class="w-full p-2 border border-gray-300 rounded-md bg-gray-50" rows="4" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const cornerSvgInput = document.getElementById('corner-svg');
+            const edgeSvgInput = document.getElementById('edge-svg');
+            const sliceSizeInput = document.getElementById('slice-size');
+            const generateBtn = document.getElementById('generate-btn');
+            const toggleFilterBtn = document.getElementById('toggle-filter-btn');
+            const previewDiv = document.getElementById('preview-div');
+            const dataUriOutput = document.getElementById('data-uri-output');
+
+            // Function to create the 9-slice SVG string
+            function createBorderImageSVG(cornerSVG, edgeSVG, size) {
+                const s = parseInt(size, 10);
+                if (isNaN(s) || s <= 0) {
+                    console.error("Invalid slice size:", size);
+                    return null; // Return null if size is invalid
+                }
+                const s2 = s * 2;
+                const s3 = s * 3;
+
+                // Basic check for empty SVG inputs
+                if (!cornerSVG.trim() || !edgeSVG.trim()) {
+                    console.error("Corner or Edge SVG input is empty.");
+                    return null;
+                }
+
+                // Construct SVG string. Use encodeURIComponent for the final data URI,
+                // but ensure internal hrefs use '%23' beforehand.
+                const svgString = `
+<svg width='${s3}' height='${s3}' xmlns='http://www.w3.org/2000/svg'>
+  <defs>
+    <g id='corner'>${cornerSVG}</g>
+    <g id='edge'>${edgeSVG}</g>
+  </defs>
+  <use href='%23corner' x='0' y='0' />
+  <use href='%23edge' x='${s}' y='0' />
+  <use href='%23corner' x='${s2}' y='0' transform='translate(${s3} 0) scale(-1 1)' />
+  <use href='%23edge' x='0' y='${s}' transform='translate(0 ${s}) rotate(-90 ${s/2} ${s/2})' />
+  <use href='%23edge' x='${s2}' y='${s}' transform='translate(${s2} ${s}) rotate(90 ${s/2} ${s/2})' />
+  <use href='%23corner' x='0' y='${s2}' transform='translate(0 ${s3}) scale(1 -1)' />
+  <use href='%23edge' x='${s}' y='${s2}' transform='translate(${s} ${s2}) rotate(180 ${s/2} ${s/2})' />
+  <use href='%23corner' x='${s2}' y='${s2}' transform='translate(${s3} ${s3}) scale(-1 -1)' />
+</svg>
+                `.trim();
+
+                return svgString;
+            }
+
+            // Function to convert SVG string to Data URI
+            function svgToDataURI(svgString) {
+                if (!svgString) return null;
+                try {
+                    const encodedSvg = encodeURIComponent(svgString);
+                    return `data:image/svg+xml;charset=utf-8,${encodedSvg}`;
+                } catch (error) {
+                    console.error("Error encoding SVG to Data URI:", error);
+                    return null;
+                }
+            }
+
+            // Function to apply the border image
+            function applyBorderImage() {
+                try {
+                    const cornerSVG = cornerSvgInput.value;
+                    const edgeSVG = edgeSvgInput.value;
+                    const sliceSize = sliceSizeInput.value;
+
+                    if (!cornerSVG || !edgeSVG || !sliceSize) {
+                        // Don't alert here, just log, maybe clear the border
+                        console.warn('Input missing for border generation.');
+                        previewDiv.style.borderImageSource = 'none'; // Clear previous border image
+                        dataUriOutput.value = '';
+                        return;
+                    }
+
+                    // 1. Generate the 9-slice SVG
+                    const finalSvg = createBorderImageSVG(cornerSVG, edgeSVG, sliceSize);
+                    if (!finalSvg) { // Check if SVG generation failed
+                       previewDiv.style.borderImageSource = 'none';
+                       dataUriOutput.value = 'Error generating SVG.';
+                       return;
+                    }
+                    console.log("Generated SVG:", finalSvg); // Log for debugging
+
+                    // 2. Convert to Data URI
+                    const dataUri = svgToDataURI(finalSvg);
+                     if (!dataUri) { // Check if Data URI conversion failed
+                       previewDiv.style.borderImageSource = 'none';
+                       dataUriOutput.value = 'Error creating Data URI.';
+                       return;
+                    }
+                    console.log("Generated Data URI:", dataUri); // Log for debugging
+
+                    // 3. Apply to preview element
+                    previewDiv.style.borderWidth = `${sliceSize}px`;
+                    previewDiv.style.borderImageSlice = sliceSize;
+                    // Use template literal for clarity, ensure quotes around URL
+                    previewDiv.style.borderImageSource = `url("${dataUri}")`;
+
+                    // 4. Display the Data URI
+                    dataUriOutput.value = dataUri;
+                } catch (error) {
+                    console.error("Error applying border image:", error);
+                    previewDiv.style.borderImageSource = 'none'; // Clear on error
+                    dataUriOutput.value = `Error: ${error.message}`;
+                }
+            }
+
+            // Event listener for the generate button
+            generateBtn.addEventListener('click', applyBorderImage);
+
+            // Event listener for the filter toggle button
+            toggleFilterBtn.addEventListener('click', () => {
+                previewDiv.classList.toggle('filtered');
+            });
+
+            // Initial generation on page load
+            applyBorderImage();
+        });
+    </script>
+
+</body>
+</html>

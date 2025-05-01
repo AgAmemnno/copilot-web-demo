@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アポロニウスギャスケット (Worker + SVG + アフィン変換)</title>
+    <style>
+        body {
+            display: flex;
+            font-family: sans-serif;
+            margin: 1em;
+            gap: 1em;
+            /* Allow body to grow if needed */
+            align-items: flex-start;
+        }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #gasketContainer {
+            position: relative;
+            /* ★ 表示領域を大きくする */
+            width: 800px;
+            height: 800px;
+            border: 1px solid black;
+            background-color: white;
+            cursor: crosshair;
+            overflow: hidden;
+        }
+        #gasketCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        #gasketSvg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 200px;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        #loadingIndicator {
+            display: none;
+            margin-top: 10px;
+            font-style: italic;
+            color: grey;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+         fieldset {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px; /* Add margin between fieldsets */
+        }
+        legend {
+            font-weight: bold;
+        }
+        /* Controls visibility styling */
+        #polygonControls, #affineControls {
+            display: none; /* Hide initially */
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        {/* ★ Container サイズ変更 */}
+        <div id="gasketContainer">
+            <canvas id="gasketCanvas" width="800" height="800"></canvas>
+            <svg id="gasketSvg" width="800" height="800" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div id="loadingIndicator">計算中...</div>
+    </div>
+
+    <div class="controls">
+         <fieldset>
+            <legend>描画モード</legend>
+            <div class="control-group">
+                <input type="radio" id="modeCanvas" name="mode" value="canvas" checked>
+                <label for="modeCanvas">Canvas (円)</label>
+            </div>
+            <div class="control-group">
+                <input type="radio" id="modeSvgCircle" name="mode" value="svgCircle">
+                <label for="modeSvgCircle">SVG (円)</label>
+            </div>
+            <div class="control-group">
+                <input type="radio" id="modeSvgPolygon" name="mode" value="svgPolygon">
+                <label for="modeSvgPolygon">SVG (多角形)</label>
+            </div>
+        </fieldset>
+
+        {/* ★ 多角形用コントロール */}
+        <fieldset id="polygonControls">
+            <legend>多角形設定 (SVG)</legend>
+            <div class="control-group">
+                 <label for="polygonSidesSlider">辺の数: <span id="polygonSidesValue">3</span></label>
+                 <input type="range" id="polygonSidesSlider" min="3" max="7" value="3">
+            </div>
+        </fieldset>
+
+        {/* ★ アフィン変換用コントロール */}
+        <fieldset id="affineControls">
+            <legend>アフィン変換 (SVG)</legend>
+             <div class="control-group">
+                <input type="checkbox" id="enableAffine" name="enableAffine">
+                <label for="enableAffine">有効化</label>
+            </div>
+            <div class="control-group">
+                 <label for="skewXSlider">Skew X (角度): <span id="skewXValue">0</span></label>
+                 <input type="range" id="skewXSlider" min="-45" max="45" value="0" step="1">
+            </div>
+             <div class="control-group">
+                 <label for="skewYSlider">Skew Y (角度): <span id="skewYValue">0</span></label>
+                 <input type="range" id="skewYSlider" min="-45" max="45" value="0" step="1">
+            </div>
+            {/* 他の変換（回転、スケールなど）もここに追加可能 */}
+        </fieldset>
+
+
+         <div class="control-group">
+            <label for="depthSlider">再帰深度: <span id="depthValue">7</span></label>
+            <input type="range" id="depthSlider" min="1" max="10" value="7">
+        </div>
+        <button id="startButton">計算 & 保持</button>
+        <button id="redrawStoredButton" disabled>保持データで再描画</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gasketCanvas');
+        const ctx = canvas.getContext('2d');
+        const svgElement = document.getElementById('gasketSvg');
+        const gasketContainer = document.getElementById('gasketContainer');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const startButton = document.getElementById('startButton');
+        const redrawStoredButton = document.getElementById('redrawStoredButton');
+        const depthSlider = document.getElementById('depthSlider');
+        const depthValueSpan = document.getElementById('depthValue');
+        const modeRadios = document.querySelectorAll('input[name="mode"]');
+        const polygonControls = document.getElementById('polygonControls');
+        const polygonSidesSlider = document.getElementById('polygonSidesSlider');
+        const polygonSidesValueSpan = document.getElementById('polygonSidesValue');
+        const affineControls = document.getElementById('affineControls'); // ★ アフィンコントロール取得
+        const enableAffineCheckbox = document.getElementById('enableAffine'); // ★ 有効化チェックボックス取得
+        const skewXSlider = document.getElementById('skewXSlider'); // ★ Skew X スライダー取得
+        const skewXValueSpan = document.getElementById('skewXValue'); // ★ Skew X 値表示取得
+        const skewYSlider = document.getElementById('skewYSlider'); // ★ Skew Y スライダー取得
+        const skewYValueSpan = document.getElementById('skewYValue'); // ★ Skew Y 値表示取得
+
+
+        // ★ Canvas サイズを更新
+        const width = 800;
+        const height = 800;
+        canvas.width = width;
+        canvas.height = height;
+        svgElement.setAttribute('width', width);
+        svgElement.setAttribute('height', height);
+
+
+        // --- グローバル変数 ---
+        let scaleFactor = 350; // 初期スケール調整
+        let offsetX = width / 2;
+        let offsetY = height / 2;
+        let mobiusParam = { x: 0, y: 0 };
+        let allCircles = [];
+        let storedCircles = [];
+        let baseCircles = [];
+        let c0 = null;
+        let worker = null;
+        let isCalculating = false;
+        let isMouseInteractionActive = true;
+        let currentMode = 'canvas';
+        let currentPolygonSides = 3;
+        let enableAffine = false; // ★ アフィン変換有効フラグ
+        let currentSkewX = 0; // ★ 現在のSkew X角度
+        let currentSkewY = 0; // ★ 現在のSkew Y角度
+
+        // --- 複素数演算ヘルパー (変更なし) ---
+        function cAdd(z1, z2) { return { x: z1.x + z2.x, y: z1.y + z2.y }; }
+        function cSub(z1, z2) { return { x: z1.x - z2.x, y: z1.y - z2.y }; }
+        function cMult(z1, z2) { return { x: z1.x * z2.x - z1.y * z2.y, y: z1.x * z2.y + z1.y * z2.x }; }
+        function cConj(z) { return { x: z.x, y: -z.y }; }
+        function cAbsSq(z) { return z.x * z.x + z.y * z.y; }
+        function cDiv(z1, z2) {
+            const denom = cAbsSq(z2);
+            if (denom < 1e-15) return { x: Infinity, y: Infinity };
+            const num = cMult(z1, cConj(z2));
+            return { x: num.x / denom, y: num.y / denom };
+        }
+        const ZERO = { x: 0, y: 0 };
+        const ONE = { x: 1, y: 0 };
+
+        // --- メビウス変換 (変更なし) ---
+        function mobiusTransform(z, a) {
+            if (cAbsSq(a) >= 1.0 - 1e-9) return z;
+            const num = cSub(z, a);
+            const den_term = cMult(cConj(a), z);
+            if (Math.abs(den_term.x - 1) < 1e-9 && Math.abs(den_term.y) < 1e-9) return { x: Infinity, y: Infinity };
+            const den = cSub(den_term, ONE);
+            return cDiv(num, den);
+        }
+
+        // --- 3点を通る円の計算 (変更なし) ---
+        function findCircleThroughThreePoints(p1, p2, p3) {
+             if (!p1 || !p2 || !p3 || !isFinite(p1.x) || !isFinite(p1.y) || !isFinite(p2.x) || !isFinite(p2.y) || !isFinite(p3.x) || !isFinite(p3.y)) return null;
+             const x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y, x3 = p3.x, y3 = p3.y;
+             const D = 2 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2));
+             if (Math.abs(D) < 1e-9) return null; // Collinear
+             const sq1 = x1*x1 + y1*y1, sq2 = x2*x2 + y2*y2, sq3 = x3*x3 + y3*y3;
+             const centerX = (sq1 * (y2 - y3) + sq2 * (y3 - y1) + sq3 * (y1 - y2)) / D;
+             const centerY = (sq1 * (x3 - x2) + sq2 * (x1 - x3) + sq3 * (x2 - x1)) / D;
+             const radiusSq = Math.pow(x1 - centerX, 2) + Math.pow(y1 - centerY, 2);
+             if (radiusSq < 0) return null;
+             const radius = Math.sqrt(radiusSq);
+             if (isNaN(centerX) || isNaN(centerY) || isNaN(radius)) return null;
+             return { x: centerX, y: centerY, r: radius };
+        }
+
+        // --- Canvas円描画関数 (変更なし) ---
+        function drawTransformedCircleCanvas(circle, color = 'black', lineWidth = 1) {
+             if (!circle || isNaN(circle.x) || isNaN(circle.y) || isNaN(circle.r) || circle.r <= 0) return;
+             const { x, y, r } = circle;
+             const p1 = { x: x + r, y: y }; const p2 = { x: x, y: y + r }; const p3 = { x: x - r, y: y };
+             const tp1 = mobiusTransform(p1, mobiusParam); const tp2 = mobiusTransform(p2, mobiusParam); const tp3 = mobiusTransform(p3, mobiusParam);
+             const transformedCircle = findCircleThroughThreePoints(tp1, tp2, tp3);
+             if (!transformedCircle || !isFinite(transformedCircle.x) || !isFinite(transformedCircle.y) || !isFinite(transformedCircle.r) || transformedCircle.r <= 0) return;
+             const tx = transformedCircle.x; const ty = transformedCircle.y; const tr = transformedCircle.r;
+             const canvasX = offsetX + tx * scaleFactor; const canvasY = offsetY - ty * scaleFactor; const canvasR = tr * scaleFactor;
+             if (canvasR < 0.1 || canvasX + canvasR < 0 || canvasX - canvasR > width || canvasY + canvasR < 0 || canvasY - canvasR > height) return;
+             try {
+                 ctx.beginPath(); ctx.arc(canvasX, canvasY, canvasR, 0, Math.PI * 2); ctx.strokeStyle = color; ctx.lineWidth = lineWidth; ctx.stroke();
+             } catch (e) { console.error("Error drawing circle:", e); }
+        }
+
+        // --- Canvas再描画 (変更なし) ---
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            if (!c0 || allCircles.length === 0) return;
+            scaleFactor = width / (c0.r * 2.2); offsetX = width / 2; offsetY = height / 2;
+            const colors = ['blue', 'green', 'red', 'black', 'purple', 'orange', 'cyan', 'magenta', 'yellow', 'lime', 'pink'];
+            const lineWidths = [2, 2, 2, 1.5, 1.5, 1, 1, 1, 1, 1, 1];
+            const sortedCircles = [...allCircles].sort((a, b) => b.r - a.r);
+            sortedCircles.forEach(circle => {
+                const gen = circle.depth || 0;
+                const color = colors[gen % colors.length];
+                const lineWidth = lineWidths[Math.min(gen, lineWidths.length - 1)];
+                drawTransformedCircleCanvas(circle, color, lineWidth);
+            });
+        }
+
+        // --- 正多角形の頂点座標文字列を生成 (変更なし) ---
+        function createPolygonPoints(centerX, centerY, radius, numSides) {
+            let points = "";
+            const angleStep = (Math.PI * 2) / numSides;
+            const startAngle = -Math.PI / 2;
+            for (let i = 0; i < numSides; i++) {
+                const angle = startAngle + i * angleStep;
+                const vx = centerX + radius * Math.cos(angle);
+                const vy = centerY + radius * Math.sin(angle);
+                points += `${vx},${vy} `;
+            }
+            return points.trim();
+        }
+
+        // --- SVG要素の生成 --- ★修正: アフィン変換グループを追加
+        function renderSVG() {
+            svgElement.innerHTML = '';
+            if (!c0 || allCircles.length === 0) return;
+
+            scaleFactor = width / (c0.r * 2.2);
+            offsetX = width / 2;
+            offsetY = height / 2;
+
+            const colors = ['blue', 'green', 'red', 'black', 'purple', 'orange', 'cyan', 'magenta', 'yellow', 'lime', 'pink'];
+            const lineWidths = [2, 2, 2, 1.5, 1.5, 1, 1, 1, 1, 1, 1];
+            const sortedCircles = [...allCircles].sort((a, b) => b.r - a.r);
+
+            // ★ アフィン変換用のグループ要素を作成
+            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            group.setAttribute("id", "affineGroup"); // ID for update
+
+            // ★ アフィン変換が有効なら transform 属性を設定
+            if (enableAffine) {
+                const angleXRad = currentSkewX * Math.PI / 180;
+                const angleYRad = currentSkewY * Math.PI / 180;
+                const tanX = Math.tan(angleXRad);
+                const tanY = Math.tan(angleYRad);
+                // matrix(a, b, c, d, e, f) = [a c e]
+                //                            [b d f]
+                //                            [0 0 1]
+                // Skew: matrix(1, tan(skewY), tan(skewX), 1, 0, 0)
+                // SVG transform matrix needs to be applied around the center (width/2, height/2)
+                const cx = width / 2;
+                const cy = height / 2;
+                // Translate to origin, skew, translate back
+                 group.setAttribute("transform", `translate(${cx} ${cy}) matrix(1 ${tanY} ${tanX} 1 0 0) translate(${-cx} ${-cy})`);
+                // group.setAttribute("transform", `matrix(1 ${tanY} ${tanX} 1 0 0)`); // Centered transform is better
+            }
+
+            sortedCircles.forEach((circle, index) => {
+                if (!circle || isNaN(circle.x) || isNaN(circle.y) || isNaN(circle.r) || circle.r <= 0) return;
+                const { x, y, r, depth } = circle;
+
+                const p1 = { x: x + r, y: y }; const p2 = { x: x, y: y + r }; const p3 = { x: x - r, y: y };
+                const tp1 = mobiusTransform(p1, mobiusParam); const tp2 = mobiusTransform(p2, mobiusParam); const tp3 = mobiusTransform(p3, mobiusParam);
+                const transformedCircle = findCircleThroughThreePoints(tp1, tp2, tp3);
+
+                if (!transformedCircle || !isFinite(transformedCircle.x) || !isFinite(transformedCircle.y) || !isFinite(transformedCircle.r) || transformedCircle.r <= 0) return;
+
+                const tx = transformedCircle.x; const ty = transformedCircle.y; const tr = transformedCircle.r;
+                const canvasX = offsetX + tx * scaleFactor; const canvasY = offsetY - ty * scaleFactor; const canvasR = tr * scaleFactor;
+
+                if (canvasR < 0.1 || canvasX + canvasR < 0 || canvasX - canvasR > width || canvasY + canvasR < 0 || canvasY - canvasR > height) return;
+
+                const gen = depth || 0;
+                const color = colors[gen % colors.length];
+                const lineWidth = lineWidths[Math.min(gen, lineWidths.length - 1)];
+
+                let svgShape;
+                if (currentMode === 'svgPolygon') {
+                    svgShape = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                    const points = createPolygonPoints(canvasX, canvasY, canvasR, currentPolygonSides);
+                    svgShape.setAttribute("points", points);
+                } else { // svgCircle モード
+                    svgShape = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    svgShape.setAttribute("cx", canvasX);
+                    svgShape.setAttribute("cy", canvasY);
+                    svgShape.setAttribute("r", canvasR);
+                }
+
+                svgShape.setAttribute("id", `svgShape_${index}`);
+                svgShape.setAttribute("stroke", color);
+                svgShape.setAttribute("stroke-width", lineWidth);
+                svgShape.setAttribute("fill", "none");
+                group.appendChild(svgShape); // ★ グループに追加
+            });
+             svgElement.appendChild(group); // ★ グループをSVGに追加
+             console.log(`SVG rendered (${currentMode}) using 3-point transform. Affine enabled: ${enableAffine}`);
+        }
+
+        // --- SVG要素の更新 (マウス移動時) --- ★修正: アフィン変換グループも考慮
+        function updateSVG() {
+             if (!c0 || (currentMode !== 'svgCircle' && currentMode !== 'svgPolygon') || allCircles.length === 0) return;
+
+             scaleFactor = width / (c0.r * 2.2);
+             offsetX = width / 2;
+             offsetY = height / 2;
+
+             // ★ アフィン変換グループの transform 属性を更新
+             const group = document.getElementById("affineGroup");
+             if (group) {
+                 if (enableAffine) {
+                     const angleXRad = currentSkewX * Math.PI / 180;
+                     const angleYRad = currentSkewY * Math.PI / 180;
+                     const tanX = Math.tan(angleXRad);
+                     const tanY = Math.tan(angleYRad);
+                     const cx = width / 2;
+                     const cy = height / 2;
+                     group.setAttribute("transform", `translate(${cx} ${cy}) matrix(1 ${tanY} ${tanX} 1 0 0) translate(${-cx} ${-cy})`);
+                 } else {
+                     group.removeAttribute("transform"); // アフィン無効ならtransform削除
+                 }
+             } else {
+                 // グループがない場合は再レンダリングが必要かもしれない
+                 renderSVG();
+                 return;
+             }
+
+
+             // 個々の図形の更新 (メビウス変換のみ)
+             allCircles.forEach((circle, index) => {
+                 const svgShape = document.getElementById(`svgShape_${index}`);
+                 if (!svgShape || !circle || isNaN(circle.x) || isNaN(circle.y) || isNaN(circle.r) || circle.r <= 0) return;
+                 const { x, y, r } = circle;
+
+                 const p1 = { x: x + r, y: y }; const p2 = { x: x, y: y + r }; const p3 = { x: x - r, y: y };
+                 const tp1 = mobiusTransform(p1, mobiusParam); const tp2 = mobiusTransform(p2, mobiusParam); const tp3 = mobiusTransform(p3, mobiusParam);
+                 const transformedCircle = findCircleThroughThreePoints(tp1, tp2, tp3);
+
+                 if (!transformedCircle || !isFinite(transformedCircle.x) || !isFinite(transformedCircle.y) || !isFinite(transformedCircle.r) || transformedCircle.r <= 0) {
+                      svgShape.setAttribute("display", "none");
+                      return;
+                 };
+
+                 const tx = transformedCircle.x; const ty = transformedCircle.y; const tr = transformedCircle.r;
+                 const canvasX = offsetX + tx * scaleFactor; const canvasY = offsetY - ty * scaleFactor; const canvasR = tr * scaleFactor;
+
+                 if (canvasR >= 0.1 && !(canvasX + canvasR < 0 || canvasX - canvasR > width || canvasY + canvasR < 0 || canvasY - canvasR > height)) {
+                    // 図形自体の属性はメビウス変換のみ反映（アフィン変換はグループに適用）
+                    if (currentMode === 'svgPolygon') {
+                        const points = createPolygonPoints(canvasX, canvasY, canvasR, currentPolygonSides);
+                        svgShape.setAttribute("points", points);
+                    } else { // svgCircle
+                        svgShape.setAttribute("cx", canvasX);
+                        svgShape.setAttribute("cy", canvasY);
+                        svgShape.setAttribute("r", canvasR);
+                    }
+                    svgShape.removeAttribute("display");
+                 } else {
+                     svgShape.setAttribute("display", "none");
+                 }
+             });
+        }
+
+        // --- モード変更処理 --- ★修正: アフィンコントロール表示切替
+        function handleModeChange() {
+            currentMode = document.querySelector('input[name="mode"]:checked').value;
+            console.log("Mode changed to:", currentMode);
+
+            if (currentMode === 'canvas') {
+                canvas.style.display = 'block';
+                svgElement.style.display = 'none';
+                polygonControls.style.display = 'none';
+                affineControls.style.display = 'none'; // ★ アフィン非表示
+                redrawCanvas();
+            } else if (currentMode === 'svgCircle' || currentMode === 'svgPolygon') {
+                canvas.style.display = 'none';
+                svgElement.style.display = 'block';
+                polygonControls.style.display = (currentMode === 'svgPolygon') ? 'block' : 'none';
+                affineControls.style.display = 'block'; // ★ アフィン表示
+                renderSVG();
+            }
+        }
+
+
+        // --- Web Worker セットアップ (変更なし) ---
+        function setupWorker() {
+            if (worker) {
+                worker.terminate();
+            }
+            try {
+                worker = new Worker('gasketWorker.js');
+                console.log("Worker created successfully.");
+
+                worker.onmessage = function(event) {
+                    const { type, data, error } = event.data;
+                    if (type === 'calculated') {
+                        allCircles = data;
+                        storedCircles = data;
+                        console.log(`Calculation finished. Total circles: ${allCircles.length}`);
+                        isCalculating = false;
+                        loadingIndicator.style.display = 'none';
+                        startButton.disabled = false;
+                        redrawStoredButton.disabled = false;
+                        handleModeChange();
+
+                    } else if (type === 'error') {
+                        console.error("Worker error:", error);
+                        alert("計算中にエラーが発生しました: " + error);
+                        isCalculating = false;
+                        loadingIndicator.style.display = 'none';
+                        startButton.disabled = false;
+                        redrawStoredButton.disabled = true;
+                    }
+                };
+
+                worker.onerror = function(error) {
+                    console.error("Worker error event:", error);
+                    alert("Workerで予期せぬエラーが発生しました。");
+                    isCalculating = false;
+                    loadingIndicator.style.display = 'none';
+                    startButton.disabled = false;
+                     redrawStoredButton.disabled = true;
+                };
+
+            } catch (e) {
+                console.error("Failed to create worker:", e);
+                alert("Web Workerの作成に失敗しました。ファイルパスを確認するか、ブラウザの対応状況を確認してください。");
+            }
+        }
+
+        // --- 計算開始処理 (変更なし) ---
+        function startCalculation() {
+            if (isCalculating) return;
+            if (!worker) {
+                alert("Workerが初期化されていません。");
+                return;
+            }
+
+            isCalculating = true;
+            loadingIndicator.style.display = 'block';
+            startButton.disabled = true;
+            redrawStoredButton.disabled = true;
+            allCircles = [];
+            storedCircles = [];
+            ctx.clearRect(0, 0, width, height);
+            svgElement.innerHTML = '';
+
+            const depth = parseInt(depthSlider.value);
+            currentMode = document.querySelector('input[name="mode"]:checked').value;
+
+            const R = 1.0;
+            const r = R / 2.0;
+            c0 = { x: 0, y: 0, r: R, depth: 0 };
+            const c1 = { x: -r, y: 0, r: r, depth: 0 };
+            const c2 = { x: r, y: 0, r: r, depth: 0 };
+            baseCircles = [c0, c1, c2];
+
+            console.log(`Starting calculation with depth: ${depth}`);
+
+            worker.postMessage({
+                type: 'start',
+                payload: {
+                    baseCircles: baseCircles,
+                    c0: c0,
+                    depth: depth
+                }
+            });
+        }
+
+         // --- 保持データで再描画 (変更なし) ---
+         function redrawWithStoredData() {
+             if (isCalculating) return;
+             if (storedCircles.length === 0) {
+                 alert("保持されているデータがありません。先に「計算 & 保持」を実行してください。");
+                 return;
+             }
+             console.log("Redrawing with stored data.");
+             allCircles = storedCircles;
+             c0 = storedCircles.find(c => c.depth === 0 && c.x === 0 && c.y === 0);
+             if (!c0) {
+                 console.error("Could not find base circle c0 in stored data.");
+                 const R = 1.0;
+                 c0 = { x: 0, y: 0, r: R, depth: 0 };
+             }
+             handleModeChange();
+         }
+
+         // --- マウス操作有効/無効切り替え (変更なし) ---
+         function toggleMouseInteraction(){
+             isMouseInteractionActive = !isMouseInteractionActive;
+             console.log("Mouse interaction active:", isMouseInteractionActive);
+             gasketContainer.style.cursor = isMouseInteractionActive ? 'crosshair' : 'default';
+         }
+
+        // --- イベントリスナー ---
+        startButton.addEventListener('click', startCalculation);
+        redrawStoredButton.addEventListener('click', redrawWithStoredData);
+
+        depthSlider.addEventListener('change', (e) => {
+            depthValueSpan.textContent = e.target.value;
+            startCalculation();
+        });
+
+        modeRadios.forEach(radio => {
+            radio.addEventListener('change', handleModeChange);
+        });
+
+        polygonSidesSlider.addEventListener('input', (e) => {
+            currentPolygonSides = parseInt(e.target.value);
+            polygonSidesValueSpan.textContent = currentPolygonSides;
+            if (currentMode === 'svgPolygon' && !isCalculating) {
+                renderSVG(); // Re-render with new side count
+            }
+        });
+
+        // ★ アフィン変換有効化チェックボックスリスナー
+        enableAffineCheckbox.addEventListener('change', (e) => {
+            enableAffine = e.target.checked;
+            if ((currentMode === 'svgCircle' || currentMode === 'svgPolygon') && !isCalculating) {
+                 renderSVG(); // Re-render to apply/remove transform group attribute
+            }
+        });
+
+        // ★ Skew X スライダーリスナー
+        skewXSlider.addEventListener('input', (e) => {
+            currentSkewX = parseInt(e.target.value);
+            skewXValueSpan.textContent = currentSkewX;
+             if (enableAffine && (currentMode === 'svgCircle' || currentMode === 'svgPolygon') && !isCalculating) {
+                 updateSVG(); // Update transform attribute
+             }
+        });
+
+         // ★ Skew Y スライダーリスナー
+        skewYSlider.addEventListener('input', (e) => {
+            currentSkewY = parseInt(e.target.value);
+            skewYValueSpan.textContent = currentSkewY;
+             if (enableAffine && (currentMode === 'svgCircle' || currentMode === 'svgPolygon') && !isCalculating) {
+                 updateSVG(); // Update transform attribute
+             }
+        });
+
+
+        gasketContainer.addEventListener('click', toggleMouseInteraction);
+
+        gasketContainer.addEventListener('mousemove', (event) => {
+             if (!isCalculating && allCircles.length > 0 && isMouseInteractionActive) {
+                const rect = gasketContainer.getBoundingClientRect();
+                const mouseX_canvas = event.clientX - rect.left;
+                const mouseY_canvas = event.clientY - rect.top;
+                const mathX = (mouseX_canvas - width / 2) / (width / 2.1);
+                const mathY = -(mouseY_canvas - height / 2) / (height / 2.1);
+                const absSq = mathX * mathX + mathY * mathY;
+
+                if (absSq < 1.0) {
+                    mobiusParam = { x: mathX, y: mathY };
+                } else {
+                    const scale = 1.0 / Math.sqrt(absSq) * 0.999;
+                    mobiusParam = { x: mathX * scale, y: mathY * scale };
+                }
+                if (currentMode === 'canvas') {
+                    requestAnimationFrame(redrawCanvas);
+                } else if (currentMode === 'svgCircle' || currentMode === 'svgPolygon') {
+                    requestAnimationFrame(updateSVG);
+                }
+            }
+        });
+
+        // --- 初期化 ---
+        setupWorker();
+        handleModeChange();
+
+    </script>
+</body>
+</html>
