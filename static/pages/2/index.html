@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolyHedronLayout</title>
+    <script type="importmap">{"imports": {"jquery": "https://cdn.jsdelivr.net/npm/jquery@3.3.1/+esm"}}</script>
+    <script type="module" src="wcom.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Aboreto&family=Bungee+Tint&family=Dela+Gothic+One&family=Special+Elite&display=swap" rel="stylesheet">
+
+    <style>
+        .grid{
+        --grid-color-major: rgba(0, 255, 255, 0.1);  /* Cyan lines */
+        --grid-color-minor: rgba(0, 255, 255, 0.05); /* Fainter cyan lines */
+        --grid-size-major: 100px;
+        --grid-size-minor: 20px;
+        background-color: #0a0a10; /* Dark blue/black base */
+        background-image:
+            /* Minor grid */
+            linear-gradient(var(--grid-color-minor) 1px, transparent 1px),
+            linear-gradient(90deg, var(--grid-color-minor) 1px, transparent 1px),
+            /* Major grid */
+            linear-gradient(var(--grid-color-major) 2px, transparent 2px),
+            linear-gradient(90deg, var(--grid-color-major) 2px, transparent 2px);
+        background-size:
+            var(--grid-size-minor) var(--grid-size-minor),
+            var(--grid-size-minor) var(--grid-size-minor),
+            var(--grid-size-major) var(--grid-size-major),
+            var(--grid-size-major) var(--grid-size-major);
+        /* Offset minor grid slightly for better look */
+        background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
+        }
+
+        .elite{
+            font-family: "Special Elite", system-ui;
+            font-weight: 400;
+            font-style: normal;
+            font-size:10rem;
+            position:fixed;
+            z-index:-1;
+        }
+    </style>
+</head>
+<body class="grid">
+    <p class="elite">asdasdbni 123456k asocjaposd ascnPANSCaknascn </p>
+    <script type="module">
+    let polyhedronElement = createElement('polyhedron-component');
+    polyhedronElement.data_num = 0;
+    polyhedronElement.GetPolyhedron().then(data => {
+        polyhedronElement.config = data;
+    });
+    document.body.appendChild(polyhedronElement);
+    let kb = createElement('virtual-keyboard-component');
+    kb.externalCB = polyhedronElement.keymap();
+    document.body.appendChild(kb);
+    </script>
+    
+
+</body>
+</html>

@@ -80,4 +80,5 @@ class VoronoiLayoutStrategy {
   }
 }
 
-customElements.define('grid-layout-component', GridLayoutComponent);
+
+export { GridLayoutComponent, GridLayoutStrategy, VoronoiLayoutStrategy };

@@ -1,0 +1,71 @@
+This is file1 in folder2.<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ヒーローイメージ デザイン 例</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Interフォントをデフォルトに設定 */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* ヒーローセクションの最小高さを画面いっぱいにする */
+        .hero-section {
+            min-height: 85vh; /* ビューポートの高さの85% */
+        }
+        /* テキストの影で読みやすさを向上（オプション） */
+        .text-shadow {
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-800">
+
+    <header class="hero-section relative flex items-center justify-center text-white overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img src="https://placehold.co/1920x1080/6366f1/ffffff?text=ヒーローイメージ"
+                 alt="ヒーローイメージ背景"
+                 class="w-full h-full object-cover"
+                 onerror="this.onerror=null; this.src='https://placehold.co/1920x1080/cccccc/ffffff?text=画像読込失敗'; this.alt='ヒーローイメージ背景読み込み失敗';">
+            <div class="absolute inset-0 bg-black opacity-40"></div>
+        </div>
+
+        <div class="relative z-10 text-center p-8">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4 text-shadow">未来を切り拓く</h1>
+            <p class="text-lg md:text-xl mb-8 text-shadow max-w-2xl mx-auto">
+                印象的なビジュアルで、あなたのメッセージを力強く伝えます。最初の数秒で心を掴むデザイン。
+            </p>
+            <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full transition duration-300 text-lg shadow-lg">
+                今すぐ始める
+            </button>
+        </div>
+    </header>
+
+    <main class="py-16 px-8 max-w-4xl mx-auto">
+        <h2 class="text-3xl font-bold text-center mb-8 text-gray-900">サービス内容</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div class="bg-gray-50 p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold mb-2 text-indigo-700">デザイン</h3>
+                <p class="text-gray-600 text-sm">ユーザー中心の魅力的なデザインを提供します。</p>
+            </div>
+            <div class="bg-gray-50 p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold mb-2 text-indigo-700">開発</h3>
+                <p class="text-gray-600 text-sm">最新技術を用いた高速かつ安定した開発。</p>
+            </div>
+            <div class="bg-gray-50 p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold mb-2 text-indigo-700">コンサルティング</h3>
+                <p class="text-gray-600 text-sm">あなたのビジネス目標達成をサポートします。</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-8 bg-gray-800 text-center text-sm text-gray-400">
+        &copy; 2025 ヒーローデザイン株式会社
+    </footer>
+
+</body>
+</html>

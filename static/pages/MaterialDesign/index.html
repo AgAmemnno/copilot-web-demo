@@ -1,0 +1,87 @@
+This is file1 in folder2.<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マテリアルデザイン 例</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        /* Interフォントをデフォルトに設定 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5; /* マテリアルデザインでよく使われる背景色 */
+        }
+        /* Material Icons のスタイル */
+        .material-icons {
+            font-family: 'Material Icons';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px; /* 推奨サイズ */
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+            /* WebKit系ブラウザでのアンチエイリアス */
+            -webkit-font-smoothing: antialiased;
+            /* Safari、Chromeでのテキストレンダリング */
+            text-rendering: optimizeLegibility;
+            /* Firefoxでのアンチエイリアス */
+            -moz-osx-font-smoothing: grayscale;
+            /* IEでのフォント機能設定 */
+            font-feature-settings: 'liga';
+        }
+    </style>
+</head>
+<body class="text-gray-900">
+
+    <header class="bg-blue-600 text-white shadow-md sticky top-0 z-10">
+        <div class="container mx-auto px-6 py-4 flex items-center">
+            <span class="material-icons mr-3">menu</span> <h1 class="text-xl font-bold">マテリアルデザイン</h1>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8 space-y-6">
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <img src="https://placehold.co/600x300/a0aec0/ffffff?text=カード画像+1" alt="カード画像 1" class="w-full h-48 object-cover" onerror="this.src='https://placehold.co/600x300/cccccc/ffffff?text=画像読込失敗'; this.alt='画像読み込み失敗';">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold mb-2 text-gray-800">カードコンポーネント</h2>
+                <p class="text-gray-700 leading-relaxed">
+                    マテリアルデザインでは、情報はカードと呼ばれるコンテナに整理されます。カードは影（Elevation）を持ち、物理的な紙のように見えます。
+                </p>
+                <button class="mt-4 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow hover:bg-blue-700 transition duration-300 ease-in-out flex items-center">
+                    <span class="material-icons mr-2">touch_app</span> 詳しく見る
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold mb-2 text-gray-800">影と奥行き</h2>
+            <p class="text-gray-700 leading-relaxed">
+                要素間の階層関係は、影の深さ（Elevation）によって表現されます。これにより、インターフェースに奥行きが生まれ、どの要素が操作可能かを示唆します。
+            </p>
+            <div class="flex space-x-4 mt-4">
+                <div class="p-4 bg-gray-100 rounded-lg shadow-sm">影 (小)</div>
+                <div class="p-4 bg-gray-100 rounded-lg shadow-md">影 (中)</div>
+                <div class="p-4 bg-gray-100 rounded-lg shadow-lg">影 (大)</div>
+            </div>
+        </div>
+
+    </main>
+
+    <button class="fixed bottom-6 right-6 bg-pink-500 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-pink-600 transition duration-300 ease-in-out z-20">
+        <span class="material-icons">add</span> </button>
+
+    <footer class="mt-12 py-6 text-center text-gray-500 text-sm">
+        &copy; 2025 マテリアルデザインデモ. All rights reserved.
+    </footer>
+
+</body>
+</html>

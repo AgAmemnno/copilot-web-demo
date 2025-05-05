@@ -134,8 +134,6 @@ class PopoverMenuComponent extends  BaseHTMLComponentWithEvent {
       subpopover.hidePopover();
       mainpopover.hidePopover();
     });
-    
-    
   }
 
 

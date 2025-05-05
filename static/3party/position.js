@@ -202,7 +202,7 @@ $.fn.position = function( options ) {
 	}
 
 	if ( options.at[ 1 ] === "bottom" ) {
-		basePosition.top += targetHeight;
+		basePosition.top += targetHeight*0.98;
 	} else if ( options.at[ 1 ] === "center" ) {
 		basePosition.top += targetHeight / 2;
 	}

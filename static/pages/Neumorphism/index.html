@@ -1,0 +1,90 @@
+This is file1 in folder2.<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニューモーフィズム デザイン 例</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Interフォントをデフォルトに設定 */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* ニューモーフィズムの基本となる背景色 */
+            background-color: #e0e5ec;
+        }
+
+        /* ニューモーフィズム（押し出し効果）のスタイル */
+        .neumorphism-raised {
+            background-color: #e0e5ec; /* 要素も背景と同じ色 */
+            border-radius: 1rem; /* 角丸 */
+            /* 影: 左上に明るい影、右下に暗い影 */
+            box-shadow: 8px 8px 16px #a3b1c6, /* 暗い影 */
+                       -8px -8px 16px #ffffff; /* 明るい影 */
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        /* ニューモーフィズム（へこみ効果）のスタイル */
+        .neumorphism-pressed {
+            background-color: #e0e5ec;
+            border-radius: 1rem;
+            /* 内側の影: 左上に暗い影、右下に明るい影 */
+            box-shadow: inset 6px 6px 12px #a3b1c6, /* 内側の暗い影 */
+                       inset -6px -6px 12px #ffffff; /* 内側の明るい影 */
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        /* ホバー/アクティブ時の押し込み効果 */
+        .neumorphism-button:active {
+            background-color: #e0e5ec;
+            border-radius: 1rem;
+            box-shadow: inset 4px 4px 8px #a3b1c6,
+                       inset -4px -4px 8px #ffffff;
+        }
+
+        /* テキストの色を少し暗くしてコントラストを確保 */
+        .neumorphism-text {
+            color: #5a667a;
+        }
+
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-8">
+
+    <div class="max-w-md w-full space-y-8">
+
+        <header class="text-center">
+            <h1 class="text-3xl font-bold neumorphism-text mb-2">ニューモーフィズム</h1>
+            <p class="text-lg neumorphism-text">ソフトなUIデザイン</p>
+        </header>
+
+        <div class="neumorphism-raised p-8 text-center">
+            <h2 class="text-xl font-bold neumorphism-text mb-4">押し出し効果カード</h2>
+            <p class="neumorphism-text leading-relaxed">
+                このカードは背景から浮き上がっているように見えます。明るい影と暗い影の組み合わせで実現しています。
+            </p>
+        </div>
+
+        <div class="flex justify-center space-x-6">
+            <button class="neumorphism-raised neumorphism-button neumorphism-text font-semibold py-3 px-6 focus:outline-none">
+                押し出しボタン
+            </button>
+            <button class="neumorphism-pressed neumorphism-text font-semibold py-3 px-6 focus:outline-none">
+                へこみボタン
+            </button>
+        </div>
+
+         <div class="neumorphism-pressed p-1">
+             <input type="text" placeholder="入力フィールド..." class="w-full bg-transparent px-4 py-3 border-none focus:outline-none neumorphism-text placeholder-gray-500">
+         </div>
+
+        <footer class="mt-12 text-center">
+            <p class="text-sm neumorphism-text">&copy; 2025 ニューモーフィズムデモ</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>

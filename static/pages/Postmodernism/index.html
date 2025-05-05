@@ -1,0 +1,150 @@
+This is file1 in folder2.<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポストモダニズム デザイン 例</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基本フォント (読みやすさのため) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f0f0; /* ややオフホワイトの背景 */
+            color: #333;
+            overflow-x: hidden; /* 横スクロール防止 */
+        }
+
+        /* 見出し1: 大きく、異なるフォント、色 */
+        .postmodern-h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem; /* 非常に大きい */
+            font-weight: 700;
+            color: #ff69b4; /* ホットピンク */
+            line-height: 1.1;
+        }
+
+        /* 見出し2: 異なるフォント、スタイル */
+        .postmodern-h2 {
+            font-family: 'Courier Prime', monospace; /* モノスペース */
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0000ff; /* 青 */
+            text-transform: uppercase;
+            border-bottom: 3px dashed #ffff00; /* 黄色の点線下線 */
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        /* テキストブロック: 異なる背景色、回転 */
+        .text-block-rotated {
+            background-color: #ccffcc; /* 明るい緑 */
+            padding: 1.5rem;
+            transform: rotate(-2deg); /* 少し回転 */
+            box-shadow: 5px 5px 0px #aaaaaa; /* シンプルな影 */
+            margin-bottom: 2rem;
+            max-width: 90%; /* 幅制限 */
+        }
+
+        /* 画像: 重なり、異なるボーダー */
+        .image-overlap {
+            border: 5px solid #ff69b4; /* ピンクの枠線 */
+            position: relative;
+            z-index: 1; /* 重なりの前面 */
+        }
+        .image-behind {
+            border: 5px dashed #0000ff; /* 青の点線枠線 */
+            transform: translate(20px, -30px) rotate(3deg); /* 位置ずらしと回転 */
+            position: relative;
+            z-index: 0; /* 重なりの背面 */
+        }
+
+        /* ボタン: 奇抜なスタイル */
+        .postmodern-button {
+            font-family: 'Courier Prime', monospace;
+            background-color: #ffff00; /* 黄色 */
+            color: #000000; /* 黒 */
+            border: 3px solid #000000;
+            padding: 0.8rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 4px 4px 0px #0000ff; /* 青い影 */
+        }
+        .postmodern-button:hover {
+            background-color: #ff69b4; /* ピンク */
+            color: #ffffff;
+            box-shadow: -4px -4px 0px #ffff00; /* 逆方向の黄色い影 */
+            transform: translate(2px, 2px);
+        }
+
+        /* 幾何学的な装飾要素 */
+        .decorative-shape {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: rgba(0, 0, 255, 0.5); /* 半透明の青 */
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%); /* 三角形 */
+            z-index: -1; /* 背景へ */
+        }
+
+    </style>
+</head>
+<body class="p-8 md:p-12 relative">
+
+    <div class="decorative-shape" style="top: 10%; left: 5%;"></div>
+    <div class="decorative-shape" style="top: 70%; right: 10%; transform: rotate(45deg); background-color: rgba(255, 105, 180, 0.5);"></div>
+
+
+    <div class="max-w-4xl mx-auto relative">
+
+        <header class="mb-16 text-center md:text-left">
+            <h1 class="postmodern-h1">ポストモダン?</h1>
+            <p class="text-lg italic" style="font-family: 'Playfair Display', serif;">ルールなんて、あるの？</p>
+        </header>
+
+        <main class="space-y-12">
+
+            <section>
+                <h2 class="postmodern-h2">脱構築と引用</h2>
+                <div class="text-block-rotated">
+                    <p class="mb-4">
+                        ポストモダニズムは、既存のスタイルやルールを疑問視し、分解し、再構築します。異なる要素の<strong class="text-red-600">コラージュ</strong>や<strong class="text-blue-600">パスティーシュ</strong>（模倣）がよく見られます。
+                    </p>
+                    <p>
+                        <em>真面目さ</em>よりも、<span style="font-family: 'Courier Prime', monospace; background-color: #ffff00;">遊び心</span>や皮肉が重視されることも。
+                    </p>
+                </div>
+            </section>
+
+            <section class="flex justify-center items-center flex-col md:flex-row gap-4">
+                 <div class="w-full md:w-1/2 relative">
+                     <img src="https://placehold.co/400x300/ff69b4/ffffff?text=画像+A+(前面)" alt="画像 A" class="w-full h-auto image-overlap" onerror="this.src='https://placehold.co/400x300/cccccc/ffffff?text=画像読込失敗'; this.alt='画像読み込み失敗';">
+                 </div>
+                 <div class="w-full md:w-1/2 relative">
+                     <img src="https://placehold.co/400x300/0000ff/ffffff?text=画像+B+(背面)" alt="画像 B" class="w-full h-auto image-behind" onerror="this.src='https://placehold.co/400x300/cccccc/ffffff?text=画像読込失敗'; this.alt='画像読み込み失敗';">
+                 </div>
+            </section>
+
+            <section class="text-center mt-8">
+                 <h2 class="postmodern-h2">予測不能なインタラクション</h2>
+                 <p class="mb-4">
+                    ユーザーの期待を裏切るような、<span style="font-size: 1.2em; color: #ff69b4;">非標準的</span>なインターフェースやナビゲーションも特徴です。
+                 </p>
+                 <button class="postmodern-button">クリックしてみる？</button>
+            </section>
+
+        </main>
+
+        <footer class="mt-20 pt-8 border-t-4 border-dotted border-black text-center">
+            <p class="text-sm" style="font-family: 'Courier Prime', monospace;">&copy; 2025 ポストモダン・ウェブ・エクスペリメント</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>

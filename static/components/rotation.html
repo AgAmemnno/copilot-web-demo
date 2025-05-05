@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAAPI 3D Rotation Example</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 基本的なスタイル */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            font-family: sans-serif;
+        }
+        /* 3D空間を作るためのコンテナ */
+        .scene {
+            width: 200px;
+            height: 200px;
+            perspective: 600px; /* 視点からの距離 */
+            margin: 50px;
+        }
+        /* アニメーションさせる要素のコンテナ */
+        .box-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d; /* 子要素を3D空間に配置 */
+            /* アニメーション中も3Dを維持するために必要 */
+        }
+        /* アニメーションさせる要素 */
+        .box {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            background-color: skyblue;
+            border: 1px solid black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            /* backface-visibility: hidden; */ /* 裏面を見せたくない場合 */
+            border-radius: 0.5rem; /* 角丸 */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 影 */
+        }
+        /* ボタンのスタイル */
+        button {
+            padding: 0.5rem 1rem;
+            margin-top: 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 0.375rem; /* rounded-md */
+            background-color: #3b82f6; /* bg-blue-500 */
+            color: white;
+            font-weight: 600; /* font-semibold */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #2563eb; /* hover:bg-blue-600 */
+        }
+        button:disabled {
+            background-color: #9ca3af; /* bg-gray-400 */
+            cursor: not-allowed;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div>
+    <div class="scene">
+        <div class="box-container" id="container">
+            <div class="box" id="animatedBox">3D</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="playButton">Rotate Y</button>
+        <button id="resetButton">Reset</button>
+    </div>
+</div>
+
+<script>
+    /**
+     * Web Animations API (WAAPI) を管理する基本的なクラス
+     */
+    class AnimationManager {
+        constructor() {
+            this.animations = new Map(); // アニメーションオブジェクトを管理
+        }
+
+        /**
+         * 要素にアニメーションを適用し、管理下に追加する
+         * @param {string} id - アニメーションの一意なID
+         * @param {Element} element - アニメーションを適用するDOM要素
+         * @param {Keyframe[]} keyframes - キーフレームの配列
+         * @param {KeyframeAnimationOptions} options - アニメーションのオプション
+         * @returns {Animation | null} - 作成されたAnimationオブジェクト、またはエラー時はnull
+         */
+        animate(id, element, keyframes, options) {
+            if (!element) {
+                console.error(`Element not found for animation ID: ${id}`);
+                return null;
+            }
+            if (this.animations.has(id)) {
+                console.warn(`Animation with ID ${id} already exists. Cancelling previous one.`);
+                this.cancel(id); // 既存のアニメーションがあればキャンセル
+            }
+
+            try {
+                const animation = element.animate(keyframes, options);
+                this.animations.set(id, animation);
+
+                // アニメーション完了時にMapから削除
+                animation.finished.then(() => {
+                    this.animations.delete(id);
+                    console.log(`Animation ${id} finished and removed.`);
+                }).catch(err => {
+                    // アニメーションがキャンセルされた場合など
+                    if (err.name !== 'AbortError') {
+                        console.error(`Animation ${id} finished with error:`, err);
+                    }
+                    // エラーでも完了とみなし、Mapから削除することが多い
+                    // キャンセル時は明示的に削除するので、ここでは不要な場合もある
+                    if (this.animations.has(id)) {
+                       this.animations.delete(id);
+                    }
+                });
+
+                return animation;
+            } catch (error) {
+                console.error(`Failed to create animation ${id}:`, error);
+                return null;
+            }
+        }
+
+        /**
+         * 指定されたIDのアニメーションを取得する
+         * @param {string} id - アニメーションのID
+         * @returns {Animation | undefined} - Animationオブジェクト、または見つからない場合はundefined
+         */
+        getAnimation(id) {
+            return this.animations.get(id);
+        }
+
+        /**
+         * 指定されたIDのアニメーションを再生する
+         * @param {string} id - アニメーションのID
+         */
+        play(id) {
+            const animation = this.getAnimation(id);
+            if (animation && animation.playState !== 'running') {
+                animation.play();
+            } else if (!animation) {
+                console.warn(`Animation with ID ${id} not found.`);
+            }
+        }
+
+        /**
+         * 指定されたIDのアニメーションを一時停止する
+         * @param {string} id - アニメーションのID
+         */
+        pause(id) {
+            const animation = this.getAnimation(id);
+            if (animation && animation.playState === 'running') {
+                animation.pause();
+            } else if (!animation) {
+                console.warn(`Animation with ID ${id} not found.`);
+            }
+        }
+
+        /**
+         * 指定されたIDのアニメーションをキャンセル（停止して初期状態に戻す）する
+         * @param {string} id - アニメーションのID
+         */
+        cancel(id) {
+            const animation = this.getAnimation(id);
+            if (animation) {
+                animation.cancel(); // cancel() は finished promise を reject する
+                this.animations.delete(id); // Mapからも削除
+                console.log(`Animation ${id} cancelled.`);
+            } else {
+                // console.warn(`Animation with ID ${id} not found for cancellation.`);
+            }
+        }
+
+        /**
+         * 管理しているすべてのアニメーションをキャンセルする
+         */
+        cancelAll() {
+            this.animations.forEach((animation, id) => {
+                animation.cancel();
+                console.log(`Animation ${id} cancelled.`);
+            });
+            this.animations.clear();
+        }
+
+        // --- チェーン（連鎖）アニメーションのための基本的なメソッド案 ---
+        // (今回は未使用だが、将来的な拡張のためにコメントとして残す)
+        /*
+        async playSequentially(animationConfigs) {
+            for (const config of animationConfigs) {
+                const { id, element, keyframes, options } = config;
+                const animation = this.animate(id, element, keyframes, options);
+                if (animation) {
+                    await animation.finished; // 前のアニメーションが終わるのを待つ
+                } else {
+                    console.error(`Failed to play animation ${id} sequentially.`);
+                    break; // エラーが発生したら連鎖を中断
+                }
+            }
+        }
+
+        playParallel(animationConfigs) {
+            const promises = [];
+            for (const config of animationConfigs) {
+                const { id, element, keyframes, options } = config;
+                const animation = this.animate(id, element, keyframes, options);
+                if (animation) {
+                    promises.push(animation.finished);
+                } else {
+                    console.error(`Failed to play animation ${id} in parallel.`);
+                }
+            }
+            return Promise.allSettled(promises); // すべてのアニメーションの完了を待つ
+        }
+        */
+    }
+
+    // --- アニメーションの実行 ---
+    const manager = new AnimationManager();
+    const box = document.getElementById('animatedBox');
+    const playButton = document.getElementById('playButton');
+    const resetButton = document.getElementById('resetButton');
+
+    const rotationKeyframes = [
+        { transform: 'rotateY(0deg) translateZ(0px)' }, // 開始状態
+        { transform: 'rotateY(360deg) translateZ(0px)' }  // 終了状態 (Y軸周りに360度回転)
+    ];
+
+    const rotationOptions = {
+        duration: 2000, // アニメーション時間 (ミリ秒)
+        easing: 'ease-in-out', // イージング関数
+        // iterations: Infinity // 無限に繰り返す場合
+        iterations: 1, // 1回だけ再生
+        fill: 'forwards' // アニメーション終了後、最後の状態を維持
+    };
+
+    playButton.addEventListener('click', () => {
+        // 既存のアニメーションがあればキャンセルしてから再生
+        manager.cancel('boxRotation');
+        const animation = manager.animate('boxRotation', box, rotationKeyframes, rotationOptions);
+        if (animation) {
+            playButton.disabled = true; // 再生中はボタンを無効化
+            animation.finished.finally(() => {
+                playButton.disabled = false; // 完了またはキャンセルされたら有効化
+            });
+        }
+    });
+
+    resetButton.addEventListener('click', () => {
+        manager.cancel('boxRotation'); // アニメーションをキャンセルして初期状態に戻す
+        // 必要であれば transform スタイルを直接リセット
+        // box.style.transform = ''; // cancel()が効かない場合や明示的に戻したい場合
+        playButton.disabled = false;
+    });
+
+</script>
+
+</body>
+</html>

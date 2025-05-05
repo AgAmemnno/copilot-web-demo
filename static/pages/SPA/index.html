@@ -1,0 +1,128 @@
+This is file1 in folder2.<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPA デザイン 例</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Interフォントをデフォルトに設定 */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* アクティブなナビゲーションリンクのスタイル */
+        .nav-link.active {
+            font-weight: bold;
+            color: #2563eb; /* Tailwindのblue-600 */
+            border-bottom: 2px solid #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 p-8">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-8">
+
+        <nav class="mb-8 pb-4 border-b">
+            <ul class="flex space-x-6">
+                <li><a href="#home" class="nav-link text-gray-600 hover:text-blue-600 pb-1">ホーム</a></li>
+                <li><a href="#about" class="nav-link text-gray-600 hover:text-blue-600 pb-1">概要</a></li>
+                <li><a href="#contact" class="nav-link text-gray-600 hover:text-blue-600 pb-1">お問い合わせ</a></li>
+            </ul>
+        </nav>
+
+        <main id="content">
+            </main>
+
+    </div>
+
+    <script>
+        // コンテンツ表示エリアの要素を取得
+        const contentElement = document.getElementById('content');
+        // ナビゲーションリンクの要素を取得
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        // 各ページのコンテンツを定義
+        const pages = {
+            home: `
+                <h1 class="text-3xl font-bold mb-4 text-blue-700">ようこそ！</h1>
+                <p class="leading-relaxed">これはシングルページアプリケーション（SPA）のデモです。</p>
+                <p class="leading-relaxed mt-2">ナビゲーションをクリックすると、ページ全体を再読み込みせずにコンテンツが切り替わります。</p>
+            `,
+            about: `
+                <h1 class="text-3xl font-bold mb-4 text-green-700">概要</h1>
+                <p class="leading-relaxed">SPAは、ユーザー体験を向上させるためのモダンなウェブアプリケーションのアーキテクチャです。</p>
+                <p class="leading-relaxed mt-2">JavaScriptを使用してDOMを動的に操作し、必要なデータだけをサーバーから取得します。</p>
+            `,
+            contact: `
+                <h1 class="text-3xl font-bold mb-4 text-purple-700">お問い合わせ</h1>
+                <p class="leading-relaxed">ご質問やフィードバックはこちらまで。</p>
+                <form class="mt-4 space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">メールアドレス:</label>
+                        <input type="email" id="email" name="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="message" class="block text-sm font-medium text-gray-700">メッセージ:</label>
+                        <textarea id="message" name="message" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"></textarea>
+                    </div>
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        送信
+                    </button>
+                </form>
+            `
+        };
+
+        // URLのハッシュに基づいてコンテンツを更新する関数
+        function updateContent() {
+            // 現在のURLハッシュを取得（例: #about）、なければデフォルトで #home
+            const hash = window.location.hash || '#home';
+            // ハッシュから # を除いたキーを取得（例: about）
+            const pageKey = hash.substring(1);
+
+            // 対応するコンテンツが存在すれば表示、なければホームを表示
+            contentElement.innerHTML = pages[pageKey] || pages.home;
+
+            // ナビゲーションリンクのアクティブ状態を更新
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === hash) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+
+        // ナビゲーションリンクがクリックされたときの処理
+        navLinks.forEach(link => {
+            link.addEventListener('click', (event) => {
+                // デフォルトのページ遷移（ハッシュ変更によるジャンプ）は行うが、
+                // フルリロードを防ぐ（ここでは不要だがSPAの基本として）
+                // event.preventDefault(); // 通常のSPAでは preventDefault することが多い
+
+                // ハッシュが変わった後にコンテンツを更新
+                // setTimeout を使うことで、ブラウザがハッシュ変更を処理するのを待つ
+                setTimeout(updateContent, 0);
+            });
+        });
+
+        // URLハッシュが変更されたとき（ブラウザの戻る/進むボタンなど）にもコンテンツを更新
+        window.addEventListener('hashchange', updateContent);
+
+        // 初期表示のためにコンテンツを更新
+        updateContent();
+
+        // お問い合わせフォームのデフォルト送信動作を無効化 (デモ用)
+        contentElement.addEventListener('submit', (event) => {
+             if (event.target.tagName === 'FORM') {
+                 event.preventDefault();
+                 alert('デモフォームが送信されました！ (実際には送信されません)');
+             }
+        });
+
+    </script>
+
+</body>
+</html>

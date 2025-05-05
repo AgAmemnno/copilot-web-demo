@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cytoscape Test Application</title>
+  <script type="importmap">{"imports": {"jquery": "https://cdn.jsdelivr.net/npm/jquery@3.3.1/+esm"}}</script>
+
+
+
+  <script src="https://unpkg.com/whatwg-fetch@2.0.3/fetch.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+  <script src="cytoscape.umd.js"></script>
+  <script src="api.js"></script>
+  <script src="gsi.js"></script>
+
+  <script src="style.js"></script>
+
+  <script type="module" src="wcom.js"></script>
+  <link rel="stylesheet" href="css/collapsible-panel.css">
+  <style>
+  .vertical-text {
+      writing-mode: vertical-rl; /* 縦書きに設定 */
+      transform: rotate(180deg); /* 文字を横向きにする */
+      text-align: center;
+      font-size: 16px;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  }
+  :root {
+      color-scheme: light;
+  }
+    
+  #full-screen {
+    width: 100vw;           /* ビューポート幅の100% */
+    height: 100vh;          /* ビューポート高さの100% */
+    position: fixed;        /* ビューポート基準で位置を固定 */
+    top: 0;                 /* 上端をビューポートの上端に合わせる */
+    left: 0;                /* 左端をビューポートの左端に合わせる */
+
+    /* 以下は任意だが推奨 */
+    box-sizing: border-box; /* paddingやborderを含めてサイズ計算 */
+
+    background-image: url('/images/demopan.png'); /* 例: example.comの画像を指定 */
+
+    /* ★ 背景画像の表示方法を調整 */
+    background-size: cover;           /* 画像のアスペクト比を保ちつつ、要素全体を完全に覆うように拡大縮小 */
+    background-position: center center; /* 画像を要素の中央に配置 */
+    background-repeat: no-repeat;     /* 画像を繰り返さない */
+
+    z-index: 2;       /* 必要に応じて重なり順を指定 */
+}
+
+  </style>
+</head>
+
+<body>
+
+  <div id="full-screen"></div>
+
+   
+  <div id="cy"></div>
+  <div id="rightPanelContainer1" class="rightPanel">
+    <div class="panel-wrapper" id="rightPanelContainer-wrapper1">
+        <div class="panel-header2" id="infoPanelsContainer1">
+        <h4>Graph Operations</h4>
+        <span class="panel-toggle-icon">▼</span>
+       </div>
+    </div>
+  </div>
+
+
+  <div id="rightPanelContainer2" class="rightPanel">
+    <div class="panel-wrapper" id="rightPanelContainer-wrapper2">
+        <div class="panel-header2" id="infoPanelsContainer2">
+        <h4>Node Properties</h4>
+        <span class="panel-toggle-icon">▼</span>
+        </div>
+        <div class="collapsible-panel" id="infoPanelContainer">
+            <div class="panel-header">
+                <h4>選択ノード情報</h4>
+                <span class="panel-toggle-icon">▼</span>
+            </div>
+            <div class="panel-content" id="infoPanelContent">
+                <div id="noSelectionMessage">ノードを選択してください</div>
+                <div id="selectedNodeInfo" style="display: none;">
+                    <div class="panel-section" id="basicInfoSection">
+                        <h5>基本情報</h5> <div id="basicInfoDisplay"></div>
+                    </div>
+                    <div class="panel-section" id="metadataSection">
+                        <h5>メタデータ</h5> <div id="metadataDisplay"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <script src="agent.js"></script>
+
+
+  <script type="module" src="/components/buttons.js"></script>
+
+  <script type="module">
+    import {panels} from "/components/panels.js";
+    import {btnProps} from "/components/buttons.js";
+    CollapsiblePanel.panelize(panels, 'rightPanelContainer-wrapper1');
+    ButtonComponent.buttonize(btnProps);
+    CollapsiblePanel.populateAll();
+    
+
+    let animMenu = createElement('anim-menu-component');
+    document.body.appendChild(animMenu);
+
+    let panel = createElement('virtual-keyboard-component');
+    animMenu.append_battery_full(panel);
+
+    let iframe = createElement('task1-manager-component');
+    animMenu.append_chat_teardrop_text( iframe);
+  </script>
+
+
+</body>
+  
+</html>

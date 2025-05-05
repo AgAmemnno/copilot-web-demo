@@ -1,2 +1,4 @@
 aiohttp
 aiohttp-cors
+aiohttp_session[secure] 
+cryptography

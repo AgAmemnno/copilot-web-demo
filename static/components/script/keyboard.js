@@ -11,11 +11,17 @@ import '/3party/widgets/autocomplete.js';
 
 
 let id0 = sessionStorage.getItem("test2");
-let shadowRoot0 = document.getElementById(id0).shadowRoot;
-
 let id  = sessionStorage.getItem("test1");
+let shadowRoot0 = document.getElementById(id).shadowRoot;
+let shadowRoot = null;
+if(id0 && shadowRoot0.getElementById(id0)){
+  shadowRoot = shadowRoot0.getElementById(id0).shadowRoot;
+}else{
+  shadowRoot =  shadowRoot0;
+}
 
-let shadowRoot = shadowRoot0.getElementById(id).shadowRoot;
+
+
 
 /*
 import keyboardsheet from "https://mottie.github.io/Keyboard/css/keyboard.css" with { type: 'css' };
@@ -32,7 +38,7 @@ $.keyboard.language.love = $.extend($.keyboard.language.en);
 $('#keyboard',shadowRoot).keyboard({
     language: ['love'],
     rtl: false,
-    layout: 'qwerty',
+    layout: 'custom',
     customLayout: {
     'default': [
         'd e f a u l t',
@@ -49,15 +55,11 @@ $('#keyboard',shadowRoot).keyboard({
     },
     // Used by jQuery UI position utility
     position: {
-    // null = attach to input/textarea;
-    // use $(sel) to attach elsewhere
-    of: null,
-    my: 'center top',
-    at: 'center top',
-    // used when "usePreview" is false
-    at2: 'center bottom'
+        my: 'right bottom', // キーボード自身の中心を
+        at: 'right bottom', // ウィンドウの中心に合わせる
+        of: window,          // 基準をウィンドウにする
+        collision: 'fit fit' // はみ出さないように調
     },
-
 
     reposition: true,
     usePreview: true,
@@ -252,7 +254,7 @@ $('#keyboard',shadowRoot).keyboard({
 
     // Event (namespaced) on the input to reveal the keyboard.
     // To disable it, just set it to ''.
-    openOn: 'focus',
+    openOn: '', //"'focus',
 
     // Event (namepaced) for when the character is added to the
     // input (clicking on the keyboard)
@@ -408,7 +410,7 @@ async function postData(d) {
   
   // 関数を実行してPOSTリクエストを送信
   //postData();
-
+/*
 $.keyboard.keyaction.accept = function(base) {
     console.log("入力が確定されました");
     const  prompt = base.getValue();
@@ -417,8 +419,19 @@ $.keyboard.keyaction.accept = function(base) {
     }else{
         postData("こんにちは!!");
     }
-
     base.close(true);
 }
+*/
+    
+$.keyboard.keyaction.accept = function(keyboard, el) {
+    const finalValue = keyboard.getValue(); // 確定された値を取得
+    console.log('Keyboard plugin accepted callback triggered with value:', finalValue);
+    const componentInstance =  document.getElementById(id);
+    if (componentInstance && typeof componentInstance.handleKeyboardAccept === 'function') {
+        componentInstance.handleKeyboardAccept(finalValue);
+    } else {
+        console.error('Could not find component instance or handleKeyboardAccept method.');
+    }
+};
     
 });

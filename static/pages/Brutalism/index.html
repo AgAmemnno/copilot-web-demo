@@ -1,0 +1,116 @@
+This is file1 in folder2.<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ブルータリズム デザイン 例</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace; /* モノスペースフォント */
+            background-color: #ffffff; /* 白背景 */
+            color: #000000; /* 黒テキスト */
+            margin: 0;
+            padding: 2rem; /* 余白 */
+            line-height: 1.6; /* 行間 */
+            border: 10px solid #000000; /* 太い枠線 */
+            min-height: calc(100vh - 4rem - 20px); /* ビューポート高さいっぱいにする (paddingとborderを考慮) */
+        }
+
+        h1 {
+            font-size: 3rem; /* 大きな見出し */
+            margin-bottom: 1rem;
+            font-weight: bold;
+            text-transform: uppercase; /* 大文字 */
+            border-bottom: 5px solid #0000ff; /* 青い下線 */
+            display: inline-block; /* 下線の幅をテキストに合わせる */
+            padding-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #0000ff; /* アクセントカラー (青) */
+        }
+
+        p {
+            margin-bottom: 1rem;
+            max-width: 60ch; /* 読みやすい幅に制限 */
+        }
+
+        a {
+            color: #0000ff; /* リンク色 */
+            text-decoration: underline; /* 下線 */
+            font-weight: bold;
+        }
+
+        a:hover {
+            background-color: #ffff00; /* ホバー時に黄色背景 */
+            color: #000000;
+        }
+
+        button {
+            font-family: inherit; /* 親要素のフォントを継承 */
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: #0000ff; /* 青背景 */
+            color: #ffffff; /* 白テキスト */
+            border: 3px solid #000000; /* 黒い枠線 */
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 1rem;
+            display: inline-block;
+        }
+
+        button:hover {
+            background-color: #ffff00; /* ホバー時に黄色背景 */
+            color: #000000;
+        }
+
+        .container {
+            max-width: 900px; /* コンテンツの最大幅 */
+            margin: 0 auto; /* 中央寄せ */
+        }
+
+        footer {
+            margin-top: 4rem;
+            border-top: 2px dashed #000000; /* 点線の上枠線 */
+            padding-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <header>
+            <h1>ブルータリズム</h1>
+        </header>
+
+        <main>
+            <h2>デザイン哲学</h2>
+            <p>
+                ブルータリズムのウェブデザインは、しばしば意図的に「未完成」または「荒削り」に見えます。華美な装飾や洗練されたスタイルよりも、コンテンツの直接的な提示と機能性を優先します。
+            </p>
+            <p>
+                基本的なHTML要素、システムフォント、限られた色数、そして時には意図的な不協和音が特徴です。詳しくは<a href="#">こちら</a>。
+            </p>
+
+            <h2>要素の例</h2>
+            <p>
+                ボタンやリンクは、明確で直接的なスタイルを持ちます。影やグラデーションのような効果は通常使用されません。
+            </p>
+            <button type="button">アクションボタン</button>
+
+        </main>
+
+        <footer>
+            <p>&copy; 2025 ブルータリズムデモ - 生のウェブ</p>
+        </footer>
+
+    </div>
+</body>
+</html>

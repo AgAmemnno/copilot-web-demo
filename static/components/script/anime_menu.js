@@ -223,7 +223,7 @@ if (!id) {
                 window.addEventListener('mouseup', dragEnd);
                 window.addEventListener('touchmove', drag, { passive: false }); // touchmoveはpassive: falseが必要な場合が多い
                 window.addEventListener('touchend', dragEnd);
-                 window.addEventListener('touchcancel', dragEnd); // touchcancelも考慮
+                window.addEventListener('touchcancel', dragEnd); // touchcancelも考慮
 
                 // ドラッグ開始時のデフォルト動作（テキスト選択など）を防止
                  if(e.cancelable) e.preventDefault();

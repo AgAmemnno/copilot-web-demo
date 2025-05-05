@@ -1,0 +1,94 @@
+This is file1 in folder2.<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>グリッドデザイン 例</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Interフォントをデフォルトに設定 */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* グリッドアイテムの視覚的区別（オプション） */
+        .grid-item {
+            /* border: 1px solid #e2e8f0; */ /* 境界線でグリッドを可視化 */
+            /* background-color: #f7fafc; */ /* 背景色で区別 */
+            padding: 1.5rem; /* 内側の余白 */
+            border-radius: 8px; /* 角丸 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* 軽い影 */
+            background-color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 p-8">
+
+    <div class="max-w-6xl mx-auto">
+
+        <header class="mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-2">グリッドデザイン</h1>
+            <p class="text-lg text-gray-600">整理された構造と視覚的調和</p>
+        </header>
+
+        <main>
+            <p class="text-center mb-8 text-gray-700">以下は、Tailwind CSSを使用したレスポンシブなグリッドレイアウトの例です。</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+
+                <div class="grid-item md:col-span-1">
+                    <h2 class="text-xl font-bold mb-3 text-blue-700">アイテム 1</h2>
+                    <p class="text-sm leading-relaxed">
+                        これはグリッド内の最初のアイテムです。中画面以上では3カラムレイアウトの一部になります。
+                    </p>
+                </div>
+
+                <div class="grid-item md:col-span-2"> {/* 中画面以上で2カラム分の幅 */}
+                    <h2 class="text-xl font-bold mb-3 text-green-700">アイテム 2 (幅広)</h2>
+                    <p class="text-sm leading-relaxed">
+                        このアイテムは少し広いです。`md:col-span-2` クラスにより、中画面以上のサイズで2カラム分の幅を占めます。これにより、異なるサイズのコンテンツを柔軟に配置できます。
+                    </p>
+                    <img src="https://placehold.co/400x150/a7f3d0/333333?text=グリッド内画像" alt="グリッド内画像" class="mt-4 rounded w-full h-auto" onerror="this.src='https://placehold.co/400x150/cccccc/ffffff?text=画像読込失敗'; this.alt='画像読み込み失敗';">
+                </div>
+
+                <div class="grid-item md:col-span-1">
+                    <h2 class="text-xl font-bold mb-3 text-purple-700">アイテム 3</h2>
+                    <p class="text-sm leading-relaxed">
+                        グリッドシステムは、要素を整列させ、視覚的な一貫性を保つのに役立ちます。
+                    </p>
+                </div>
+
+                <div class="grid-item md:col-span-1">
+                    <h2 class="text-xl font-bold mb-3 text-yellow-700">アイテム 4</h2>
+                    <p class="text-sm leading-relaxed">
+                        `gap-6` や `md:gap-8` クラスは、グリッドアイテム間の間隔（溝）を指定します。
+                    </p>
+                </div>
+
+                 <div class="grid-item md:col-span-1">
+                    <h2 class="text-xl font-bold mb-3 text-red-700">アイテム 5</h2>
+                    <p class="text-sm leading-relaxed">
+                        レスポンシブプレフィックス (`md:`) を使うことで、画面幅に応じてレイアウトが変化します。
+                    </p>
+                </div>
+
+                 <div class="grid-item md:col-span-1">
+                    <h2 class="text-xl font-bold mb-3 text-indigo-700">アイテム 6</h2>
+                    <p class="text-sm leading-relaxed">
+                        最後のアイテムです。グリッドはコンテンツを整理する強力なツールです。
+                    </p>
+                </div>
+
+            </div>
+        </main>
+
+        <footer class="mt-16 text-center text-sm text-gray-500">
+            &copy; 2025 グリッドデザインデモ
+        </footer>
+
+    </div>
+
+</body>
+</html>

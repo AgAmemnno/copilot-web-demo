@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platonic Path Navigator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/3.4.3/gl-matrix-min.js"></script>
+
+    <style>
+                /* Basic styling for readability and compactness */
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.4;
+            margin: 1em;
+            background-color: #f9f9f9;
+        }
+        /* (前のスタイル定義は省略) */
+        #controls { margin-top: 1em; padding-top: 1em; border-top: 1px solid #ccc; }
+        #polyhedron-container {
+            width: 200px; height: 200px;
+            margin: 2em auto;
+            border: 1px dashed #999;
+            perspective: 600px; /* 3D表示のための視点 */
+        }
+        #my-polyhedron {
+            width: 100%; height: 100%;
+            background-color: lightblue; /* 表示確認用 */
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease-out; /* アニメーション */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            color: #333;
+        }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+      
+
+        .family-container {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px; /* Rounded corners */
+            margin-bottom: 1em;
+            padding: 0.5em 1em 1em 1em; /* Compact padding */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .family-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.3em;
+        }
+        ul {
+            list-style-type: none; /* Remove default bullets */
+            padding-left: 0; /* Remove default padding */
+            margin: 0;
+        }
+        li {
+            padding: 0.25em 0; /* Compact vertical spacing */
+            font-size: 0.95em;
+            color: #555;
+            display: flex; /* Use flexbox for alignment */
+            justify-content: space-between; /* Space out name and number */
+            border-bottom: 1px dotted #eee; /* Separator */
+        }
+        li:last-child {
+            border-bottom: none; /* Remove border for the last item */
+        }
+        .polyhedron-number {
+            font-weight: bold;
+            color: #007bff; /* Highlight number */
+            margin-left: 1em; /* Space between name and number */
+            flex-shrink: 0; /* Prevent number from shrinking */
+        }
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            body {
+                margin: 0.5em;
+            }
+            .family-container {
+                padding: 0.5em;
+            }
+            .family-name {
+                font-size: 1.1em;
+            }
+            li {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Polyhedra List</h1>
+
+    <div id="polyhedra-list-container">
+        <div class="family-container">
+            <h2 class="family-name">Platonic</h2>
+            <ul>
+                <li><span class="polyhedron-name">Tetrahedron</span><span class="polyhedron-number">#0</span></li>
+                <li><span class="polyhedron-name">Cube</span><span class="polyhedron-number">#1</span></li>
+                <li><span class="polyhedron-name">Octahedron</span><span class="polyhedron-number">#2</span></li>
+                <li><span class="polyhedron-name">Dodecahedron</span><span class="polyhedron-number">#3</span></li>
+                <li><span class="polyhedron-name">Icosahedron</span><span class="polyhedron-number">#4</span></li>
+            </ul>
+        </div>
+        <div class="family-container">
+            <h2 class="family-name">Kepler-Poinsot</h2>
+            <ul>
+                <li><span class="polyhedron-name">Small Stellated Dodecahedron</span><span class="polyhedron-number">#5</span></li>
+                <li><span class="polyhedron-name">Great Dodecahedron</span><span class="polyhedron-number">#6</span></li>
+                <li><span class="polyhedron-name">Great Stellated Dodecahedron</span><span class="polyhedron-number">#7</span></li>
+                <li><span class="polyhedron-name">Great Icosahedron</span><span class="polyhedron-number">#8</span></li>
+            </ul>
+        </div>
+        <div class="family-container">
+            <h2 class="family-name">Archimedean</h2>
+            <ul>
+                <li><span class="polyhedron-name">Truncated Tetrahedron</span><span class="polyhedron-number">#9</span></li>
+                <li><span class="polyhedron-name">Cuboctahedron</span><span class="polyhedron-number">#10</span></li>
+                <li><span class="polyhedron-name">Truncated Cube</span><span class="polyhedron-number">#11</span></li>
+                <li><span class="polyhedron-name">Truncated Octahedron</span><span class="polyhedron-number">#12</span></li>
+                <li><span class="polyhedron-name">Rhombicuboctahedron</span><span class="polyhedron-number">#13</span></li>
+                <li><span class="polyhedron-name">Great Rhombicuboctahedron</span><span class="polyhedron-number">#14</span></li>
+                <li><span class="polyhedron-name">Snub Cube (Laevo)</span><span class="polyhedron-number">#15</span></li>
+                <li><span class="polyhedron-name">Icosidodecahedron</span><span class="polyhedron-number">#16</span></li>
+                <li><span class="polyhedron-name">Truncated Dodecahedron</span><span class="polyhedron-number">#17</span></li>
+                <li><span class="polyhedron-name">Truncated Icosahedron</span><span class="polyhedron-number">#18</span></li>
+                <li><span class="polyhedron-name">Rhombicosidodecahedron</span><span class="polyhedron-number">#19</span></li>
+                <li><span class="polyhedron-name">Great Rhombicosidodecahedron</span><span class="polyhedron-number">#20</span></li>
+                <li><span class="polyhedron-name">Snub Dodecahedron (Laevo)</span><span class="polyhedron-number">#21</span></li>
+            </ul>
+        </div>
+        <div class="family-container">
+            <h2 class="family-name">Prisms &amp; Anti-prisms</h2>
+            <ul>
+                <li><span class="polyhedron-name">Triangular Prism</span><span class="polyhedron-number">#22</span></li>
+                <li><span class="polyhedron-name">Pentagonal Prism</span><span class="polyhedron-number">#23</span></li>
+                <li><span class="polyhedron-name">Hexagonal Prism</span><span class="polyhedron-number">#24</span></li>
+                <li><span class="polyhedron-name">Octagonal Prism</span><span class="polyhedron-number">#25</span></li>
+                <li><span class="polyhedron-name">Decagonal Prism</span><span class="polyhedron-number">#26</span></li>
+                <li><span class="polyhedron-name">Square Antiprism</span><span class="polyhedron-number">#27</span></li>
+                <li><span class="polyhedron-name">Pentagonal Antiprism</span><span class="polyhedron-number">#28</span></li>
+                <li><span class="polyhedron-name">Hexagonal Antiprism</span><span class="polyhedron-number">#29</span></li>
+                <li><span class="polyhedron-name">Octagonal Antiprism</span><span class="polyhedron-number">#30</span></li>
+                <li><span class="polyhedron-name">Decagonal Antiprism</span><span class="polyhedron-number">#31</span></li>
+            </ul>
+        </div>
+        <div class="family-container">
+            <h2 class="family-name">Archimedean Duals</h2>
+            <ul>
+                <li><span class="polyhedron-name">Triakis Tetrahedron</span><span class="polyhedron-number">#32</span></li>
+                <li><span class="polyhedron-name">Rhombic Dodecahedron</span><span class="polyhedron-number">#33</span></li>
+                <li><span class="polyhedron-name">Triakis Octahedron</span><span class="polyhedron-number">#34</span></li>
+                <li><span class="polyhedron-name">Tetrakis Hexahedron</span><span class="polyhedron-number">#35</span></li>
+                <li><span class="polyhedron-name">Trapezoidal Icositetrahedron</span><span class="polyhedron-number">#36</span></li>
+                <li><span class="polyhedron-name">Hexakis Octahedron</span><span class="polyhedron-number">#37</span></li>
+                <li><span class="polyhedron-name">Pentagonal Icositetrahedron (Dextro)</span><span class="polyhedron-number">#38</span></li>
+                <li><span class="polyhedron-name">Rhombic Triacontahedron</span><span class="polyhedron-number">#39</span></li>
+                <li><span class="polyhedron-name">Triakis Icosahedron</span><span class="polyhedron-number">#40</span></li>
+                <li><span class="polyhedron-name">Pentakis Dodecahedron</span><span class="polyhedron-number">#41</span></li>
+                <li><span class="polyhedron-name">Trapezoidal Hexecontahedron</span><span class="polyhedron-number">#42</span></li>
+                <li><span class="polyhedron-name">Hexakis Icosahedron</span><span class="polyhedron-number">#43</span></li>
+                <li><span class="polyhedron-name">Pentagonal Hexecontahedron (Dextro)</span><span class="polyhedron-number">#44</span></li>
+            </ul>
+        </div>
+        <div class="family-container">
+            <h2 class="family-name">Johnson Solids</h2>
+            <ul>
+                <li><span class="polyhedron-name">Square Pyramid (J1)</span><span class="polyhedron-number">#45</span></li>
+                <li><span class="polyhedron-name">Pentagonal Pyramid (J2)</span><span class="polyhedron-number">#46</span></li>
+                <li><span class="polyhedron-name">Triangular Cupola (J3)</span><span class="polyhedron-number">#47</span></li>
+                <li><span class="polyhedron-name">Square Cupola (J4)</span><span class="polyhedron-number">#48</span></li>
+                <li><span class="polyhedron-name">Pentagonal Cupola (J5)</span><span class="polyhedron-number">#49</span></li>
+                <li><span class="polyhedron-name">Pentagonal Rotunda (J6)</span><span class="polyhedron-number">#50</span></li>
+                <li><span class="polyhedron-name">Elongated Triangular Pyramid (J7)</span><span class="polyhedron-number">#51</span></li>
+                <li><span class="polyhedron-name">Elongated Square Pyramid (J8)</span><span class="polyhedron-number">#52</span></li>
+                <li><span class="polyhedron-name">Elongated Pentagonal Pyramid (J9)</span><span class="polyhedron-number">#53</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Square Pyramid (J10)</span><span class="polyhedron-number">#54</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Pentagonal Pyramid (J11)</span><span class="polyhedron-number">#55</span></li>
+                <li><span class="polyhedron-name">Triangular Dipyramid (J12)</span><span class="polyhedron-number">#56</span></li>
+                <li><span class="polyhedron-name">Pentagonal Dipyramid (J13)</span><span class="polyhedron-number">#57</span></li>
+                <li><span class="polyhedron-name">Elongated Triangular Dipyramid (J14)</span><span class="polyhedron-number">#58</span></li>
+                <li><span class="polyhedron-name">Elongated Square Dipyramid (J15)</span><span class="polyhedron-number">#59</span></li>
+                <li><span class="polyhedron-name">Elongated Pentagonal Dipyramid (J16)</span><span class="polyhedron-number">#60</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Square Dipyramid (J17)</span><span class="polyhedron-number">#61</span></li>
+                <li><span class="polyhedron-name">Elongated Triangular Cupola (J18)</span><span class="polyhedron-number">#62</span></li>
+                <li><span class="polyhedron-name">Elongated Square Cupola (J19)</span><span class="polyhedron-number">#63</span></li>
+                <li><span class="polyhedron-name">Elongated Pentagonal Cupola (J20)</span><span class="polyhedron-number">#64</span></li>
+                <li><span class="polyhedron-name">Elongated Pentagonal Rotunds (J21)</span><span class="polyhedron-number">#65</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Triangular Cupola (J22)</span><span class="polyhedron-number">#66</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Square Cupola (J23)</span><span class="polyhedron-number">#67</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Pentagonal Cupola (J24)</span><span class="polyhedron-number">#68</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Pentagonal Rotunda (J25)</span><span class="polyhedron-number">#69</span></li>
+                <li><span class="polyhedron-name">Gyrobifastigium (J26)</span><span class="polyhedron-number">#70</span></li>
+                <li><span class="polyhedron-name">Triangular Orthobicupola (J27)</span><span class="polyhedron-number">#71</span></li>
+                <li><span class="polyhedron-name">Square Orthobicupola (J28)</span><span class="polyhedron-number">#72</span></li>
+                <li><span class="polyhedron-name">Square Gyrobicupola (J29)</span><span class="polyhedron-number">#73</span></li>
+                <li><span class="polyhedron-name">Pentagonal Orthobicupola (J30)</span><span class="polyhedron-number">#74</span></li>
+                <li><span class="polyhedron-name">Pentagonal Gyrobicupola (J31)</span><span class="polyhedron-number">#75</span></li>
+                <li><span class="polyhedron-name">Pentagonal Orthocupolarontunda (J32)</span><span class="polyhedron-number">#76</span></li>
+                <li><span class="polyhedron-name">Pentagonal Gyrocupolarotunda (J33)</span><span class="polyhedron-number">#77</span></li>
+                <li><span class="polyhedron-name">Pentagonal Orthobirotunda (J34)</span><span class="polyhedron-number">#78</span></li>
+                <li><span class="polyhedron-name">Elongated Triangular Orthobicupola (J35)</span><span class="polyhedron-number">#79</span></li>
+                <li><span class="polyhedron-name">Elongated Triangular Gyrobicupola (J36)</span><span class="polyhedron-number">#80</span></li>
+                <li><span class="polyhedron-name">Elongated Square Gyrobicupola (J37)</span><span class="polyhedron-number">#81</span></li>
+                <li><span class="polyhedron-name">Elongated Pentagonal Orthobicupola (J38)</span><span class="polyhedron-number">#82</span></li>
+                <li><span class="polyhedron-name">Elongated Pentagonal Gyrobicupola (J39)</span><span class="polyhedron-number">#83</span></li>
+                <li><span class="polyhedron-name">Elongated Pentagonal Orthocupolarotunda (J40)</span><span class="polyhedron-number">#84</span></li>
+                <li><span class="polyhedron-name">Elongated Pentagonal Gyrocupolarotunda (J41)</span><span class="polyhedron-number">#85</span></li>
+                <li><span class="polyhedron-name">Elongated Pentagonal Orthobirotunda (J42)</span><span class="polyhedron-number">#86</span></li>
+                <li><span class="polyhedron-name">Elongated Pentagonal Gyrobirotunda (J43)</span><span class="polyhedron-number">#87</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Triangular Bicupola (J44)</span><span class="polyhedron-number">#88</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Square Bicupola (J45)</span><span class="polyhedron-number">#89</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Pentagonal Bicupola (J46)</span><span class="polyhedron-number">#90</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Pentagonal Cupolarotunda (J47)</span><span class="polyhedron-number">#91</span></li>
+                <li><span class="polyhedron-name">Gyroelongated Pentagonal Birotunda (J48)</span><span class="polyhedron-number">#92</span></li>
+                <li><span class="polyhedron-name">Augmented Triangular Prism (J49)</span><span class="polyhedron-number">#93</span></li>
+                <li><span class="polyhedron-name">Biaugmented Triangular Prism (J50)</span><span class="polyhedron-number">#94</span></li>
+                <li><span class="polyhedron-name">Triaugmented Triangular Prism (J51)</span><span class="polyhedron-number">#95</span></li>
+                <li><span class="polyhedron-name">Augmented Pentagonal Prism (J52)</span><span class="polyhedron-number">#96</span></li>
+                <li><span class="polyhedron-name">Biaugmented Pentagonal Prism (J53)</span><span class="polyhedron-number">#97</span></li>
+                <li><span class="polyhedron-name">Augmented Hexagonal Prism (J54)</span><span class="polyhedron-number">#98</span></li>
+                <li><span class="polyhedron-name">Parabiaugmented Hexagonal Prism (J55)</span><span class="polyhedron-number">#99</span></li>
+                <li><span class="polyhedron-name">Metabiaugmented Hexagonal Prism (J56)</span><span class="polyhedron-number">#100</span></li>
+                <li><span class="polyhedron-name">Triaugmented Hexagonal Prism (J57)</span><span class="polyhedron-number">#101</span></li>
+                <li><span class="polyhedron-name">Augmented Dodecahedron (J58)</span><span class="polyhedron-number">#102</span></li>
+                <li><span class="polyhedron-name">Parabiaugmented Dodecahedron (J59)</span><span class="polyhedron-number">#103</span></li>
+                <li><span class="polyhedron-name">Metabiaugmented Dodecahedron (J60)</span><span class="polyhedron-number">#104</span></li>
+                <li><span class="polyhedron-name">Triaugmented Dodecahedron (J61)</span><span class="polyhedron-number">#105</span></li>
+                <li><span class="polyhedron-name">Metabidiminished Icosahedron (J62)</span><span class="polyhedron-number">#106</span></li>
+                <li><span class="polyhedron-name">Tridiminished Icosahedron (J63)</span><span class="polyhedron-number">#107</span></li>
+                <li><span class="polyhedron-name">Augmented Tridiminished Icosahedron (J64)</span><span class="polyhedron-number">#108</span></li>
+                <li><span class="polyhedron-name">Augmented Truncated Tetrahedron (J65)</span><span class="polyhedron-number">#109</span></li>
+                <li><span class="polyhedron-name">Augmented Truncated Cube (J66)</span><span class="polyhedron-number">#110</span></li>
+                <li><span class="polyhedron-name">Biaugmented Truncated Cube (J67)</span><span class="polyhedron-number">#111</span></li>
+                <li><span class="polyhedron-name">Augmented Truncated Dodecahedron (J68)</span><span class="polyhedron-number">#112</span></li>
+                <li><span class="polyhedron-name">Parabiaugmented Truncated Dodecahedron (J69)</span><span class="polyhedron-number">#113</span></li>
+                <li><span class="polyhedron-name">Metabiaugmented Truncated Dodecahedron (J70)</span><span class="polyhedron-number">#114</span></li>
+                <li><span class="polyhedron-name">Triaugmented Truncated Dodecahedron (J71)</span><span class="polyhedron-number">#115</span></li>
+                <li><span class="polyhedron-name">Gyrate Rhombicosidodecahedron (J72)</span><span class="polyhedron-number">#116</span></li>
+                <li><span class="polyhedron-name">Parabigyrate Rhombicosidodecahedron (J73)</span><span class="polyhedron-number">#117</span></li>
+                <li><span class="polyhedron-name">Metabigyrate Rhombicosidodecahedron (J74)</span><span class="polyhedron-number">#118</span></li>
+                <li><span class="polyhedron-name">Trigyrate Rhombicosidodecahedron (J75)</span><span class="polyhedron-number">#119</span></li>
+                <li><span class="polyhedron-name">Diminished Rhombicosidodecahedron (J76)</span><span class="polyhedron-number">#120</span></li>
+                <li><span class="polyhedron-name">Paragyrate Diminished Rhombicosidodecahedron (J77)</span><span class="polyhedron-number">#121</span></li>
+                <li><span class="polyhedron-name">Metagyrate Diminished Rhombicosidodecahedron (J78)</span><span class="polyhedron-number">#122</span></li>
+                <li><span class="polyhedron-name">Bigyrate Diminished Rhombicosidodecahedron (J79)</span><span class="polyhedron-number">#123</span></li>
+                <li><span class="polyhedron-name">Parabidiminished Rhombicosidodecahedron (J80)</span><span class="polyhedron-number">#124</span></li>
+                <li><span class="polyhedron-name">Metabidiminished Rhombicosidodecahedron (J81)</span><span class="polyhedron-number">#125</span></li>
+                <li><span class="polyhedron-name">Gyrate Bidiminished Rhombicosidodecahedron (J82)</span><span class="polyhedron-number">#126</span></li>
+                <li><span class="polyhedron-name">Tridiminished Rhombicosidodecahedron (J83)</span><span class="polyhedron-number">#127</span></li>
+                <li><span class="polyhedron-name">Snub Disphenoid (J84)</span><span class="polyhedron-number">#128</span></li>
+                <li><span class="polyhedron-name">Snub Square Antiprism (J85)</span><span class="polyhedron-number">#129</span></li>
+                <li><span class="polyhedron-name">Sphenocorona (J86)</span><span class="polyhedron-number">#130</span></li>
+                <li><span class="polyhedron-name">Augmented Sphenocorona (J87)</span><span class="polyhedron-number">#131</span></li>
+                <li><span class="polyhedron-name">Sphenomegacorona (J88)</span><span class="polyhedron-number">#132</span></li>
+                <li><span class="polyhedron-name">Hebesphenomegacorona (J89)</span><span class="polyhedron-number">#133</span></li>
+                <li><span class="polyhedron-name">Disphenocingulum (J90)</span><span class="polyhedron-number">#134</span></li>
+                <li><span class="polyhedron-name">Bilunabirotunda (J91)</span><span class="polyhedron-number">#135</span></li>
+                <li><span class="polyhedron-name">Triangular Hebesphenorotunda (J92)</span><span class="polyhedron-number">#136</span></li>
+            </ul>
+        </div>
+        <div class="family-container">
+            <h2 class="family-name">Others</h2>
+            <ul>
+                <li><span class="polyhedron-name">Tetrahemihexahedron</span><span class="polyhedron-number">#137</span></li>
+                <li><span class="polyhedron-name">Octahemioctahedron</span><span class="polyhedron-number">#138</span></li>
+                <li><span class="polyhedron-name">Small Ditrigonal Icosidodecahedron</span><span class="polyhedron-number">#139</span></li>
+                <li><span class="polyhedron-name">Dodecadodecahedron</span><span class="polyhedron-number">#140</span></li>
+                <li><span class="polyhedron-name">Echidnahedron</span><span class="polyhedron-number">#141</span></li>
+            </ul>
+        </div>
+    </div>
+    <h1>Platonic Path Navigator</h1>
+
+    <div id="polyhedron-container">
+        <div id="my-polyhedron">Polyhedron</div>
+    </div>
+
+    <div id="controls">
+        <label for="path-selector">Group:</label>
+        <select id="path-selector">
+            <option value="T">Tetrahedron (T)</option>
+            <option value="O">Cube/Octahedron (O)</option>
+            <option value="I">Icosahedron/Dodecahedron (I)</option>
+        </select>
+        <button id="backward-button">&lt; Return (戻る)</button>
+        <button id="forward-button">Turn (進む) &gt;</button>
+        <p>
+            <span id="current-index">ステップ: 0 / 0</span> |
+            <span id="current-op">操作: 初期状態</span>
+        </p>
+    </div>
+
+    <script type="module" src="/static/main.js"></script>
+
+    <hr>
+    <h2>Data Test Results (Reference)</h2>
+    <div id="test-results">
+         <p><i>テスト結果は別ページまたはコンソールで確認してください。</i></p>
+    </div>
+    </body>
+</html>
+
+
+</html>

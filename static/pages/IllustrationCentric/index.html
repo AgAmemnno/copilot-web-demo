@@ -1,0 +1,96 @@
+This is file1 in folder2.<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>イラストレーション中心デザイン 例</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Poppinsフォントをデフォルトに設定 */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f7ff; /* 明るい空色系の背景 */
+            color: #334155; /* やや落ち着いたテキスト色 */
+        }
+        /* イラストを引き立てるためのセクション背景 */
+        .illustration-section {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 119, 255, 0.1); /* 青系のソフトな影 */
+            overflow: hidden; /* イラストがはみ出さないように */
+        }
+        /* ボタンのスタイル */
+        .playful-button {
+            background-color: #3b82f6; /* 明るい青 */
+            color: white;
+            font-weight: 600;
+            padding: 0.8rem 1.8rem;
+            border: none;
+            border-radius: 9999px; /* 完全な角丸 (ピル形状) */
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        }
+        .playful-button:hover {
+            background-color: #2563eb; /* 少し濃い青 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+        }
+        /* SVGイラストの基本スタイル */
+        .illustration-svg {
+            width: 100%;
+            max-width: 400px; /* イラストの最大幅 */
+            height: auto;
+            display: block;
+            margin: 0 auto; /* 中央寄せ */
+        }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="max-w-5xl mx-auto">
+
+        <header class="text-center mb-16">
+            <svg class="illustration-svg mb-6" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+              <rect width="200" height="100" fill="#e0f2fe"/> <circle cx="50" cy="50" r="30" fill="#facc15"/> <path d="M 80 70 Q 100 40 120 70 T 160 70" stroke="#3b82f6" stroke-width="5" fill="none"/> <rect x="140" y="40" width="30" height="30" rx="5" fill="#22c55e"/> <text x="10" y="90" font-family="Poppins, sans-serif" font-size="10" fill="#334155">[イラストレーションの例]</text>
+            </svg>
+
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-600 mb-3">アイデアを彩る</h1>
+            <p class="text-lg text-gray-600">イラストレーションで世界をもっと楽しく</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+
+            <div class="space-y-4">
+                <h2 class="text-3xl font-bold text-blue-700">ストーリーを語るイラスト</h2>
+                <p class="leading-relaxed text-gray-700">
+                    イラストレーションは、言葉だけでは伝えきれない感情やストーリーを視覚的に表現する力を持っています。複雑なコンセプトを分かりやすくしたり、ブランドに親しみやすい個性を与えたりするのに最適です。
+                </p>
+                <p class="leading-relaxed text-gray-700">
+                    カスタムイラストを使用することで、他にはないユニークなウェブサイト体験を創り出すことができます。
+                </p>
+                <div class="pt-4">
+                    <button class="playful-button">もっと詳しく</button>
+                </div>
+            </div>
+
+            <div class="illustration-section p-6">
+                 <svg class="illustration-svg" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="150" height="150" rx="10" fill="#ffffff"/> <path d="M 30 120 C 40 80, 110 80, 120 120 Z" fill="#fecaca"/> <circle cx="75" cy="60" r="25" fill="#a7f3d0"/> <rect x="50" y="90" width="50" height="10" rx="3" fill="#bfdbfe"/> <text x="10" y="140" font-family="Poppins, sans-serif" font-size="8" fill="#334155">[コンセプトイラスト]</text>
+                </svg>
+                <p class="text-center text-sm text-gray-500 mt-4">コンセプトを視覚化</p>
+            </div>
+
+        </main>
+
+        <footer class="mt-20 text-center text-sm text-gray-500">
+            &copy; 2025 イラストスタジオ・クリエイティブ
+        </footer>
+
+    </div>
+
+</body>
+</html>

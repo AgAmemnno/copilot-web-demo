@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>モダニズム デザイン 例</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Interフォントをデフォルトに設定 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff; /* 白背景 */
+            color: #000000; /* 黒テキスト */
+        }
+        /* 強調色 */
+        .accent-color {
+            color: #ff0000; /* 赤 */
+        }
+        .accent-bg {
+            background-color: #ff0000; /* 赤 */
+        }
+        /* 角丸なし */
+        .no-border-radius {
+            border-radius: 0;
+        }
+        /* グリッドラインの視覚化（デバッグ用、必要なら削除） */
+        /*
+        .grid > * {
+            border: 1px solid rgba(0, 0, 255, 0.2);
+        }
+        */
+    </style>
+</head>
+<body class="p-8 md:p-12">
+
+    <div class="max-w-5xl mx-auto">
+
+        <header class="mb-12">
+            <h1 class="text-4xl md:text-6xl font-bold uppercase tracking-wider">モダニズム</h1>
+            <div class="w-16 h-1 accent-bg mt-2"></div> </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+
+            <div class="md:col-span-2 space-y-6">
+                <h2 class="text-2xl font-bold uppercase">機能性と明瞭性</h2>
+                <p class="leading-relaxed">
+                    モダニズムデザインは、装飾的な要素を排除し、本質的な機能と構造を重視します。「形態は機能に従う」という原則に基づき、クリーンなライン、幾何学的な形状、そしてグリッドシステムが用いられます。
+                </p>
+                <p class="leading-relaxed">
+                    タイポグラフィは通常、サンセリフ体が選ばれ、情報の階層構造が明確に示されます。
+                </p>
+                <button class="mt-4 accent-bg text-white font-bold py-2 px-6 uppercase tracking-wider no-border-radius hover:bg-black transition-colors duration-300">
+                    詳細
+                </button>
+            </div>
+
+            <div class="md:col-span-1 space-y-4">
+                 <div class="bg-gray-100 p-6 no-border-radius">
+                    <h3 class="text-lg font-bold mb-2 uppercase accent-color">原則</h3>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li>機能主義</li>
+                        <li>グリッドシステム</li>
+                        <li>サンセリフ体</li>
+                        <li>非対称レイアウト</li>
+                        <li>装飾の排除</li>
+                        <li>幾何学的形状</li>
+                    </ul>
+                 </div>
+                 <div class="w-full h-48 bg-gray-300 flex items-center justify-center no-border-radius">
+                     <span class="text-gray-500">幾何学的要素</span>
+                 </div>
+            </div>
+
+        </main>
+
+        <footer class="mt-16 pt-6 border-t border-black">
+            <p class="text-sm text-gray-600">&copy; 2025 モダニズムデザインデモ</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
