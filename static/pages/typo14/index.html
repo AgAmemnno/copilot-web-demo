@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フィルター付きフォントリスト (軸詳細表示対応)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .filter-select {
+            min-width: 150px;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px 16px; /* セルのパディングを少し広めに */
+        }
+        thead {
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb; /* Tailwind gray-50 */
+        }
+        .container {
+            max-width: 1024px; /* コンテナ幅を少し広げる */
+            margin-left: auto;
+            margin-right: auto;
+            padding: 20px;
+        }
+        .filter-container, .table-container, #axisDetailContainer { /* 共通スタイル */
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 24px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50; /* Success color */
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .message-box.error {
+            background-color: #f44336; /* Error color */
+        }
+        .message-box.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .axis-tag { /* テーブル内の軸タグ用スタイル */
+            cursor: pointer;
+            text-decoration: none; /* 下線を削除 */
+            color: #4f46e5; /* Tailwind indigo-600 */
+            margin-right: 4px;
+            padding: 4px 8px; /* パディング調整 */
+            background-color: #e0e7ff; /* Tailwind indigo-100 */
+            border-radius: 4px; /* 角丸 */
+            font-size: 0.875rem; /* 少し小さく */
+            transition: background-color 0.2s ease-in-out;
+        }
+        .axis-tag:hover {
+            background-color: #c7d2fe; /* Tailwind indigo-200 */
+            text-decoration: underline;
+        }
+        #axisDetailContainer {
+            border: 1px solid #e5e7eb; /* Tailwind gray-200 */
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <h1 class="text-3xl font-bold mb-8 text-center text-gray-700" style="font-family: 'Noto Sans JP', sans-serif;">フォントライブラリ</h1>
+
+        <div class="filter-container">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label for="axisTypeFilter" class="block text-sm font-medium text-gray-700 mb-1">軸の種類:</label>
+                    <select id="axisTypeFilter" class="filter-select mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">すべて</option>
+                      
+                    </select>
+                </div>
+                <div>
+                    <label for="axisCountFilter" class="block text-sm font-medium text-gray-700 mb-1">軸の数:</label>
+                    <select id="axisCountFilter" class="filter-select mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">すべて</option>
+                      
+                    </select>
+                </div>
+                <div class="md:flex md:items-end">
+                    <button id="resetFilters" class="w-full md:w-auto mt-4 md:mt-0 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                        フィルターをリセット
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">フォント名</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">リンク</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">軸の種類 (一覧)</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">軸の総数</th>
+                    </tr>
+                </thead>
+                <tbody id="fontTableBody" class="bg-white divide-y divide-gray-200">
+                  
+                </tbody>
+            </table>
+        </div>
+         <p id="noResultsMessage" class="text-center text-gray-500 mt-8 py-4 hidden">該当するフォントが見つかりませんでした。</p>
+         <p id="loadingMessage" class="text-center text-gray-500 mt-8 py-4">データを読み込み中です...</p>
+
+        <div id="axisDetailContainer" class="hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h3 id="axisDetailTitle" class="text-xl font-semibold text-gray-800"></h3>
+                <button id="closeAxisDetail" title="閉じる" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <p id="axisDetailDescription" class="text-gray-700 mb-4"></p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-4">
+                <div><strong>デフォルト値:</strong> <span id="axisDetailDefault" class="text-gray-900"></span></div>
+                <div><strong>最小値:</strong> <span id="axisDetailMin" class="text-gray-900"></span></div>
+                <div><strong>最大値:</strong> <span id="axisDetailMax" class="text-gray-900"></span></div>
+                <div><strong>ステップ:</strong> <span id="axisDetailStep" class="text-gray-900"></span></div>
+            </div>
+            <div>
+                <strong class="text-sm">利用法のアイデア:</strong>
+                <p id="axisDetailIdea" class="text-gray-700 text-sm mt-1"></p>
+            </div>
+            <div>
+                <strong class="text-sm">面白い例:</strong>
+                <p id="axisDetailExample" class="text-gray-700 text-sm mt-1"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="customMessageBox" class="message-box">
+        <span id="messageText"></span>
+    </div>
+
+    <script>
+        let fontData = []; // グローバルスコープ
+
+        // 軸の詳細情報 (Google Docsから抽出・整形したデータ)
+        // タグは小文字で統一しておくと検索しやすい
+        var axisDescriptions = [
+            { tag: "ytlc", name: "Lowercase Height / 小文字の高さ", description: "小文字の高さを変更するためのパラメトリック軸です。", defaultValue: 500, minValue: 0, maxValue: 1000, step: 1, idea: "可読性の調整、デザインの雰囲気変更、ロゴデザインでの利用など。" },
+            { tag: "mono", name: "Monospace / 等幅", description: "プロポーショナル（自然な幅、デフォルト）から等幅（固定幅）スタイルに調整します。", defaultValue: 0, minValue: 0, maxValue: 1, step: 0.01, idea: "コード表示、レトロな表現、デザインアクセントとしての利用。" },
+            { tag: "morf", name: "Morph / モーフィング", description: "文字の形状がモーフィング（変形）します。0から60の範囲は秒数として理解できます。", defaultValue: 0, minValue: 0, maxValue: 60, step: 1, idea: "アニメーション、実験的なデザイン、サイバーパンク風の表現。" },
+            { tag: "xrot", name: "Rotation in X / X軸回転", description: "グリフがX次元で左右に回転します。", defaultValue: 0, minValue: -180, maxValue: 180, step: 1, idea: "3D的な表現、動きのあるタイトル、インタラクションへの応用。" },
+            { tag: "yrot", name: "Rotation in Y / Y軸回転", description: "グリフがY次元で上下に回転します。", defaultValue: 0, minValue: -180, maxValue: 180, step: 1, idea: "視点の変化、浮遊感の演出、UIデザインへの応用。" },
+            { tag: "zrot", name: "Rotation in Z / Z軸回転", description: "グリフがZ次元で左右に回転します（平面上での回転）。", defaultValue: 0, minValue: -180, maxValue: 180, step: 1, idea: "強調、手書き風の表現、ダイナミックなレイアウト。" },
+            { tag: "rond", name: "Roundness / 丸み", description: "角張ったデフォルトの形状（0%）から、徐々に丸みを帯びた形状（最大100%）に調整します。", defaultValue: 0, minValue: 0, maxValue: 100, step: 1, idea: "印象操作、ロゴやアイコンへの適用、UI要素との統一感。" },
+            { tag: "wght", name: "Weight / 太さ", description: "フォントの線の太さを調整します。Light、Regular、Boldなどのバリエーションが生まれます。", defaultValue: "400 (Regular)", minValue: 1, maxValue: 1000, step: 1, idea: "見出しや本文の強調度合いの調整、可読性の向上、階層構造の明確化。" },
+            { tag: "wdth", name: "Width / 幅", description: "文字の幅を調整します。Condensed（幅狭）からExtended（幅広）までのバリエーションがあります。", defaultValue: "100 (Normal)", minValue: 25, maxValue: 200, step: 1, idea: "限られたスペースへのテキストの配置、デザイン的なインパクトの創出、特定のスタイルの表現。" },
+            { tag: "opsz", name: "Optical Size / オプティカルサイズ", description: "表示されるフォントサイズに応じて、字形を微調整します。小さいサイズでは読みやすく、大きいサイズでは美しく見えるように最適化されます。", defaultValue: "14 (本文向け)", minValue: 6, maxValue: 144, step: 1, idea: "レスポンシブデザインでの可読性維持、様々な表示サイズでの最適な文字表現。" },
+            { tag: "slnt", name: "Slant / 傾斜", description: "文字を傾けます。イタリック体とは異なり、機械的に傾斜させることが多いです。", defaultValue: 0, minValue: -15, maxValue: 15, step: 1, idea: "強調、動きの表現、デザインのアクセント。" },
+            { tag: "ital", name: "Italic / イタリック", description: "イタリック体のON/OFFを切り替えます。多くの場合、傾斜(slnt)とは異なる専用の字形が用意されています。", defaultValue: 0, minValue: 0, maxValue: 1, step: 1, idea: "引用、強調、外国語表記、デザイン上の変化付け。" },
+            // 他の軸情報は必要に応じてユーザーが追加可能 (例: CASL, CRSV, etc.)
+        ];
+        async function loadFontDescData(jsonPath = '/static/axesData.json') {
+
+            try {
+                const response = await fetch(jsonPath);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}. ファイル '${jsonPath}' が見つからないか、読み込めません。`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('フォントデータの読み込みに失敗しました:', error);
+                showMessage(`エラー: ${error.message}`, 'error', 5000);
+                fontData = [];
+            } 
+        }
+       
+        const fontTableBody = document.getElementById('fontTableBody');
+        const axisTypeFilter = document.getElementById('axisTypeFilter');
+        const axisCountFilter = document.getElementById('axisCountFilter');
+        const resetFiltersButton = document.getElementById('resetFilters');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+        const loadingMessage = document.getElementById('loadingMessage');
+        
+        const customMessageBox = document.getElementById('customMessageBox');
+        const messageText = document.getElementById('messageText');
+
+        // 軸詳細表示エリアの要素
+        const axisDetailContainer = document.getElementById('axisDetailContainer');
+        const axisDetailTitle = document.getElementById('axisDetailTitle');
+        const axisDetailDescription = document.getElementById('axisDetailDescription');
+        const axisDetailDefault = document.getElementById('axisDetailDefault');
+        const axisDetailMin = document.getElementById('axisDetailMin');
+        const axisDetailMax = document.getElementById('axisDetailMax');
+        const axisDetailStep = document.getElementById('axisDetailStep');
+        const axisDetailIdea = document.getElementById('axisDetailIdea');
+        const axisDetailExample = document.getElementById('axisDetailExample');
+        const closeAxisDetailButton = document.getElementById('closeAxisDetail');
+
+
+        function showMessage(message, type = 'success', duration = 3000) {
+            messageText.textContent = message;
+            customMessageBox.className = 'message-box';
+            customMessageBox.classList.add('show');
+            if (type === 'error') {
+                customMessageBox.classList.add('error');
+            }
+            setTimeout(() => {
+                customMessageBox.classList.remove('show');
+            }, duration);
+        }
+
+        async function loadFontData(jsonPath = '/static/vfont.json') {
+            loadingMessage.classList.remove('hidden');
+            noResultsMessage.classList.add('hidden');
+            axisDetailContainer.classList.add('hidden'); // ロード中は詳細を隠す
+            fontTableBody.innerHTML = '';
+            try {
+                const response = await fetch(jsonPath);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}. ファイル '${jsonPath}' が見つからないか、読み込めません。`);
+                }
+                const data = await response.json();
+                fontData = data;
+            } catch (error) {
+                console.error('フォントデータの読み込みに失敗しました:', error);
+                showMessage(`エラー: ${error.message}`, 'error', 5000);
+                fontData = [];
+            } finally {
+                loadingMessage.classList.add('hidden');
+            }
+        }
+
+        function populateFilterOptions() {
+            const axisTypes = new Set();
+            const axisCounts = new Set();
+
+            fontData.forEach(font => {
+                if (font.axes && Array.isArray(font.axes)) {
+                    font.axes.forEach(axis => {
+                        if (axis.axisType) {
+                           axisTypes.add(axis.axisType.toLowerCase()); // 比較のため小文字で統一
+                        }
+                    });
+                    axisCounts.add(font.axes.length);
+                }
+            });
+
+            axisTypeFilter.innerHTML = '<option value="">すべての軸の種類</option>'; // ラベル変更
+            axisCountFilter.innerHTML = '<option value="">すべての軸の数</option>'; // ラベル変更
+
+            Array.from(axisTypes).sort().forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                // axisDescriptionsから対応する名前を探す、なければtypeをそのまま表示
+                const desc = axisDescriptions.find(d => d.tag.toLowerCase() === type);
+                option.textContent = desc ? `${type.toUpperCase()} (${desc.name.split('/')[0].trim()})` : type.toUpperCase();
+                axisTypeFilter.appendChild(option);
+            });
+
+            Array.from(axisCounts).sort((a, b) => a - b).forEach(count => {
+                const option = document.createElement('option');
+                option.value = count;
+                option.textContent = count;
+                axisCountFilter.appendChild(option);
+            });
+        }
+
+        function renderTable(dataToRender) {
+            fontTableBody.innerHTML = ''; 
+            if (dataToRender.length === 0 && loadingMessage.classList.contains('hidden')) {
+                 noResultsMessage.classList.remove('hidden');
+            } else {
+                noResultsMessage.classList.add('hidden');
+            }
+
+            dataToRender.forEach(font => {
+                const row = fontTableBody.insertRow();
+                row.insertCell().textContent = font.name;
+                
+                const linkCell = row.insertCell();
+                const linkTag = document.createElement('a');
+                linkTag.href = font.link;
+                linkTag.textContent = "表示";
+                linkTag.target = "_blank"; 
+                linkTag.classList.add('text-indigo-600', 'hover:text-indigo-800', 'hover:underline');
+                linkCell.appendChild(linkTag);
+                
+                const axisTypesCell = row.insertCell();
+                if (font.axes && Array.isArray(font.axes) && font.axes.length > 0) {
+                    font.axes.forEach((axis) => {
+                        if (axis.axisType) {
+                            const axisTagSpan = document.createElement('span');
+                            axisTagSpan.textContent = axis.axisType.toUpperCase();
+                            axisTagSpan.classList.add('axis-tag');
+                            axisTagSpan.title = `${axis.axisType.toUpperCase()} の詳細を表示`;
+                            axisTagSpan.dataset.axisTag = axis.axisType.toLowerCase(); // データ属性に小文字で保持
+                            axisTagSpan.addEventListener('click', (e) => {
+                                displayAxisDetails(e.currentTarget.dataset.axisTag);
+                            });
+                            axisTypesCell.appendChild(axisTagSpan);
+                        }
+                    });
+                } else {
+                    axisTypesCell.textContent = 'N/A';
+                }
+
+                const axisCountNum = (font.axes && Array.isArray(font.axes)) ? font.axes.length : 0;
+                row.insertCell().textContent = axisCountNum;
+            });
+        }
+        
+        function displayAxisDetails(axisTag) {
+            if (!axisTag) {
+                axisDetailContainer.classList.add('hidden');
+                return;
+            }
+            const detail = axisDescriptions.find(desc => desc.tag.toLowerCase() === axisTag.toLowerCase());
+
+            if (detail) {
+                axisDetailTitle.textContent = `${detail.tag.toUpperCase()} - ${detail.name}`;
+                axisDetailDescription.textContent = detail.description || detail.explanation || 'N/A';
+                axisDetailDefault.textContent = detail.default !== undefined ? detail.default : 'N/A';
+                axisDetailMin.textContent = detail.min_value !== undefined ? detail.min_value : detail.min !== undefined ? detail.min : 'N/A';
+                axisDetailMax.textContent = detail.max_value !== undefined ? detail.max_value : detail.max !== undefined ? detail.max : 'N/A';
+                axisDetailStep.textContent = detail.step !== undefined ? detail.step : 'N/A';
+                axisDetailIdea.textContent = detail.usage_ideas || 'N/A';
+                axisDetailExample.textContent = detail.interesting_examples|| 'N/A';
+                axisDetailContainer.classList.remove('hidden');
+                axisDetailContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                axisDetailTitle.textContent = `${axisTag.toUpperCase()} の詳細`;
+                axisDetailDescription.textContent = 'この軸に関する詳細情報は見つかりませんでした。';
+                axisDetailDefault.textContent = 'N/A';
+                axisDetailMin.textContent = 'N/A';
+                axisDetailMax.textContent = 'N/A';
+                axisDetailStep.textContent = 'N/A';
+                axisDetailIdea.textContent = 'N/A';
+                axisDetailExample.textContent ='N/A'
+                axisDetailContainer.classList.remove('hidden');
+                axisDetailContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function filterFonts() {
+            const selectedAxisType = axisTypeFilter.value; // これは小文字のはず
+            const selectedAxisCount = axisCountFilter.value;
+            axisDetailContainer.classList.add('hidden'); // フィルター変更時は詳細を隠す
+
+            const filteredData = fontData.filter(font => {
+                if (!font.axes || !Array.isArray(font.axes)) {
+                    return false; 
+                }
+                // 軸タイプでの絞り込み: font.axes内のいずれかのaxisTypeが選択されたものと一致(小文字比較)
+                const typeMatch = selectedAxisType === "" || font.axes.some(axis => axis.axisType && axis.axisType.toLowerCase() === selectedAxisType);
+                const countMatch = selectedAxisCount === "" || font.axes.length.toString() === selectedAxisCount;
+                return typeMatch && countMatch;
+            });
+            renderTable(filteredData);
+
+            // もしフィルターで軸の種類が選択されていたら、その詳細を表示する
+            if (selectedAxisType) {
+                displayAxisDetails(selectedAxisType);
+            }
+        }
+
+        function resetFilters() {
+            axisTypeFilter.value = "";
+            axisCountFilter.value = "";
+            axisDetailContainer.classList.add('hidden'); // リセット時も詳細を隠す
+            filterFonts(); 
+            showMessage("フィルターがリセットされました。");
+        }
+
+        // イベントリスナー
+        axisTypeFilter.addEventListener('change', filterFonts);
+        axisCountFilter.addEventListener('change', filterFonts);
+        resetFiltersButton.addEventListener('click', resetFilters);
+        closeAxisDetailButton.addEventListener('click', () => {
+            axisDetailContainer.classList.add('hidden');
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadFontData(); 
+            axisDescriptions  = await loadFontDescData();
+            populateFilterOptions(); 
+            renderTable(fontData); 
+            
+            if (fontData.length === 0 && loadingMessage.classList.contains('hidden')) {
+                noResultsMessage.classList.remove('hidden');
+            }
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+/* --- imported-styles.css の内容をここに展開 (デモ用) --- */
+/* @layer  reset,framework, project-specific, utilities; */
+/* @layer  base,theme; */
+/* @layer theme,base; */
+@layer base { /* この base は framework レイヤーの一部 */
+.action-button {
+    padding: 10px 18px;
+    border: 1px solid #bdc3c7;
+    background-color: #ecf0f1; /* 初期スタイル */
+    color: #2c3e50;
+    cursor: pointer;
+    font-size: 1em;
+}
+.component-b {
+    border: 2px dashed #e67e22;
+    background-color: #fef5e7; /* base レイヤーのスタイル */
+    color: #d35400;
+}
+a {
+    color: #8e44ad; /* base レイヤーのリンク色 */
+}
+.component-a { /* main.css の framework レイヤー内のスタイル */
+border: 2px solid #2ae10c;
+background-color: #006f38;
+color: #9aea7d;
+}
+}
+
+@layer theme { /* この theme は framework レイヤーの一部で、base の後 */
+.action-button {
+    background-color: #f1c40f; /* theme レイヤーで base を上書き */
+    color: #333;
+    border-color: #f39c12;
+}
+.component-b {
+    background-color: #fff9c4; /* theme レイヤーで base を上書き */
+    border-color: #fbc02d;
+    color: #c77000;
+    font-weight: bold;
+}
+a {
+    color: #d35400; /* theme レイヤーで base のリンク色を上書き */
+    text-decoration: none;
+    font-weight: bold;
+}
+.component-a { /* main.css の framework レイヤー内のスタイル */
+border: 2px solid #3498db;
+background-color: #eaf5ff;
+color: #2980b9;
+}
+}
+
+p.imported-unlayered-text { /* framework レイヤーの一部で、base, theme の後 */
+color: #7f8c8d;
+font-size: 0.9em;
+border-left: 3px solid #95a5a6;
+background-color: #e0e0e0;
+padding: 10px; /* パディング追加 */
+}
+/* --- imported-styles.css の内容ここまで --- */
+
+
+p { /* framework レイヤーの p スタイル (reset レイヤーのものを継承・上書き) */
+line-height: 1.6;
+}

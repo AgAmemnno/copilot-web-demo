@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フォント単位計算と文の調整</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTAS,YTDE,YTFI,YTLC,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,649..854,-305..-98,560..788,416..570,528..760&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --text-box-padding: 10px; /* CSS変数として定義 */
+        }
+        /* ルート要素 (html) のデフォルトフォント */
+        html {
+            font-family: 'Roboto', sans-serif;
+            font-size: 16px; /* ルートのフォントサイズを任意に設定 */
+        }
+
+        /* Shantell Sans の設定 */
+        html.font-shantell-sans {
+            font-family: "Shantell Sans", cursive;
+            font-optical-sizing: auto;
+            font-weight: 400;
+            font-style: normal;
+            font-variation-settings:
+                "BNCE" 0,
+                "INFM" 0,
+                "SPAC" 0;
+        }
+
+        /* Fraunces の設定 */
+        html.font-fraunces {
+            font-family: "Fraunces", serif;
+            font-optical-sizing: auto;
+            font-weight: 400;
+            font-style: normal;
+            font-variation-settings:
+                "SOFT" 0,
+                "WONK" 0;
+        }
+
+        /* Roboto Flex の設定 */
+        html.font-roboto-flex {
+            font-family: "Roboto Flex", sans-serif;
+            font-optical-sizing: auto;
+            font-weight: 400;
+            font-style: normal;
+            font-variation-settings:
+                "slnt" 0, "wdth" 100, "GRAD" 0, "XOPQ" 96,
+                "XTRA" 468, "YOPQ" 79, "YTAS" 750, "YTDE" -205,
+                "YTFI" 738, "YTLC" 528, "YTUC" 712;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            text-align: center;
+            font-family: 'Inter', sans-serif; 
+        }
+        .container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            width: 90%;
+            max-width: 700px; 
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #1877f2;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+         h3 {
+            margin-top: 0;
+            margin-bottom: 20px; 
+            color: #1c1e21;
+            text-align: left;
+            font-size: 1.3em;
+            border-bottom: 1px solid #e4e6eb;
+            padding-bottom: 10px;
+        }
+
+        .font-selector-label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4b5563;
+            text-align: left;
+        }
+        #fontSelector {
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ccd0d5;
+            font-size: 1em;
+            margin-bottom: 25px;
+            width: 100%;
+            max-width: 350px;
+            background-color: #f5f6f7;
+            display: block; 
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #status {
+            font-style: italic;
+            color: #606770;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        #resultsArea, #visualizationContainer, #sentenceAdjustmentContainer, 
+        #variableFontAdjustmentContainer, #semanticAdjustmentContainer, #targetLengthAdjustmentContainer {
+            margin-top: 30px; 
+            padding: 25px;
+            border: 1px solid #e4e6eb;
+            border-radius: 8px;
+            background-color: #ffffff;
+        }
+        .metric-result {
+            font-size: 1.0em; 
+            padding: 10px 12px;
+            background-color: #e7f3ff;
+            color: #1877f2;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .metric-display {
+            display: flex;
+            align-items: center;
+            margin-bottom: 18px;
+            padding: 12px;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            background-color: #f9fafb;
+            min-height: 40px;
+        }
+        .metric-label {
+            min-width: 130px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+            text-align: left;
+        }
+        .metric-char, .line-height-example-char, .space-char-placeholder {
+            font-size: 28px; 
+            margin: 0 10px;
+            padding: 0 5px;
+            color: #1877f2;
+        }
+        .space-char-placeholder {
+            border: 1px dashed #adb5bd;
+            width: auto; 
+            height: 1em; 
+            display: inline-block;
+            box-sizing: border-box;
+            color: transparent; 
+        }
+        .metric-line-container {
+            position: relative;
+            margin-left: 15px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            height: 28px; 
+        }
+        .metric-line {
+            background-color: #ff7f0e;
+            opacity: 0.8;
+            border-radius: 2px;
+        }
+        .vertical-line { width: 6px; }
+        .horizontal-line { height: 6px; }
+        
+        .line-height-example-container { display: flex; align-items: center; }
+        .line-height-example-char { border: 1px dashed #ced4da; padding: 0 5px; }
+        .metric-value {
+            font-style: normal;
+            font-weight: 500;
+            color: #4b5563;
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+
+        /* Sentence Adjustment Styles */
+        #sampleSentence {
+            font-size: 20px; 
+            padding: 20px; 
+            border: 1px solid #dee2e6; 
+            border-radius: 6px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            text-align: left;
+            line-height: 1.6; 
+            min-height: 100px;
+            white-space: nowrap;    
+            width: fit-content;     
+            overflow-x: auto;       
+        }
+        .slider-container, .input-container { 
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .slider-container label, .input-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+        }
+        .slider-container input[type="range"] {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 5px;
+        }
+        .input-container input[type="number"] { 
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            margin-right: 5px;
+            width: 80px;
+        }
+        .slider-container .slider-value {
+            font-weight: 500;
+            color: #007bff;
+            min-width: 50px;
+            display: inline-block;
+        }
+        #sampleSentenceWidthDisplay, #sampleSentenceEstimatedWidthDisplay {
+            margin-top: 10px; 
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            font-weight: 500;
+            text-align: left;
+        }
+        #sampleSentenceWidthDisplay { 
+            color: #28a745; 
+        }
+        #sampleSentenceEstimatedWidthDisplay { 
+            color: #17a2b8; 
+            margin-bottom:10px;
+        }
+
+        /* Variable Font Adjustment Styles */
+        #fixedWidthContainer {
+            width: 100%; 
+            max-width: 500px; 
+            border: 2px solid #007bff; 
+            overflow-x: scroll; 
+            margin: 20px auto; 
+            padding: 10px;
+            background-color: #e9f7ff;
+        }
+        #variableFontSentence {
+            font-family: "Roboto Flex", sans-serif; 
+            font-size: 24px; 
+            white-space: nowrap; 
+            padding: 10px 0; 
+        }
+
+        /* Semantic Font Adjustment Styles */
+        #semanticSampleText {
+            font-family: "Roboto Flex", sans-serif;
+            font-size: 22px;
+            padding: 20px;
+            border: 1px solid #6c757d;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            background-color: #f1f3f5;
+            text-align: left;
+            line-height: 1.7;
+        }
+        .semantic-slider-group {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #ced4da;
+        }
+        .semantic-slider-group:last-child {
+            border-bottom: none;
+        }
+        .semantic-slider-group h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #343a40;
+        }
+
+        /* Target Length Adjustment Styles */
+        #targetLengthSentenceContainer {
+            position: relative; 
+            /* width: 500px; CSS width removed, will be set by JS */
+            padding: var(--text-box-padding); 
+            margin: 20px auto; 
+            border: 2px dashed #28a745; 
+            overflow-x: hidden; 
+            background-color: #f0fff0; 
+            box-sizing: border-box;
+            text-align: left; 
+        }
+        #targetLengthSentence {
+            font-family: "Roboto Flex", sans-serif;
+            font-size: 24px;
+            white-space: nowrap; 
+            display: inline-block; 
+        }
+        .actual-width-line-left { 
+            position: absolute;
+            top: 5px;
+            left: calc(var(--text-box-padding) / 2); 
+            bottom: 5px;
+            width: calc(var(--text-box-padding) / 2); 
+            background-color: rgba(255, 0, 0, 0.25); 
+            z-index: 10;
+        }
+        .actual-width-line-right { 
+            position: absolute;
+            top: 5px;
+            /* 'left' will be set by JS */
+            bottom: 5px;
+            width: calc(var(--text-box-padding) / 2); 
+            background-color: rgba(255, 0, 0, 0.25); 
+            z-index: 10;
+        }
+
+
+        .target-length-info {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #555;
+            text-align: left; 
+            line-height: 1.6;
+        }
+        .target-length-info span {
+            font-weight: bold;
+            color: #000;
+            margin-left: 5px;
+            margin-right: 10px;
+            display: inline-block; 
+            min-width: 50px; 
+        }
+         .target-length-info br {
+            display: block; 
+            margin-bottom: 5px; 
+            content: "";
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>フォントメトリクス &amp; 文の調整</h1>
+
+        <label for="fontSelector" class="font-selector-label">ルートフォントを選択:</label>
+        <select id="fontSelector">
+            <option value="Roboto">Roboto (デフォルト)</option>
+            <option value="Roboto Flex">Roboto Flex</option>
+            <option value="Fraunces">Fraunces</option>
+            <option value="Shantell Sans">Shantell Sans</option>
+        </select>
+
+        <p id="status">フォントを読み込んでいます...</p>
+        
+        <div id="resultsArea">
+            <h3>ルート要素の計算メトリクス</h3>
+            <div id="resultEx" class="metric-result">ex (x-height): 計算中...</div>
+            <div id="resultCap" class="metric-result">cap (Cap Height): 計算中...</div>
+            <div id="resultCh" class="metric-result">ch ('0' width): 計算中...</div>
+            <div id="resultSpace" class="metric-result">space (Space width): 計算中...</div>
+            <div id="resultLh" class="metric-result">lh (Line Height): 計算中...</div>
+        </div>
+
+        <div id="visualizationContainer">
+            <h3>視覚的なメトリクス (ルートフォント基準)</h3>
+            <div class="metric-display">
+                <span class="metric-label">ex (x-height):</span>
+                <span class="metric-char" id="vizExChar">x</span>
+                <div class="metric-line-container"><div id="vizExLine" class="metric-line vertical-line"></div></div>
+                <span id="vizExValue" class="metric-value"></span>
+            </div>
+            <div class="metric-display">
+                <span class="metric-label">cap (Cap Height):</span>
+                <span class="metric-char" id="vizCapChar">X</span>
+                <div class="metric-line-container"><div id="vizCapLine" class="metric-line vertical-line"></div></div>
+                <span id="vizCapValue" class="metric-value"></span>
+            </div>
+            <div class="metric-display">
+                <span class="metric-label">ch ('0' width):</span>
+                <span class="metric-char" id="vizChChar">0</span>
+                <div class="metric-line-container"><div id="vizChLine" class="metric-line horizontal-line"></div></div>
+                <span id="vizChValue" class="metric-value"></span>
+            </div>
+            <div class="metric-display">
+                <span class="metric-label">space (Width):</span>
+                <span class="space-char-placeholder" id="vizSpaceChar">&nbsp;</span>
+                <div class="metric-line-container"><div id="vizSpaceLine" class="metric-line horizontal-line"></div></div>
+                <span id="vizSpaceValue" class="metric-value"></span>
+            </div>
+            <div class="metric-display">
+                <span class="metric-label">lh (Line Height):</span>
+                <div class="line-height-example-container"><span class="line-height-example-char" id="lhExampleChar">Ag</span></div>
+                <div class="metric-line-container"><div id="vizLhLine" class="metric-line vertical-line"></div></div>
+                <span id="vizLhValue" class="metric-value"></span>
+            </div>
+        </div>
+
+        <div id="sentenceAdjustmentContainer">
+            <h3>文の調整の視覚化 (ルートフォント適用)</h3>
+            <h2>これは調整可能なサンプル文です。フォントを変更したり、下のスライダーで文字間や単語間を調整してみてください。</h2>
+            <div id="sampleSentence">The quick brown fox jumps over the lazy dog.</div>
+            
+            <div class="slider-container">
+                <label for="letterSpacingSlider">文字間のスペース (letter-spacing): <span id="letterSpacingValue" class="slider-value">0px</span></label>
+                <input type="range" id="letterSpacingSlider" min="-5" max="20" value="0" step="0.5">
+            </div>
+
+            <div class="slider-container">
+                <label for="wordSpacingSlider">単語間のスペース (word-spacing): <span id="wordSpacingValue" class="slider-value">0px</span></label>
+                <input type="range" id="wordSpacingSlider" min="0" max="50" value="0" step="1">
+            </div>
+            <div id="sampleSentenceEstimatedWidthDisplay">サンプル文の推定内容幅 (カーニング等未考慮): 計算中...</div>
+            <div id="sampleSentenceWidthDisplay">サンプル文の実際の内容幅 (ブラウザ計算): 計算中...</div>
+        </div>
+
+        <div id="variableFontAdjustmentContainer">
+            <h3>可変フォント (Roboto Flex) の軸調整</h3>
+            <p>下のスライダーで Roboto Flex の軸を個別に調整します。</p>
+            <div id="fixedWidthContainer">
+                <div id="variableFontSentence">Adjustable Variable Font Text.</div>
+            </div>
+            <div class="slider-container">
+                <label for="vfWdthSlider">幅 (wdth): <span id="vfWdthValue" class="slider-value">100</span></label>
+                <input type="range" id="vfWdthSlider" min="25" max="151" value="100" step="1">
+            </div>
+            <div class="slider-container">
+                <label for="vfWghtSlider">太さ (wght): <span id="vfWghtValue" class="slider-value">400</span></label>
+                <input type="range" id="vfWghtSlider" min="100" max="1000" value="400" step="10">
+            </div>
+            <div class="slider-container">
+                <label for="vfOpszSlider">オプティカルサイズ (opsz): <span id="vfOpszValue" class="slider-value">16</span></label>
+                <input type="range" id="vfOpszSlider" min="8" max="144" value="16" step="1">
+            </div>
+            <div class="slider-container">
+                <label for="vfSlntSlider">傾き (slnt): <span id="vfSlntValue" class="slider-value">0</span></label>
+                <input type="range" id="vfSlntSlider" min="-10" max="0" value="0" step="1">
+            </div>
+            <div class="slider-container">
+                <label for="vfGradSlider">階調 (GRAD): <span id="vfGradValue" class="slider-value">0</span></label>
+                <input type="range" id="vfGradSlider" min="-200" max="150" value="0" step="1">
+            </div>
+        </div>
+
+        <div id="semanticAdjustmentContainer">
+            <h3>意味論的フォント調整 (Roboto Flex)</h3>
+            <p>各スライダーは、特定の「意味」に基づいて複数のフォント軸とスペーシングを連動して調整します。</p>
+            <div id="semanticSampleText">このテキストは意味論的スライダーで調整されます。</div>
+
+            <div class="semantic-slider-group">
+                <h4>可読性 (Readability)</h4>
+                <div class="slider-container">
+                    <label for="semanticReadabilitySlider">調整: <span id="semanticReadabilityValue" class="slider-value">50</span> (0: 低い - 100: 高い)</label>
+                    <input type="range" id="semanticReadabilitySlider" min="0" max="100" value="50" step="1">
+                </div>
+            </div>
+
+            <div class="semantic-slider-group">
+                <h4>フォーマル度 (Formality)</h4>
+                <div class="slider-container">
+                    <label for="semanticFormalitySlider">調整: <span id="semanticFormalityValue" class="slider-value">50</span> (0: カジュアル - 100: フォーマル)</label>
+                    <input type="range" id="semanticFormalitySlider" min="0" max="100" value="50" step="1">
+                </div>
+            </div>
+
+            <div class="semantic-slider-group">
+                <h4>インパクト (Impact)</h4>
+                <div class="slider-container">
+                    <label for="semanticImpactSlider">調整: <span id="semanticImpactValue" class="slider-value">50</span> (0: 弱い - 100: 強い)</label>
+                    <input type="range" id="semanticImpactSlider" min="0" max="100" value="50" step="1">
+                </div>
+            </div>
+        </div>
+
+        <div id="targetLengthAdjustmentContainer">
+            <h3>目標長への可変フォント自動調整 (Roboto Flex)</h3>
+            <p>太さ(wght)スライダーを動かすと、オプティカルサイズ(opsz)とスペーシングが自動調整され、文の長さがコンテナ幅に近づきます。</p>
+            <div class="input-container"> <label for="targetContainerWidthInput">コンテナ目標幅 (px): 
+                    <input type="number" id="targetContainerWidthInput" value="500" step="10" min="100" max="1000">
+                </label>
+            </div>
+            <div id="targetLengthSentenceContainer">
+                <div id="actualWidthLineLeft" class="actual-width-line-left"></div>
+                <div id="actualWidthLineRight" class="actual-width-line-right"></div>
+                <span id="targetLengthSentence">Target Robot Flex Variable Font Width.</span>
+            </div>
+            <div class="slider-container">
+                <label for="targetWghtSlider">太さ (wght): <span id="targetWghtValue" class="slider-value">400</span></label>
+                <input type="range" id="targetWghtSlider" min="100" max="1000" value="400" step="10">
+            </div>
+            <div class="target-length-info">
+                コンテナ目標幅:<span id="targetContainerWidthInfo">476.00px</span><br> 
+                調整後 wdth:<span id="targetWdthInfo">75.00</span><br> 
+                自動調整opsz:<span id="targetOpszInfo">144.00</span><br>
+                自動調整LS:<span id="targetLSInfo">0.00px</span><br>
+                自動調整WS:<span id="targetWSInfo">0.00px</span><br>
+                現在の文の幅:<span id="currentSentenceWidthInfo">計算中...</span>
+            </div>
+        </div>
+
+
+    </div>
+
+    <script>
+        // --- 既存のグローバル変数とヘルパー関数 (一部はクラスメソッドに移行予定) ---
+        const statusElement = document.getElementById('status');
+        const fontSelector = document.getElementById('fontSelector');
+        const htmlElement = document.documentElement;
+
+        const resultExElement = document.getElementById('resultEx');
+        const resultCapElement = document.getElementById('resultCap');
+        const resultChElement = document.getElementById('resultCh');
+        const resultSpaceElement = document.getElementById('resultSpace');
+        const resultLhElement = document.getElementById('resultLh');
+
+        const vizExChar = document.getElementById('vizExChar');
+        const vizCapChar = document.getElementById('vizCapChar');
+        const vizChChar = document.getElementById('vizChChar');
+        const vizSpaceChar = document.getElementById('vizSpaceChar'); 
+        const lhExampleChar = document.getElementById('lhExampleChar');
+        const vizExLine = document.getElementById('vizExLine');
+        const vizCapLine = document.getElementById('vizCapLine');
+        const vizChLine = document.getElementById('vizChLine');
+        const vizSpaceLine = document.getElementById('vizSpaceLine'); 
+        const vizLhLine = document.getElementById('vizLhLine');
+        const vizExValue = document.getElementById('vizExValue');
+        const vizCapValue = document.getElementById('vizCapValue');
+        const vizChValue = document.getElementById('vizChValue');
+        const vizSpaceValue = document.getElementById('vizSpaceValue'); 
+        const vizLhValue = document.getElementById('vizLhValue');
+
+        const sampleSentenceElement = document.getElementById('sampleSentence');
+        const letterSpacingSlider = document.getElementById('letterSpacingSlider');
+        const letterSpacingValueElement = document.getElementById('letterSpacingValue');
+        const wordSpacingSlider = document.getElementById('wordSpacingSlider');
+        const wordSpacingValueElement = document.getElementById('wordSpacingValue');
+        const sampleSentenceWidthDisplay = document.getElementById('sampleSentenceWidthDisplay');
+        const sampleSentenceEstimatedWidthDisplay = document.getElementById('sampleSentenceEstimatedWidthDisplay');
+
+        const variableFontSentenceElement = document.getElementById('variableFontSentence');
+        const vfWdthSlider = document.getElementById('vfWdthSlider');
+        const vfWdthValue = document.getElementById('vfWdthValue');
+        const vfWghtSlider = document.getElementById('vfWghtSlider');
+        const vfWghtValue = document.getElementById('vfWghtValue');
+        const vfOpszSlider = document.getElementById('vfOpszSlider');
+        const vfOpszValue = document.getElementById('vfOpszValue');
+        const vfSlntSlider = document.getElementById('vfSlntSlider');
+        const vfSlntValue = document.getElementById('vfSlntValue');
+        const vfGradSlider = document.getElementById('vfGradSlider');
+        const vfGradValue = document.getElementById('vfGradValue');
+
+        const semanticSampleTextElement = document.getElementById('semanticSampleText');
+        const semanticReadabilitySlider = document.getElementById('semanticReadabilitySlider');
+        const semanticReadabilityValue = document.getElementById('semanticReadabilityValue');
+        const semanticFormalitySlider = document.getElementById('semanticFormalitySlider');
+        const semanticFormalityValue = document.getElementById('semanticFormalityValue');
+        const semanticImpactSlider = document.getElementById('semanticImpactSlider');
+        const semanticImpactValue = document.getElementById('semanticImpactValue');
+
+        const targetContainerWidthInput = document.getElementById('targetContainerWidthInput'); 
+        const targetLengthSentenceContainer = document.getElementById('targetLengthSentenceContainer');
+        const targetLengthSentence = document.getElementById('targetLengthSentence');
+        const actualWidthLineLeft = document.getElementById('actualWidthLineLeft'); 
+        const actualWidthLineRight = document.getElementById('actualWidthLineRight'); 
+        const targetWghtSlider = document.getElementById('targetWghtSlider');
+        const targetWghtValue = document.getElementById('targetWghtValue');
+        const targetContainerWidthInfo = document.getElementById('targetContainerWidthInfo');
+        const targetWdthInfo = document.getElementById('targetWdthInfo'); 
+        const targetOpszInfo = document.getElementById('targetOpszInfo');
+        const targetLSInfo = document.getElementById('targetLSInfo'); 
+        const targetWSInfo = document.getElementById('targetWSInfo'); 
+        const currentSentenceWidthInfo = document.getElementById('currentSentenceWidthInfo');
+
+        const ROBOTO_FLEX_AXES = {
+            wght: { min: 100, default: 400, max: 1000 },
+            wdth: { min: 25, default: 100, max: 151 },
+            opsz: { min: 8, default: 144, max: 144 }, 
+            GRAD: { min: -200, default: 0, max: 150 },
+            slnt: { min: -10, default: 0, max: 0 }
+        };
+        
+        const INITIAL_TARGET_WDTH = 75; // Defined INITIAL_TARGET_WDTH
+
+        // --- リファクタリング: FontControllerBase クラス定義 ---
+        class FontControllerBase {
+            constructor(targetElement, initialSettings = {}) {
+                if (!targetElement) {
+                    throw new Error("FontControllerBase: targetElement is required.");
+                }
+                this.targetElement = targetElement;
+                this.fontFamily = initialSettings.fontFamily || getComputedStyle(this.targetElement).fontFamily;
+                this.fontSize = initialSettings.fontSize || getComputedStyle(this.targetElement).fontSize; 
+                this.currentVariationSettings = { ...initialSettings.variationSettings } || {}; 
+                this.currentLetterSpacing = initialSettings.letterSpacing || getComputedStyle(this.targetElement).letterSpacing;
+                this.currentWordSpacing = initialSettings.wordSpacing || getComputedStyle(this.targetElement).wordSpacing;
+                this.axisDefinitions = initialSettings.axisDefinitions || {};
+                this.fontSizeScale = initialSettings.fontSizeScale || [];
+
+                this.applyStyles();
+            }
+
+            applyStyles() {
+                if (!this.targetElement) return;
+                this.targetElement.style.fontFamily = this.fontFamily;
+                this.targetElement.style.fontSize = this.fontSize;
+                
+                let vsString = Object.entries(this.currentVariationSettings)
+                                   .map(([axis, value]) => `"${axis.toLowerCase()}" ${value}`) 
+                                   .join(', ');
+                this.targetElement.style.fontVariationSettings = vsString;
+                
+                this.targetElement.style.letterSpacing = this.currentLetterSpacing;
+                this.targetElement.style.wordSpacing = this.currentWordSpacing;
+            }
+
+            getElementWidth() {
+                if (!this.targetElement) return 0;
+                return this.targetElement.getBoundingClientRect().width;
+            }
+
+            setFontSize(sizeOrScaleStep, unitOrUseScale = 'px') {
+                if (unitOrUseScale === true && this.fontSizeScale && this.fontSizeScale.length > 0) {
+                    const index = parseInt(sizeOrScaleStep, 10);
+                    if (index >= 0 && index < this.fontSizeScale.length) {
+                        this.fontSize = this.fontSizeScale[index];
+                    } else {
+                        console.warn("Invalid fontSizeScale step:", sizeOrScaleStep);
+                        return;
+                    }
+                } else if (typeof sizeOrScaleStep === 'number' && typeof unitOrUseScale === 'string') {
+                     this.fontSize = `${sizeOrScaleStep}${unitOrUseScale}`;
+                } else if (typeof sizeOrScaleStep === 'string') { 
+                    this.fontSize = sizeOrScaleStep;
+                } else {
+                    console.warn("Invalid setFontSize arguments:", sizeOrScaleStep, unitOrUseScale);
+                    return;
+                }
+                this.applyStyles();
+            }
+
+            setVariationSetting(axisName, value) {
+                const axisKey = axisName.toLowerCase(); 
+                const axisDef = this.axisDefinitions[axisKey];
+                let numericValue = parseFloat(value);
+
+                if (isNaN(numericValue)) {
+                    console.warn(`Invalid value for axis ${axisName}: ${value}`);
+                    return;
+                }
+
+                if (axisDef) {
+                    numericValue = Math.max(axisDef.min, Math.min(axisDef.max, numericValue));
+                }
+                this.currentVariationSettings[axisName.toUpperCase()] = numericValue; 
+                this.applyStyles();
+            }
+            
+            getVariationSetting(axisName) {
+                const axisKeyUpper = axisName.toUpperCase();
+                const axisKeyLower = axisName.toLowerCase();
+                return this.currentVariationSettings[axisKeyUpper] !== undefined ? 
+                       this.currentVariationSettings[axisKeyUpper] : 
+                       (this.axisDefinitions[axisKeyLower] ? this.axisDefinitions[axisKeyLower].default : undefined);
+            }
+
+            setLetterSpacing(value, unit = 'px') {
+                if (typeof value === 'number') {
+                    this.currentLetterSpacing = `${value}${unit}`;
+                } else { 
+                    this.currentLetterSpacing = value;
+                }
+                this.applyStyles();
+            }
+
+            setWordSpacing(value, unit = 'px') {
+                 if (typeof value === 'number') {
+                    this.currentWordSpacing = `${value}${unit}`;
+                } else { 
+                    this.currentWordSpacing = value;
+                }
+                this.applyStyles();
+            }
+
+            _performIterativeAdjustment(adjustmentConfig) {
+                const {
+                    targetWght,
+                    targetWidthPx,
+                    initialWdth,
+                    initialOpsz,
+                    tolerance,
+                    maxMainIterations,
+                    maxSubIterations,
+                    maxSpacingIterations,
+                    letterSpacingClamp,
+                    wordSpacingClamp
+                } = adjustmentConfig;
+
+                let adjustedOpsz = initialOpsz;
+                let adjustedWdth = initialWdth;
+                let adjustedLetterSpacing = letterSpacingClamp.default;
+                let adjustedWordSpacing = wordSpacingClamp.default;
+
+                let currentElementWidth = 0;
+                let error = 0;
+
+                const opszAxisDef = this.axisDefinitions.opsz || ROBOTO_FLEX_AXES.opsz;
+                const wdthAxisDef = this.axisDefinitions.wdth || ROBOTO_FLEX_AXES.wdth;
+                
+                const initialOpszStep = (opszAxisDef.max - opszAxisDef.min) * 0.20;
+                const initialWdthStep = (wdthAxisDef.max - wdthAxisDef.min) * 0.20;
+                const minAdjustmentStep = 0.5;
+
+                // Phase 1: Adjust opsz and wdth iteratively
+                for (let mainIter = 0; mainIter < maxMainIterations; mainIter++) {
+                    let opszChangedInLoop = false;
+                    let wdthChangedInLoop = false;
+                    
+                    let currentOpszAdjustVal = Math.max(minAdjustmentStep, initialOpszStep / (mainIter + 1));
+                    let currentWdthAdjustVal = Math.max(minAdjustmentStep, initialWdthStep / (mainIter + 1));
+
+                    // Sub-phase: Adjust opsz
+                    for (let i = 0; i < maxSubIterations; i++) {
+                        this.currentVariationSettings = { WGHT: targetWght, WDTH: adjustedWdth, OPSZ: adjustedOpsz };
+                        this.currentLetterSpacing = `${letterSpacingClamp.default}px`;
+                        this.currentWordSpacing = `${wordSpacingClamp.default}px`;
+                        this.applyStyles();
+                        currentElementWidth = this.getElementWidth();
+                        error = targetWidthPx - currentElementWidth;
+                        if (Math.abs(error) < tolerance) break;
+                        
+                        let prevOpsz = adjustedOpsz;
+                        if (error > 0) adjustedOpsz -= currentOpszAdjustVal;
+                        else adjustedOpsz += currentOpszAdjustVal;
+                        adjustedOpsz = Math.max(opszAxisDef.min, Math.min(opszAxisDef.max, adjustedOpsz));
+                        if (adjustedOpsz.toFixed(3) === prevOpsz.toFixed(3)) break; 
+                        opszChangedInLoop = true;
+                    }
+                    if (Math.abs(error) < tolerance) break; 
+
+                    // Sub-phase: Adjust wdth
+                    for (let i = 0; i < maxSubIterations; i++) {
+                        this.currentVariationSettings = { WGHT: targetWght, WDTH: adjustedWdth, OPSZ: adjustedOpsz };
+                        this.applyStyles();
+                        currentElementWidth = this.getElementWidth();
+                        error = targetWidthPx - currentElementWidth;
+                        if (Math.abs(error) < tolerance) break;
+
+                        let prevWdth = adjustedWdth;
+                        if (error > 0) adjustedWdth += currentWdthAdjustVal;
+                        else adjustedWdth -= currentWdthAdjustVal;
+                        adjustedWdth = Math.max(wdthAxisDef.min, Math.min(wdthAxisDef.max, adjustedWdth));
+                        if (adjustedWdth.toFixed(3) === prevWdth.toFixed(3)) break; 
+                        wdthChangedInLoop = true;
+                    }
+                    if (Math.abs(error) < tolerance) break; 
+
+                    if (!opszChangedInLoop && !wdthChangedInLoop && mainIter > 0) break; 
+                }
+                
+                this.currentVariationSettings = { WGHT: targetWght, WDTH: adjustedWdth, OPSZ: adjustedOpsz };
+                this.currentLetterSpacing = `${letterSpacingClamp.default}px`;
+                this.currentWordSpacing = `${wordSpacingClamp.default}px`;
+                this.applyStyles();
+                currentElementWidth = this.getElementWidth();
+                error = targetWidthPx - currentElementWidth;
+                
+                // Phase 2: Adjust letter-spacing if still too long
+                if (error < -tolerance) { 
+                    for (let i = 0; i < maxSpacingIterations; i++) {
+                        this.currentLetterSpacing = `${adjustedLetterSpacing}px`;
+                        this.currentWordSpacing = `${wordSpacingClamp.default}px`; // Reset word spacing
+                        this.applyStyles();
+                        currentElementWidth = this.getElementWidth();
+                        error = targetWidthPx - currentElementWidth;
+
+                        if (Math.abs(error) < tolerance || adjustedLetterSpacing <= letterSpacingClamp.min) break;
+                        
+                        if (error < 0) { 
+                             adjustedLetterSpacing -= letterSpacingClamp.step;
+                             adjustedLetterSpacing = Math.max(letterSpacingClamp.min, adjustedLetterSpacing);
+                        } else { break; }
+                    }
+                }
+                
+                this.currentLetterSpacing = `${adjustedLetterSpacing}px`; 
+                this.applyStyles(); 
+                currentElementWidth = this.getElementWidth();
+                error = targetWidthPx - currentElementWidth;
+
+                // Phase 3: Adjust word-spacing if still too long
+                if (error < -tolerance) { 
+                     for (let i = 0; i < maxSpacingIterations; i++) {
+                        this.currentWordSpacing = `${adjustedWordSpacing}px`;
+                        this.applyStyles();
+                        currentElementWidth = this.getElementWidth();
+                        error = targetWidthPx - currentElementWidth;
+
+                        if (Math.abs(error) < tolerance || adjustedWordSpacing <= wordSpacingClamp.min) break;
+
+                        if (error < 0) { 
+                            adjustedWordSpacing -= wordSpacingClamp.step;
+                            adjustedWordSpacing = Math.max(wordSpacingClamp.min, adjustedWordSpacing);
+                        } else { break; }
+                    }
+                }
+                
+                // Final application of styles and return results
+                this.currentVariationSettings = { WGHT: targetWght, WDTH: adjustedWdth, OPSZ: adjustedOpsz };
+                this.currentLetterSpacing = `${adjustedLetterSpacing}px`;
+                this.currentWordSpacing = `${adjustedWordSpacing}px`;
+                this.applyStyles();
+
+                return {
+                    wght: targetWght,
+                    wdth: adjustedWdth,
+                    opsz: adjustedOpsz,
+                    letterSpacing: adjustedLetterSpacing,
+                    wordSpacing: adjustedWordSpacing,
+                    finalWidth: this.getElementWidth(),
+                    error: targetWidthPx - this.getElementWidth()
+                };
+            }
+        }
+
+        // --- リファクタリング準備: LineLengthController クラス定義 ---
+        class LineLengthController extends FontControllerBase {
+            constructor(targetElement, initialSettings, lineLengthOptions = {}) {
+                super(targetElement, initialSettings);
+                this.targetWidth = 0; 
+                this.tolerance = lineLengthOptions.tolerance !== undefined ? lineLengthOptions.tolerance : TARGET_LENGTH_TOLERANCE_PX;
+                this.initialWdthValue = lineLengthOptions.initialWdthValue !== undefined ? lineLengthOptions.initialWdthValue : INITIAL_TARGET_WDTH;
+                this.initialOpszValue = lineLengthOptions.initialOpszValue !== undefined ? lineLengthOptions.initialOpszValue : ROBOTO_FLEX_AXES.opsz.max;
+                this.maxMainIterations = lineLengthOptions.maxMainIterations !== undefined ? lineLengthOptions.maxMainIterations : MAIN_ADJUST_ITERATIONS;
+                this.maxSubIterations = lineLengthOptions.maxSubIterations !== undefined ? lineLengthOptions.maxSubIterations : SUB_ADJUST_ITERATIONS;
+                this.maxSpacingIterations = lineLengthOptions.maxSpacingIterations !== undefined ? lineLengthOptions.maxSpacingIterations : SPACING_ADJUST_ITERATIONS;
+                this.letterSpacingClamp = lineLengthOptions.letterSpacingClamp || { ...TARGET_LETTER_SPACING_CLAMP };
+                this.wordSpacingClamp = lineLengthOptions.wordSpacingClamp || { ...TARGET_WORD_SPACING_CLAMP };
+                this.spacingClampValues = lineLengthOptions.spacingClampValues || {
+                    letterSpacing: { min: -2.5, default: 0, step: 0.05 },
+                    wordSpacing: { min: -5, default: 0, step: 0.1 }
+                };
+                this.lastAdjustedParams = {
+                    wght: this.getVariationSetting('wght') || ROBOTO_FLEX_AXES.wght.default,
+                    wdth: this.initialWdthValue,
+                    opsz: this.initialOpszValue,
+                    letterSpacing: this.spacingClampValues.letterSpacing.default,
+                    wordSpacing: this.spacingClampValues.wordSpacing.default,
+                    finalWidth: 0,
+                    error: 0
+                };
+            }
+
+            adjustToTargetLength(currentWght) {
+                const container = this.targetElement.parentElement;
+                if (!container) {
+                    console.warn("LineLengthController: Target element has no parent container.");
+                    return this.getAdjustedParameters();
+                }
+                const containerStyle = window.getComputedStyle(container);
+                const containerPaddingLeft = parseFloat(containerStyle.paddingLeft) || 0;
+                const containerPaddingRight = parseFloat(containerStyle.paddingRight) || 0;
+                this.targetWidth = container.clientWidth - containerPaddingLeft - containerPaddingRight;
+
+                if (isNaN(this.targetWidth) || this.targetWidth <= 0) {
+                    console.warn("LineLengthController: Invalid target width from container.", this.targetWidth);
+                    return this.getAdjustedParameters();
+                }
+
+                const adjustmentConfig = {
+                    targetWght: parseFloat(currentWght),
+                    targetWidthPx: this.targetWidth,
+                    initialWdth: this.initialWdthValue,
+                    initialOpsz: this.initialOpszValue,
+                    tolerance: this.tolerance,
+                    maxMainIterations: this.maxMainIterations,
+                    maxSubIterations: this.maxSubIterations,
+                    maxSpacingIterations: this.maxSpacingIterations,
+                    letterSpacingClamp: this.letterSpacingClamp,
+                    wordSpacingClamp: this.wordSpacingClamp
+                };
+                
+                this.lastAdjustedParams = this._performIterativeAdjustment(adjustmentConfig);
+                return this.getAdjustedParameters();
+            }
+
+            getAdjustedParameters() {
+                return { ...this.lastAdjustedParams };
+            }
+        }
+
+
+        // --- 既存の関数群 (一部はクラスメソッドに移行済み、または移行予定) ---
+        // getCharacterActualWidth, estimateSentenceWidth, updateSampleSentenceWidthAndEstimate, 
+        // calculateAndDisplayMetrics, updateVisualization, handleFontChange, 
+        // updateVariableFontSettings, applySemanticSettings, lerp
+        // は、まだグローバルスコープに残っていますが、最終的にはクラスメソッドや
+        // UI制御専用の関数に整理される予定です。
+
+        // Target Length Adjustment Logic (Global function to be replaced by LineLengthController instance)
+        // const TARGET_WDTH_FIXED_VALUE = 75; // Now INITIAL_TARGET_WDTH
+        const MAIN_ADJUST_ITERATIONS = 10; 
+        const SUB_ADJUST_ITERATIONS = 3;   
+        const SPACING_ADJUST_ITERATIONS = 10; 
+        const TARGET_LENGTH_TOLERANCE_PX = 2; 
+
+        const TARGET_LETTER_SPACING_CLAMP = { min: -2.5, default: 0, step: 0.05 }; 
+        const TARGET_WORD_SPACING_CLAMP = { min: -5, default: 0, step: 0.1 };  
+
+
+        // Global instance of LineLengthController for the target length section
+        let targetLengthController = null; 
+
+        function initTargetLengthController() {
+            if (targetLengthSentence) {
+                targetLengthController = new LineLengthController(
+                    targetLengthSentence,
+                    { 
+                        fontFamily: '"Roboto Flex", sans-serif',
+                        fontSize: getComputedStyle(targetLengthSentence).fontSize, 
+                        axisDefinitions: ROBOTO_FLEX_AXES,
+                        variationSettings: { 
+                            WGHT: parseFloat(targetWghtSlider.value),
+                            WDTH: INITIAL_TARGET_WDTH, 
+                            OPSZ: ROBOTO_FLEX_AXES.opsz.max
+                        }
+                    },
+                    { 
+                        initialWdthValue: INITIAL_TARGET_WDTH,
+                        initialOpszValue: ROBOTO_FLEX_AXES.opsz.max,
+                        tolerance: TARGET_LENGTH_TOLERANCE_PX,
+                        maxMainIterations: MAIN_ADJUST_ITERATIONS,
+                        maxSubIterations: SUB_ADJUST_ITERATIONS,
+                        maxSpacingIterations: SPACING_ADJUST_ITERATIONS,
+                        spacingClampValues: { // ★この部分で渡す想定でした
+                            letterSpacing: TARGET_LETTER_SPACING_CLAMP,
+                            wordSpacing: TARGET_WORD_SPACING_CLAMP
+                        }
+                    }
+                );
+            }
+        }
+        
+        function handleTargetLengthAdjustment() {
+            if (!targetLengthController || !targetWghtSlider || !targetLengthSentenceContainer || !targetContainerWidthInfo || !targetWdthInfo || !targetOpszInfo || !targetLSInfo || !targetWSInfo || !currentSentenceWidthInfo || !actualWidthLineRight) {
+                console.warn("Target length adjustment elements not ready.");
+                return;
+            }
+            
+            const currentWght = parseFloat(targetWghtSlider.value);
+            const results = targetLengthController.adjustToTargetLength(currentWght);
+
+            // Update UI from results
+            targetWdthInfo.textContent = results.wdth.toFixed(2); 
+            targetOpszInfo.textContent = results.opsz.toFixed(2);
+            targetLSInfo.textContent = `${results.letterSpacing.toFixed(2)}px`;
+            targetWSInfo.textContent = `${results.wordSpacing.toFixed(2)}px`;
+            
+            const containerStyle = window.getComputedStyle(targetLengthSentenceContainer);
+            const containerPaddingLeft = parseFloat(containerStyle.paddingLeft) || 0;
+            const containerPaddingRight = parseFloat(containerStyle.paddingRight) || 0;
+            const targetContentWidth = targetLengthSentenceContainer.clientWidth - containerPaddingLeft - containerPaddingRight;
+
+            if (targetContainerWidthInfo) targetContainerWidthInfo.textContent = `${targetContentWidth.toFixed(2)}px (内容領域)`;
+            currentSentenceWidthInfo.textContent = `${results.finalWidth.toFixed(2)}px (最終誤差: ${results.error.toFixed(2)}px)`;
+            
+            // Update actual width lines
+            const textBoxPaddingValue = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--text-box-padding')) || 0;
+            // Corrected: Right line starts at the end of the text content, plus the container's left padding
+            // because the line itself is positioned relative to the container's padding box.
+            // The text starts after the container's left padding.
+            actualWidthLineRight.style.left = `${containerPaddingLeft + results.finalWidth}px`;
+        }
+
+
+        // --- イベントリスナーと初期化 ---
+        // (calculateAndDisplayMetrics, updateVisualization, etc. は変更なし)
+        function getCharacterActualWidth(char, fontFamily, fontSize) {
+            const tempSpan = document.createElement('span');
+            tempSpan.innerHTML = (char === ' ') ? '&nbsp;' : char; 
+            tempSpan.style.fontFamily = fontFamily;
+            tempSpan.style.fontSize = fontSize;
+            tempSpan.style.lineHeight = 'normal';
+            tempSpan.style.padding = '0';
+            tempSpan.style.margin = '0';
+            tempSpan.style.border = '0';
+            tempSpan.style.visibility = 'hidden';
+            tempSpan.style.position = 'absolute';
+            tempSpan.style.whiteSpace = 'pre'; 
+
+            document.body.appendChild(tempSpan);
+            const width = tempSpan.offsetWidth; 
+            document.body.removeChild(tempSpan);
+            return width;
+        }
+
+        function estimateSentenceWidth(element) {
+            const text = element.textContent;
+            if (!text) return 0;
+
+            const computedStyle = window.getComputedStyle(element);
+            const fontFamily = computedStyle.fontFamily;
+            const fontSize = computedStyle.fontSize;
+            const letterSpacing = parseFloat(computedStyle.letterSpacing) || 0; 
+            const wordSpacing = parseFloat(computedStyle.wordSpacing) || 0;
+
+            let estimatedWidth = 0;
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                estimatedWidth += getCharacterActualWidth(char, fontFamily, fontSize);
+                if (i < text.length - 1) {
+                    estimatedWidth += letterSpacing;
+                }
+                if (char === ' ') {
+                    estimatedWidth += wordSpacing;
+                }
+            }
+            return estimatedWidth;
+        }
+
+        function updateSampleSentenceWidthAndEstimate() {
+            if (sampleSentenceElement && sampleSentenceWidthDisplay && sampleSentenceEstimatedWidthDisplay) {
+                const estimatedW = estimateSentenceWidth(sampleSentenceElement);
+                sampleSentenceEstimatedWidthDisplay.textContent = `サンプル文の推定内容幅 (カーニング等未考慮): ${estimatedW.toFixed(2)}px`;
+
+                requestAnimationFrame(() => {
+                    const sentenceStyle = window.getComputedStyle(sampleSentenceElement);
+                    const rect = sampleSentenceElement.getBoundingClientRect();
+                    
+                    const paddingLeft = parseFloat(sentenceStyle.paddingLeft) || 0;
+                    const paddingRight = parseFloat(sentenceStyle.paddingRight) || 0;
+                    const borderLeft = parseFloat(sentenceStyle.borderLeftWidth) || 0;
+                    const borderRight = parseFloat(sentenceStyle.borderRightWidth) || 0;
+
+                    const actualContentWidth = rect.width - paddingLeft - paddingRight - borderLeft - borderRight;
+                    
+                    sampleSentenceWidthDisplay.textContent = `サンプル文の実際の内容幅 (ブラウザ計算): ${actualContentWidth.toFixed(2)}px`;
+                });
+            }
+        }
+
+        function calculateAndDisplayMetrics() {
+            requestAnimationFrame(() => {
+                const computedStyle = window.getComputedStyle(htmlElement);
+                const currentFontFamily = computedStyle.fontFamily;
+                const currentFontSize = computedStyle.fontSize;
+                const currentLineHeight = computedStyle.lineHeight;
+
+                const tempExEl = document.createElement('div');
+                tempExEl.style.position = 'absolute';
+                tempExEl.style.visibility = 'hidden';
+                tempExEl.style.fontFamily = currentFontFamily;
+                tempExEl.style.fontSize = currentFontSize;
+                tempExEl.style.height = '1ex';
+                document.body.appendChild(tempExEl);
+                const exHeight = tempExEl.offsetHeight;
+                document.body.removeChild(tempExEl);
+
+                function measureCharDimension(charContent, isWidthMeasurement) {
+                    const tempSpan = document.createElement('span');
+                    if (charContent === ' ') {
+                        tempSpan.innerHTML = '&nbsp;'; 
+                    } else {
+                        tempSpan.textContent = charContent;
+                    }
+                    tempSpan.style.fontFamily = currentFontFamily;
+                    tempSpan.style.fontSize = currentFontSize;
+                    tempSpan.style.lineHeight = 'normal'; 
+                    tempSpan.style.position = 'absolute';
+                    tempSpan.style.visibility = 'hidden';
+                    tempSpan.style.padding = '0';
+                    tempSpan.style.border = '0';
+                    tempSpan.style.height = 'auto'; 
+                    tempSpan.style.width = 'auto';  
+                    document.body.appendChild(tempSpan);
+                    const dimension = isWidthMeasurement ? tempSpan.offsetWidth : tempSpan.offsetHeight;
+                    document.body.removeChild(tempSpan);
+                    return dimension;
+                }
+
+                const capHeight = measureCharDimension('X', false); 
+                const chWidth = measureCharDimension('0', true);   
+                const spaceWidth = measureCharDimension(' ', true); 
+
+                let lineHeightPx;
+                if (currentLineHeight === 'normal') {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.style.fontFamily = currentFontFamily;
+                    tempDiv.style.fontSize = currentFontSize;
+                    tempDiv.style.lineHeight = 'normal';
+                    tempDiv.style.position = 'absolute';
+                    tempDiv.style.visibility = 'hidden';
+                    tempDiv.textContent = 'Ag'; 
+                    document.body.appendChild(tempDiv);
+                    lineHeightPx = tempDiv.offsetHeight;
+                    document.body.removeChild(tempDiv);
+                } else if (currentLineHeight.endsWith('px')) {
+                    lineHeightPx = parseFloat(currentLineHeight);
+                } else { 
+                    const tempDiv = document.createElement('div');
+                    tempDiv.style.fontFamily = currentFontFamily;
+                    tempDiv.style.fontSize = currentFontSize; 
+                    tempDiv.style.lineHeight = currentLineHeight;
+                    tempDiv.style.position = 'absolute';
+                    tempDiv.style.visibility = 'hidden';
+                    tempDiv.textContent = 'Ag'; 
+                    document.body.appendChild(tempDiv);
+                    lineHeightPx = tempDiv.offsetHeight;
+                    document.body.removeChild(tempDiv);
+                }
+
+                const firstFontName = currentFontFamily.split(',')[0].trim().replace(/"/g, '');
+                resultExElement.textContent = `ex (x-height): ${exHeight}px (フォント: ${firstFontName})`;
+                resultCapElement.textContent = `cap (Cap Height): ${capHeight}px (フォント: ${firstFontName})`;
+                resultChElement.textContent = `ch ('0' width): ${chWidth}px (フォント: ${firstFontName})`;
+                resultSpaceElement.textContent = `space (Space width): ${spaceWidth}px (フォント: ${firstFontName})`;
+                resultLhElement.textContent = `lh (Line Height): ${lineHeightPx}px (フォント: ${firstFontName})`;
+                
+                updateVisualization({ ex: exHeight, cap: capHeight, ch: chWidth, space: spaceWidth, lh: lineHeightPx }, currentFontFamily, currentFontSize, currentLineHeight);
+                
+                if (sampleSentenceElement) {
+                    sampleSentenceElement.style.fontFamily = currentFontFamily; 
+                    updateSampleSentenceWidthAndEstimate(); 
+                }
+            });
+        }
+
+        function updateVisualization(metrics, fontFamily, fontSize, lineHeight) {
+            [vizExChar, vizCapChar, vizChChar, lhExampleChar, vizSpaceChar].forEach(el => {
+                if (el) { 
+                    el.style.fontFamily = fontFamily; 
+                }
+            });
+            if (lhExampleChar) {
+                 lhExampleChar.style.lineHeight = lineHeight; 
+            }
+            if (vizSpaceChar) {
+                vizSpaceChar.style.width = metrics.space > 0 ? `${metrics.space}px` : 'auto';
+            }
+
+            vizExLine.style.height = metrics.ex > 0 ? `${metrics.ex}px` : '0px';
+            vizExValue.textContent = metrics.ex > 0 ? `${metrics.ex.toFixed(2)}px` : 'N/A';
+            vizCapLine.style.height = metrics.cap > 0 ? `${metrics.cap}px` : '0px';
+            vizCapValue.textContent = metrics.cap > 0 ? `${metrics.cap.toFixed(2)}px` : 'N/A';
+            vizChLine.style.width = metrics.ch > 0 ? `${metrics.ch}px` : '0px';
+            vizChValue.textContent = metrics.ch > 0 ? `${metrics.ch.toFixed(2)}px` : 'N/A';
+            vizSpaceLine.style.width = metrics.space > 0 ? `${metrics.space}px` : '0px';
+            vizSpaceValue.textContent = metrics.space > 0 ? `${metrics.space.toFixed(2)}px` : 'N/A';
+            vizLhLine.style.height = metrics.lh > 0 ? `${metrics.lh}px` : '0px';
+            vizLhValue.textContent = metrics.lh > 0 ? `${metrics.lh.toFixed(2)}px` : 'N/A';
+        }
+
+        function handleFontChange() {
+            const selectedFont = fontSelector.value;
+            
+            htmlElement.classList.remove('font-roboto-flex', 'font-fraunces', 'font-shantell-sans');
+
+            if (selectedFont === "Roboto Flex") {
+                htmlElement.classList.add('font-roboto-flex');
+            } else if (selectedFont === "Fraunces") {
+                htmlElement.classList.add('font-fraunces');
+            } else if (selectedFont === "Shantell Sans") {
+                htmlElement.classList.add('font-shantell-sans');
+            }
+            
+            statusElement.textContent = `'${selectedFont}' フォントを適用し、メトリクスを計算中...`;
+            calculateAndDisplayMetrics(); 
+        }
+
+        function updateVariableFontSettings() {
+            if (!variableFontSentenceElement) return;
+
+            const wdth = vfWdthSlider.value;
+            const wght = vfWghtSlider.value;
+            const opsz = vfOpszSlider.value;
+            const slnt = vfSlntSlider.value;
+            const grad = vfGradSlider.value;
+
+            variableFontSentenceElement.style.fontVariationSettings = `
+                "wdth" ${wdth}, "wght" ${wght}, "opsz" ${opsz}, "slnt" ${slnt}, "GRAD" ${grad}
+            `;
+
+            if(vfWdthValue) vfWdthValue.textContent = wdth;
+            if(vfWghtValue) vfWghtValue.textContent = wght;
+            if(vfOpszValue) vfOpszValue.textContent = opsz;
+            if(vfSlntValue) vfSlntValue.textContent = slnt;
+            if(vfGradValue) vfGradValue.textContent = grad;
+        }
+
+        [vfWdthSlider, vfWghtSlider, vfOpszSlider, vfSlntSlider, vfGradSlider].forEach(slider => {
+            if (slider) {
+                slider.addEventListener('input', updateVariableFontSettings);
+            }
+        });
+
+        function applySemanticSettings(settings) {
+            if (!semanticSampleTextElement) return;
+            semanticSampleTextElement.style.fontVariationSettings = settings.fontVariationSettings || '';
+            semanticSampleTextElement.style.letterSpacing = settings.letterSpacing || 'normal';
+            semanticSampleTextElement.style.wordSpacing = settings.wordSpacing || 'normal';
+        }
+
+        function lerp(min, max, t) { return min * (1 - t) + max * t; }
+        
+        if (semanticReadabilitySlider) {
+            semanticReadabilitySlider.addEventListener('input', (event) => {
+                const value = parseInt(event.target.value, 10) / 100; 
+                if(semanticReadabilityValue) semanticReadabilityValue.textContent = Math.round(value * 100);
+                const wght = Math.round(lerp(ROBOTO_FLEX_AXES.wght.default + 200, ROBOTO_FLEX_AXES.wght.default - 100, value)); 
+                const wdth = Math.round(lerp(85, 110, value)); 
+                const opsz = Math.round(lerp(ROBOTO_FLEX_AXES.opsz.min, 48, value)); 
+                const letterSpacing = lerp(-1, 0.5, value).toFixed(2) + 'px';
+                const wordSpacing = lerp(-1.5, 2.5, value).toFixed(2) + 'px';
+                const grad = Math.round(lerp(80, -50, value)); 
+
+                applySemanticSettings({
+                    fontVariationSettings: `"wght" ${Math.max(ROBOTO_FLEX_AXES.wght.min, Math.min(ROBOTO_FLEX_AXES.wght.max, wght))}, "wdth" ${Math.max(ROBOTO_FLEX_AXES.wdth.min, Math.min(ROBOTO_FLEX_AXES.wdth.max, wdth))}, "opsz" ${Math.max(ROBOTO_FLEX_AXES.opsz.min, Math.min(ROBOTO_FLEX_AXES.opsz.max, opsz))}, "GRAD" ${Math.max(ROBOTO_FLEX_AXES.GRAD.min, Math.min(ROBOTO_FLEX_AXES.GRAD.max, grad))}`,
+                    letterSpacing: letterSpacing,
+                    wordSpacing: wordSpacing
+                });
+            });
+        }
+
+        if (semanticFormalitySlider) {
+            semanticFormalitySlider.addEventListener('input', (event) => {
+                const value = parseInt(event.target.value, 10) / 100; 
+                if(semanticFormalityValue) semanticFormalityValue.textContent = Math.round(value * 100);
+                const wght = Math.round(lerp(ROBOTO_FLEX_AXES.wght.default + 50, ROBOTO_FLEX_AXES.wght.min + 100, value)); 
+                const wdth = Math.round(lerp(90, 100, value)); 
+                const slnt = Math.round(lerp(ROBOTO_FLEX_AXES.slnt.min, ROBOTO_FLEX_AXES.slnt.default, value)); 
+                const letterSpacing = lerp(-0.5, 1, value).toFixed(2) + 'px'; 
+                const grad = Math.round(lerp(-100, ROBOTO_FLEX_AXES.GRAD.default, value)); 
+
+                applySemanticSettings({
+                    fontVariationSettings: `"wght" ${Math.max(ROBOTO_FLEX_AXES.wght.min, Math.min(ROBOTO_FLEX_AXES.wght.max, wght))}, "wdth" ${Math.max(ROBOTO_FLEX_AXES.wdth.min, Math.min(ROBOTO_FLEX_AXES.wdth.max, wdth))}, "slnt" ${Math.max(ROBOTO_FLEX_AXES.slnt.min, Math.min(ROBOTO_FLEX_AXES.slnt.max, slnt))}, "GRAD" ${Math.max(ROBOTO_FLEX_AXES.GRAD.min, Math.min(ROBOTO_FLEX_AXES.GRAD.max, grad))}`,
+                    letterSpacing: letterSpacing,
+                    wordSpacing: lerp(0, 1.5, value).toFixed(2) + 'px'
+                });
+            });
+        }
+
+        if (semanticImpactSlider) {
+            semanticImpactSlider.addEventListener('input', (event) => {
+                const value = parseInt(event.target.value, 10) / 100;
+                if(semanticImpactValue) semanticImpactValue.textContent = Math.round(value * 100);
+                const wght = Math.round(lerp(ROBOTO_FLEX_AXES.wght.min, ROBOTO_FLEX_AXES.wght.max, value)); 
+                const wdth = Math.round(lerp(75, ROBOTO_FLEX_AXES.wdth.max, value)); 
+                const opsz = Math.round(lerp(ROBOTO_FLEX_AXES.opsz.min, ROBOTO_FLEX_AXES.opsz.max, value)); 
+                const letterSpacing = lerp(1, -2, value).toFixed(2) + 'px'; 
+                const grad = Math.round(lerp(ROBOTO_FLEX_AXES.GRAD.min, ROBOTO_FLEX_AXES.GRAD.max, value)); 
+
+                applySemanticSettings({
+                    fontVariationSettings: `"wght" ${wght}, "wdth" ${wdth}, "opsz" ${opsz}, "GRAD" ${grad}`,
+                    letterSpacing: letterSpacing,
+                    wordSpacing: lerp(0.5, -2.5, value).toFixed(2) + 'px'
+                });
+            });
+        }
+        
+
+
+        function initTargetLengthController() {
+            if (targetLengthSentence) {
+                targetLengthController = new LineLengthController(
+                    targetLengthSentence,
+                    { 
+                        fontFamily: '"Roboto Flex", sans-serif',
+                        fontSize: getComputedStyle(targetLengthSentence).fontSize, 
+                        axisDefinitions: ROBOTO_FLEX_AXES,
+                        variationSettings: { 
+                            WGHT: parseFloat(targetWghtSlider.value),
+                            WDTH: INITIAL_TARGET_WDTH, 
+                            OPSZ: ROBOTO_FLEX_AXES.opsz.max
+                        }
+                    },
+                    { 
+                        initialWdthValue: INITIAL_TARGET_WDTH,
+                        initialOpszValue: ROBOTO_FLEX_AXES.opsz.max,
+                        tolerance: TARGET_LENGTH_TOLERANCE_PX,
+                        maxMainIterations: MAIN_ADJUST_ITERATIONS,
+                        maxSubIterations: SUB_ADJUST_ITERATIONS,
+                        maxSpacingIterations: SPACING_ADJUST_ITERATIONS,
+                        letterSpacingClamp: TARGET_LETTER_SPACING_CLAMP,
+                        wordSpacingClamp: TARGET_WORD_SPACING_CLAMP
+                    }
+                );
+            }
+        }
+        
+        function handleTargetLengthAdjustment() {
+            if (!targetLengthController || !targetWghtSlider || !targetLengthSentenceContainer || !targetContainerWidthInfo || !targetWdthInfo || !targetOpszInfo || !targetLSInfo || !targetWSInfo || !currentSentenceWidthInfo || !actualWidthLineRight) {
+                console.warn("Target length adjustment elements not ready.");
+                return;
+            }
+            
+            const currentWght = parseFloat(targetWghtSlider.value);
+            const results = targetLengthController.adjustToTargetLength(currentWght);
+
+            // Update UI from results
+            targetWdthInfo.textContent = results.wdth.toFixed(2); 
+            targetOpszInfo.textContent = results.opsz.toFixed(2);
+            targetLSInfo.textContent = `${results.letterSpacing.toFixed(2)}px`;
+            targetWSInfo.textContent = `${results.wordSpacing.toFixed(2)}px`;
+            
+            const containerStyle = window.getComputedStyle(targetLengthSentenceContainer);
+            const containerPaddingLeft = parseFloat(containerStyle.paddingLeft) || 0;
+            const containerPaddingRight = parseFloat(containerStyle.paddingRight) || 0;
+            const targetContentWidth = targetLengthSentenceContainer.clientWidth - containerPaddingLeft - containerPaddingRight;
+
+            if (targetContainerWidthInfo) targetContainerWidthInfo.textContent = `${targetContentWidth.toFixed(2)}px (内容領域)`;
+            currentSentenceWidthInfo.textContent = `${results.finalWidth.toFixed(2)}px (最終誤差: ${results.error.toFixed(2)}px)`;
+            
+            // Update actual width lines
+            const textBoxPaddingValue = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--text-box-padding')) || 0;
+            // Corrected: Right line starts where the text ends, plus the container's left padding (since the line is relative to the container's padding box)
+            actualWidthLineRight.style.left = `${containerPaddingLeft + results.finalWidth}px`;
+        }
+
+
+        // --- イベントリスナーと初期化 ---
+        // (calculateAndDisplayMetrics, updateVisualization, etc. は変更なし)
+        fontSelector.addEventListener('change', handleFontChange);
+
+        if (letterSpacingSlider && sampleSentenceElement && letterSpacingValueElement) {
+            letterSpacingSlider.addEventListener('input', (event) => {
+                const value = event.target.value;
+                sampleSentenceElement.style.letterSpacing = `${value}px`;
+                letterSpacingValueElement.textContent = `${value}px`;
+                updateSampleSentenceWidthAndEstimate(); 
+            });
+        }
+
+        if (wordSpacingSlider && sampleSentenceElement && wordSpacingValueElement) {
+            wordSpacingSlider.addEventListener('input', (event) => {
+                const value = event.target.value;
+                sampleSentenceElement.style.wordSpacing = `${value}px`;
+                wordSpacingValueElement.textContent = `${value}px`;
+                updateSampleSentenceWidthAndEstimate(); 
+            });
+        }
+
+        document.fonts.ready.then(() => {
+            statusElement.textContent = '全てのフォントの準備が完了しました。初期メトリクスを計算します。';
+            statusElement.style.color = 'green';
+            
+            if (targetContainerWidthInput && targetLengthSentenceContainer) {
+                
+                targetContainerWidthInput.addEventListener('input', (event) => {
+                    const newWidth = parseFloat(event.target.value);
+                    if (!isNaN(newWidth) && newWidth >= 100 && newWidth <= 1000) { 
+                        targetLengthSentenceContainer.style.width = `${newWidth}px`;
+                        if (targetLengthController) { // Check if controller is initialized
+                            handleTargetLengthAdjustment(); // Re-run adjustment
+                        }
+                    }
+                });
+            
+                const initialContainerWidth = parseFloat(targetContainerWidthInput.value);
+                 if (!isNaN(initialContainerWidth) && initialContainerWidth >= 100 && initialContainerWidth <= 1000) {
+                    targetLengthSentenceContainer.style.width = `${initialContainerWidth}px`;
+                }
+            }
+            
+            if (targetWghtSlider) {
+                targetWghtSlider.addEventListener('input', (event) => {
+                    if(targetWghtValue) targetWghtValue.textContent = event.target.value; // スライダーの値を表示に反映
+                    if (targetLengthController) { // targetLengthControllerが初期化されていれば
+                        handleTargetLengthAdjustment(); // 調整関数を呼び出す
+                    }
+                });
+            }
+
+            initTargetLengthController(); // Initialize the controller
+
+            calculateAndDisplayMetrics(); 
+            updateVariableFontSettings(); 
+            
+            if(semanticReadabilitySlider) semanticReadabilitySlider.dispatchEvent(new Event('input'));
+            if(semanticFormalitySlider) semanticFormalitySlider.dispatchEvent(new Event('input'));
+            if(semanticImpactSlider) semanticImpactSlider.dispatchEvent(new Event('input'));
+            
+            if (targetLengthController) { // Ensure controller is initialized before first adjustment
+                 handleTargetLengthAdjustment(); 
+            }
+
+
+            if (sampleSentenceElement) {
+                 if (letterSpacingSlider) sampleSentenceElement.style.letterSpacing = `${letterSpacingSlider.value}px`;
+                 if (wordSpacingSlider) sampleSentenceElement.style.wordSpacing = `${wordSpacingSlider.value}px`;
+                 if (letterSpacingValueElement && letterSpacingSlider) letterSpacingValueElement.textContent = `${letterSpacingSlider.value}px`;
+                 if (wordSpacingValueElement && wordSpacingSlider) wordSpacingValueElement.textContent = `${wordSpacingSlider.value}px`;
+                 updateSampleSentenceWidthAndEstimate(); 
+            }
+
+        }).catch((error) => {
+            statusElement.textContent = 'フォントの読み込みに失敗しました。';
+            statusElement.style.color = 'red';
+            [resultExElement, resultCapElement, resultChElement, resultSpaceElement, resultLhElement].forEach(el => {
+                if (el) { 
+                    const metricName = el.id.replace('result', '');
+                    el.textContent = `${metricName}: エラーが発生しました。`;
+                }
+            });
+            console.error('フォントの読み込み中にエラーが発生しました:', error);
+        });
+    </script>
+</body>
+</html>

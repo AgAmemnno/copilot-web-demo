@@ -1,0 +1,25 @@
+/* --- imported-styles.css の内容をここに展開 (デモ用) --- */
+/* @layer  reset,framework, project-specific, utilities; */
+@layer  base,theme;
+
+
+@layer theme { /* この theme は framework レイヤーの一部で、base の後 */
+    .component-a { /* main.css の framework レイヤー内のスタイル */
+        border: 2px solid #542e01;
+        background-color: #ff902e;
+        color: #b48400;
+    }
+}
+
+
+@layer base { /* この base は framework レイヤーの一部 */
+
+
+.component-a { /* main.css の framework レイヤー内のスタイル */
+    border: 2px solid #f700ff;
+    background-color: #f690ff;
+    color: #81009e;
+}
+}
+
+

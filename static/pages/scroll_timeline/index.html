@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>段階3: bodyのSDA進行度取得</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            min-height: 250vh; /* スクロール領域 */
+            margin: 0;
+            padding: 1rem;
+
+            /* bodyにSDAを設定 */
+            /* アニメーション名は 'body-scroll-progress' とする */
+            animation: body-scroll-progress linear forwards;
+            animation-timeline: scroll(root block); /* ページ全体のスクロールに連動 */
+            /* animation-range はデフォルト (0% to 100%) */
+            /* animation-duration: auto; */ /* SDAではdurationは通常不要だが、互換性で1msなど入れる場合もある */
+        }
+
+        /* body用のアニメーションキーフレーム (内容は進行度取得目的なので単純でOK) */
+        /* 例えば、カスタムプロパティを変化させるなど */
+        @keyframes body-scroll-progress {
+            from {
+                --body-scroll-progress-value: 0;
+            }
+            to {
+                --body-scroll-progress-value: 1;
+            }
+        }
+
+        .spacer {
+            height: 80vh;
+        }
+        #tracked-element { /* この要素は進行度取得の対象ではなくなります */
+            width: 200px;
+            height: 200px;
+            background-color: lightslategray; /* 色を変更して区別 */
+            margin: 50vh auto;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        /* 進行度表示用 */
+        #progress-display {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 1.1rem;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>段階3: bodyのSDA進行度取得</h1>
+    <p>ページ全体をスクロールしてください。</p>
+    <p>デベロッパーコンソールと左上の表示で<code>body</code>要素のスクロールアニメーション進行度（0〜1）を確認できます。</p>
+
+    <div class="spacer"></div>
+
+    <div id="tracked-element">
+        (この要素は直接追跡していません)
+    </div>
+
+    <div class="spacer"></div>
+
+    <div id="progress-display">Body Scroll Progress: 0.000</div>
+
+    <script>
+        // const trackedElement = document.getElementById('tracked-element'); // 不要に
+        const progressDisplay = document.getElementById('progress-display');
+        let bodyAnimation = null; // bodyのAnimationオブジェクトを保持する変数
+
+        // bodyのアニメーションオブジェクトを取得する関数
+        function getBodyAnimation() {
+            // document.body に適用されているアニメーションを取得
+            const animations = document.body.getAnimations();
+
+            if (animations && animations.length > 0) {
+                // animation-name 'body-scroll-progress' で特定
+                bodyAnimation = animations.find(anim => anim.animationName === 'body-scroll-progress');
+
+                if (bodyAnimation) {
+                    console.log('Animation object for body (body-scroll-progress) found:', bodyAnimation);
+                } else {
+                    // console.log('Animation "body-scroll-progress" not found on body. Checking all animations on body...');
+                    // 見つからない場合、bodyに適用されている他のSDAを探す (フォールバック)
+                    bodyAnimation = animations.find(anim => anim.timeline && (anim.timeline.source !== undefined || anim.timeline instanceof ScrollTimeline || anim.timeline instanceof ViewTimeline) );
+                    if(bodyAnimation){
+                        console.warn('Found a scroll-driven animation on body, but not named "body-scroll-progress":', bodyAnimation);
+                    } else {
+                        // console.log('No scroll-driven animation found on body yet...');
+                        requestAnimationFrame(getBodyAnimation); // 再試行
+                    }
+                }
+            } else {
+                // console.log('No animations found on body yet...');
+                requestAnimationFrame(getBodyAnimation); // 再試行
+            }
+        }
+
+        // アニメーション進行度を監視・表示する関数
+        function updateBodyScrollProgress() {
+            if (bodyAnimation && bodyAnimation.effect) {
+                const progress = bodyAnimation.effect.getComputedTiming().progress;
+
+                if (progress !== null && typeof progress !== 'undefined') {
+                    const progressValue = Math.max(0, Math.min(1, Number(progress)));
+                    console.log('Body Scroll Animation Progress:', progressValue.toFixed(3));
+                    progressDisplay.textContent = `Body Scroll Progress: ${progressValue.toFixed(3)}`;
+                } else {
+                    progressDisplay.textContent = `Body Scroll Progress: N/A`;
+                }
+            } else {
+                progressDisplay.textContent = `Body Scroll Progress: Waiting...`;
+            }
+            requestAnimationFrame(updateBodyScrollProgress);
+        }
+
+        // 最初にアニメーションオブジェクトを取得開始
+        getBodyAnimation();
+        // 進行度の監視を開始
+        requestAnimationFrame(updateBodyScrollProgress);
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新しいルート相対フォント単位デモ</title>
+    <style>
+        /* --- ルート要素のスタイル --- */
+        :root {
+            /* これらの値を変えると、各単位の値も変わります */
+            font-size: 18px;
+            line-height: 1.6;
+            font-family: 'Georgia', serif; /* 例: セリフ体 */
+            /* font-family: 'Courier New', monospace; */ /* 例: 等幅フォント */
+            /* font-family: 'Meiryo', sans-serif; */ /* 例: 日本語フォント */
+        }
+
+        /* --- デモ用基本スタイル --- */
+        body {
+            font-family: sans-serif; /* デモ要素以外のフォント */
+            padding: 1rem;
+            background-color: #f9f9f9;
+        }
+        .demo-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .demo-section h2 {
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        .unit-label {
+            font-weight: bold;
+            color: #007bff;
+            margin-right: 0.5em;
+            display: inline-block;
+            min-width: 5em; /* ラベル幅を揃える */
+        }
+        .demo-box {
+            display: inline-block; /* 横並びにするため */
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+            padding: 0.3rem 0.6rem;
+            vertical-align: baseline; /* ベースラインを揃える */
+            font-size: 1rem; /* ボックス内の文字サイズは固定 */
+            min-height: 1.5em; /* 最小高さを確保 */
+            box-sizing: border-box;
+        }
+        .comparison-text {
+            font-size: var(--root-font-size, 18px); /* ルートのフォントサイズを適用 */
+            font-family: var(--root-font-family, 'Georgia', serif); /* ルートのフォントを適用 */
+            line-height: var(--root-line-height, 1.6); /* ルートの行高を適用 */
+            border: 1px dashed #ccc;
+            padding: 0.5rem;
+            margin-top: 1rem;
+            background-color: #fff9e6;
+        }
+         .comparison-text span { /* 比較用のマーカー */
+            border-bottom: 1px solid red;
+            display: inline-block; /* 幅を持たせる */
+         }
+         .comparison-text .x-height-marker { /* x-height用 */
+             height: 1ex; /* ex単位で高さを設定 */
+             width: 1em;
+             background-color: rgba(255, 0, 0, 0.2);
+             vertical-align: baseline;
+             margin-left: 5px;
+         }
+         .comparison-text .cap-height-marker { /* cap-height用 */
+             height: 1cap; /* cap単位で高さを設定 */
+             width: 1em;
+             background-color: rgba(0, 0, 255, 0.2);
+             vertical-align: baseline;
+             margin-left: 5px;
+         }
+         .comparison-text .ch-marker { /* ch用 */
+             border-bottom: none;
+             border-left: 1px solid green;
+             border-right: 1px solid green;
+             padding: 0;
+             margin: 0 2px;
+         }
+         .comparison-text .ic-marker { /* ic用 */
+             border-bottom: none;
+             border-left: 1px solid orange;
+             border-right: 1px solid orange;
+             padding: 0;
+             margin: 0 2px;
+         }
+         .comparison-text .lh-marker { /* lh用 */
+             height: 1lh; /* lh単位で高さを設定 */
+             width: 1em;
+             background-color: rgba(128, 0, 128, 0.2);
+             vertical-align: top; /* 上端基準 */
+             margin-left: 5px;
+         }
+
+
+        /* --- 各単位のデモスタイル --- */
+
+        /* rex (Root Ex Unit) */
+        .rex-height { height: 1rex; }
+        .rex-margin { margin-bottom: 2rex; }
+        .rex-padding { padding-top: 0.5rex; padding-bottom: 0.5rex; }
+
+        /* rch (Root Character Unit) */
+        .rch-width { width: 10rch; }
+        .rch-max-width { max-width: 60rch; }
+        .rch-padding { padding-left: 2rch; padding-right: 2rch; }
+
+        /* rcap (Root Cap Unit) */
+        .rcap-height { height: 1rcap; }
+        .rcap-font-size { font-size: 1.5rcap; } /* 文字サイズにも使える */
+        .rcap-margin { margin-bottom: 1rcap; }
+
+        /* ric (Root Ideograph Character Unit) */
+        .ric-width { width: 5ric; }
+        .ric-height { height: 2ric; }
+        .ric-padding { padding: 1ric; }
+
+        /* rlh (Root Line Height Unit) */
+        .rlh-height { height: 1rlh; }
+        .rlh-margin { margin-bottom: 2rlh; }
+        .rlh-padding { padding-top: 0.5rlh; padding-bottom: 0.5rlh; }
+
+    </style>
+</head>
+<body>
+
+    <h1>新しいルート相対フォント単位デモ</h1>
+    <p>ルート要素 (<code>&lt;html&gt;</code>) のフォント設定に基づいてサイズが決まる単位の例です。</p>
+    <p>
+        現在のルート設定:
+        <span id="current-root-settings"></span>
+    </p>
+    <button onclick="changeRootFont('serif')">Serif (Georgia)</button>
+    <button onclick="changeRootFont('sans-serif')">Sans-serif (Arial)</button>
+    <button onclick="changeRootFont('monospace')">Monospace (Courier New)</button>
+    <button onclick="changeRootFont('japanese')">Japanese (Meiryo)</button>
+    <button onclick="changeRootFontSize(16)">Font Size: 16px</button>
+    <button onclick="changeRootFontSize(24)">Font Size: 24px</button>
+    <button onclick="changeRootLineHeight(1.4)">Line Height: 1.4</button>
+    <button onclick="changeRootLineHeight(2.0)">Line Height: 2.0</button>
+
+    <div class="demo-section">
+        <h2>rex (Root Ex Unit) - ルートの x-height 基準</h2>
+        <span class="unit-label">height: 1rex;</span>
+        <div class="demo-box rex-height">Box</div>
+        <br>
+        <span class="unit-label">margin-bottom: 2rex;</span>
+        <div class="demo-box rex-margin">Box</div>
+        <div class="demo-box">次のBox (マージン確認用)</div>
+        <br>
+        <span class="unit-label">padding-top/bottom: 0.5rex;</span>
+        <div class="demo-box rex-padding">Box</div>
+        <div class="comparison-text" id="rex-compare">
+            ルートフォント: xX<span class="x-height-marker" title="1ex (1rex)"></span>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>rch (Root Character Unit) - ルートの '0' の幅基準</h2>
+        <span class="unit-label">width: 10rch;</span>
+        <div class="demo-box rch-width">0123456789</div>
+        <br>
+        <span class="unit-label">max-width: 60rch;</span>
+        <div class="demo-box rch-max-width" style="display: block; white-space: normal;">このボックスの最大幅はルートの約60文字分です。This box has a max-width of about 60 characters of the root font.</div>
+        <br>
+        <span class="unit-label">padding-left/right: 2rch;</span>
+        <div class="demo-box rch-padding">Box</div>
+         <div class="comparison-text" id="rch-compare">
+            ルートフォント: <span class="ch-marker">0</span><span class="ch-marker">0</span><span class="ch-marker">0</span> (3ch / 3rch)
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>rcap (Root Cap Unit) - ルートの Cap height 基準</h2>
+        <span class="unit-label">height: 1rcap;</span>
+        <div class="demo-box rcap-height">Box</div>
+        <br>
+        <span class="unit-label">font-size: 1.5rcap;</span>
+        <span class="demo-box rcap-font-size" style="background:none; border: none; padding: 0; height: auto;">テキストサイズ</span>
+        <br>
+        <span class="unit-label">margin-bottom: 1rcap;</span>
+        <div class="demo-box rcap-margin">Box</div>
+        <div class="demo-box">次のBox</div>
+         <div class="comparison-text" id="rcap-compare">
+            ルートフォント: XH<span class="cap-height-marker" title="1cap (1rcap)"></span>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>ric (Root Ideograph Character Unit) - ルートの '水' の幅/高さ基準</h2>
+        <span class="unit-label">width: 5ric;</span>
+        <div class="demo-box ric-width">Box</div>
+        <br>
+        <span class="unit-label">height: 2ric;</span>
+        <div class="demo-box ric-height">Box</div>
+        <br>
+        <span class="unit-label">padding: 1ric;</span>
+        <div class="demo-box ric-padding">Box</div>
+         <div class="comparison-text" id="ric-compare">
+            ルートフォント: <span class="ic-marker">水</span><span class="ic-marker">水</span> (2ic / 2ric)
+        </div>
+    </div>
+
+     <div class="demo-section">
+        <h2>rlh (Root Line Height Unit) - ルートの line-height 基準</h2>
+        <span class="unit-label">height: 1rlh;</span>
+        <div class="demo-box rlh-height">Box</div>
+        <br>
+        <span class="unit-label">margin-bottom: 2rlh;</span>
+        <div class="demo-box rlh-margin">Box</div>
+        <div class="demo-box">次のBox</div>
+        <br>
+        <span class="unit-label">padding-top/bottom: 0.5rlh;</span>
+        <div class="demo-box rlh-padding">Box</div>
+         <div class="comparison-text" id="rlh-compare">
+            ルートフォント: Text<br>Line Height<span class="lh-marker" title="1lh (1rlh)"></span>
+        </div>
+    </div>
+
+    <script>
+        const root = document.documentElement;
+        const settingsDisplay = document.getElementById('current-root-settings');
+        const comparisonTexts = document.querySelectorAll('.comparison-text');
+
+        function updateRootInfo() {
+            const styles = getComputedStyle(root);
+            const fontSize = styles.fontSize;
+            const fontFamily = styles.fontFamily;
+            const lineHeight = styles.lineHeight;
+            settingsDisplay.textContent = `font-size: ${fontSize}, line-height: ${lineHeight}, font-family: ${fontFamily}`;
+
+            // 比較用テキストのスタイルも更新
+             comparisonTexts.forEach(el => {
+                el.style.fontSize = fontSize;
+                el.style.fontFamily = fontFamily;
+                el.style.lineHeight = lineHeight;
+                // CSS変数も更新 (マーカー用)
+                el.style.setProperty('--root-font-size', fontSize);
+                el.style.setProperty('--root-font-family', fontFamily);
+                el.style.setProperty('--root-line-height', lineHeight);
+            });
+        }
+
+        function changeRootFont(type) {
+            let family = 'Georgia, serif';
+            if (type === 'sans-serif') family = 'Arial, sans-serif';
+            else if (type === 'monospace') family = "'Courier New', monospace";
+            else if (type === 'japanese') family = "'Meiryo', sans-serif";
+            root.style.fontFamily = family;
+            updateRootInfo();
+        }
+
+        function changeRootFontSize(size) {
+            root.style.fontSize = `${size}px`;
+            updateRootInfo();
+        }
+
+        function changeRootLineHeight(height) {
+            root.style.lineHeight = height;
+            updateRootInfo();
+        }
+
+        // 初期表示
+        updateRootInfo();
+    </script>
+
+</body>
+</html>

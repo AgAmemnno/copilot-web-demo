@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スワイプによる2次元スクロール (時間連動duration - 修正)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            /* margin: 0; */ /* コメントアウトのまま */
+            width: 100vw; /* bodyの幅をビューポート幅に */
+            height: 100vh; /* bodyの高さをビューポート高に */
+            /* overflow: hidden; */ /* コメントアウトのまま */
+            /* background-image: radial-gradient(circle at center, #3498db 0%, #2c3e50 70%); */ /* コメントアウトのまま */
+            color: #333;
+            position: fixed; /* #viewport の absolute 配置の基準 */
+        }
+
+        #scroll-content { /* イベントを拾い、背景グリッドを表示する固定レイヤー */
+            position: absolute; /* bodyを基準に配置 */
+            --mw: 1vw;
+            --mh: 1vh;
+            margin-top: var(--mh);
+            margin-left: var(--mw);
+            width: calc(100vw - 2 * var(--mw));
+            height: calc(100vh - 2 * var(--mh));
+            border-color: rgb(0 27 49 / 70%);
+            border-style: double;
+            border-width: var(--m);
+            background-color: rgb(238 238 238 / 7%);
+            z-index: 100;
+            cursor: grab;
+        }
+        #scroll-content:active {
+            cursor: grabbing;
+        }
+
+        #viewport { /* ユーザーが見る「窓」、これが動く */
+            position: absolute; /* bodyを基準に配置 */
+            top:50%;
+            left:50%;
+            /* 初期位置は transform で中央に設定 */
+            transform: translate(-50%, -50%);
+            width: 10000px;  /* ビューポートの幅 */
+            height: 10000px;/* ビューポートの高さ */
+            border: 3px solid #f39c12; /* 目立つボーダー */
+            /* overflow: hidden; */ /* コメントアウトのまま */
+            box-shadow: 0 0 25px rgba(0,0,0,0.5);
+            background-image:
+                linear-gradient(to right, rgb(255 0 0 / 45%) 0px, #001fff57 500px), /* 縦線 */
+                linear-gradient(to bottom, rgb(8 255 2 / 71%) 0px, #d8ff00b5 500px);
+            background-size: 500px 500px; /* グリッドのサイズ */
+            z-index: 2; /* scroll-contentより手前 */
+            /* display: flex; */ /* コメントアウトのまま */
+            /* justify-content: center; */ /* コメントアウトのまま */
+            /* align-items: center; */ /* コメントアウトのまま */
+            will-change: transform; /* パフォーマンスヒント */
+        }
+
+        .content-text { /* viewport内に表示されるテキスト */
+            /* viewportが巨大なので、テキストの位置を調整する必要があるかも */
+            position: absolute; /* viewport内で位置指定 */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* viewportの中心に配置 */
+            font-size: 1.8rem;
+            padding: 25px;
+            background-color: rgba(44, 62, 80, 0.85);
+            color: white;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 3; /* viewport内の他の要素より手前に */
+        }
+
+        #info-display {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            z-index: 200; /* 最前面 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="scroll-content"></div>
+
+    <div id="viewport">
+        {/* content-text は viewport の中心に配置される */}
+        <div class="content-text">
+            このウィンドウが動きます<br>
+            背景をスワイプしてください
+        </div>
+    </div>
+
+    <div id="info-display">
+        スワイプ方向 (度): N/A<br>
+        経過時間 (秒): N/A<br> {/* 経過時間表示を追加 */}
+        アニメーション時間 (ms): N/A<br> {/* アニメーション時間表示を追加 */}
+        Viewport X移動目標: N/A<br>
+        Viewport Y移動目標: N/A<br>
+        Viewport 目標位置 X: 0, Y: 0
+    </div>
+
+    <script>
+        const scrollContent = document.getElementById('scroll-content'); // イベントを拾う要素
+        const viewport = document.getElementById('viewport');             // 動かす要素
+        const infoDisplay = document.getElementById('info-display');
+
+        let isDragging = false;
+        let swipeStartX, swipeStartY,swipeTime;
+        let viewportCurrentX = 0;    // viewportの現在のX座標 (transform用)
+        let viewportCurrentY = 0;    // viewportの現在のY座標 (transform用)
+
+        // アニメーション時間に関する設定
+        const baseDuration = 300;  // 基本のアニメーション時間 (ms) - 短めに変更
+        const maxDuration = 1500; // 最長のアニメーション時間 (ms) - 追加
+        const timeSensitivity = 1; // 60秒でdurationが最大になる感度 (ミリ秒) - 値を調整
+
+        // viewportの初期transformを設定 (中央配置はCSSで行う)
+        viewport.style.transform = `translate(-50%, -50%) translate(${viewportCurrentX}px, ${viewportCurrentY}px)`;
+        updateInfoDisplay("N/A", "N/A", "N/A", "N/A", "N/A");
+
+
+        scrollContent.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            swipeStartX = e.clientX;
+            swipeStartY = e.clientY;
+            swipeTime = document.timeline.currentTime;
+            scrollContent.style.cursor = 'grabbing';
+        });
+
+        scrollContent.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            scrollContent.style.cursor = 'grab';
+
+            const swipeEndX = e.clientX;
+            const swipeEndY = e.clientY;
+
+            const deltaXSwipe = swipeEndX - swipeStartX;
+            const deltaYSwipe = swipeEndY - swipeStartY;
+
+            const swipeDistance = Math.sqrt(deltaXSwipe * deltaXSwipe + deltaYSwipe * deltaYSwipe);
+
+            if (swipeDistance < 10) { // 距離で判定
+                updateInfoDisplay("N/A (短すぎ)", "N/A", "N/A", "N/A", "N/A");
+                return;
+            }
+
+            // スワイプ方向の計算
+            let angleRad = Math.atan2(deltaYSwipe, deltaXSwipe);
+            let angleDeg = angleRad * 180 / Math.PI;
+            if (angleDeg < 0) {
+                angleDeg += 360;
+            }
+
+            // 経過時間 (DocumentTimeline) を取得
+            const elapsedTimeMs = document.timeline.currentTime - swipeTime; // ミリ秒
+
+            // アニメーション時間 (duration) の計算
+            // 経過時間が長いほどdurationが長くなるように計算
+            // timeSensitivityミリ秒かけてbaseDurationからmaxDurationまで線形に増加
+            let animationDuration1 = (elapsedTimeMs * timeSensitivity);
+            // maxDurationを超えないようにクランプ
+            animationDuration = Math.min(maxDuration, animationDuration1);
+            // baseDurationより短くならないようにする (オプション)
+            animationDuration = Math.max(baseDuration, animationDuration);
+
+
+            // 移動量 (移動量はスワイプ量そのままを使用)
+            const moveViewportX = deltaXSwipe; // スワイプした分だけ移動
+            const moveViewportY = deltaYSwipe; // スワイプした分だけ移動
+
+            // 新しい目標座標を計算
+            const targetX = viewportCurrentX + moveViewportX;
+            const targetY = viewportCurrentY + moveViewportY;
+
+            // --- WAAPI を使用してアニメーション ---
+            viewport.animate([
+                { transform: `translate(-50%, -50%) translate(${targetX}px, ${targetY}px)` }
+            ], {
+                duration: animationDuration, // 計算したdurationを設定
+                easing: 'ease-out',
+                fill: 'forwards'
+            });
+
+            // アニメーションのターゲット値を現在の座標として更新
+            viewportCurrentX = targetX;
+            viewportCurrentY = targetY;
+
+            updateInfoDisplay(
+                angleDeg.toFixed(1),
+                animationDuration1.toFixed(0),
+                animationDuration.toFixed(0), // アニメーション時間を表示
+                moveViewportX.toFixed(1),
+                moveViewportY.toFixed(1)
+            );
+        });
+
+        scrollContent.addEventListener('mouseleave', () => {
+            if (isDragging) {
+                isDragging = false;
+                scrollContent.style.cursor = 'grab';
+            }
+        });
+
+        function updateInfoDisplay(angle, elapsedTime, duration, dx, dy) {
+            infoDisplay.innerHTML = `
+                スワイプ方向 (度): ${angle}<br>
+                経過時間 (秒): ${elapsedTime}<br> {/* 経過時間表示を追加 */}
+                アニメーション時間 (ms): ${duration}<br>
+                Viewport X移動目標: ${dx}<br>
+                Viewport Y移動目標: ${dy}<br>
+                Viewport 目標位置 X: ${viewportCurrentX.toFixed(0)}, Y: ${viewportCurrentY.toFixed(0)}
+            `;
+        }
+
+    </script>
+</body>
+</html>

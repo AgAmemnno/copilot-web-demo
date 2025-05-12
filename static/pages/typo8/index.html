@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汎用フォントファミリー デモ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: sans-serif; /* 基本のフォント */
+        }
+        *{
+            white-space: pre;
+        }
+        .font-sample-container {
+            border: 1px solid #e2e8f0; /* tailwind: border-gray-300 */
+            padding: 1.5rem; /* tailwind: p-6 */
+            margin-bottom: 1.5rem; /* tailwind: mb-6 */
+            border-radius: 0.5rem; /* tailwind: rounded-lg */
+            background-color: #f9fafb; /* tailwind: bg-gray-50 */
+        }
+        .font-sample-container h3 {
+            margin-top: 0;
+            font-size: 1.25rem; /* tailwind: text-xl */
+            font-weight: 600; /* tailwind: font-semibold */
+            color: #1f2937; /* tailwind: text-gray-800 */
+        }
+        .font-sample-container p {
+            font-size: 1.125rem; /* tailwind: text-lg */
+            line-height: 1.75; /* tailwind: leading-relaxed */
+            color: #374151; /* tailwind: text-gray-700 */
+        }
+        .font-label {
+            font-family: monospace;
+            background-color: #e5e7eb; /* tailwind: bg-gray-200 */
+            padding: 0.125rem 0.375rem; /* tailwind: px-1.5 py-0.5 */
+            border-radius: 0.25rem; /* tailwind: rounded-md */
+            font-size: 0.9em;
+        }
+
+        /* 各汎用フォントファミリーのスタイル */
+        .font-serif {
+            font-family: serif; 
+            
+        }
+        .font-sans-serif { font-family: sans-serif; }
+        .font-monospace { font-family: monospace; }
+        .font-cursive { font-family: cursive; }
+        .font-fantasy { font-family: fantasy; }
+        .font-system-ui { font-family: system-ui; }
+        .font-ui-serif { font-family: ui-serif; }
+        .font-ui-sans-serif { font-family: ui-sans-serif; }
+        .font-ui-monospace { font-family: ui-monospace; }
+        .font-ui-rounded { font-family: ui-rounded; }
+        .font-math { font-family: math; } /* Mathフォントは特定の数式文字で効果が見られる */
+        .font-emoji { font-family: emoji; font-size: 1.5rem; } /* 絵文字はサイズを少し大きく */
+        .font-fangsong { font-family: fangsong; }
+
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900 p-4 md:p-8">
+    <div class="max-w-3xl mx-auto">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-600">汎用フォントファミリー視覚デモ</h1>
+            <p class="text-gray-600 mt-2">CSSの汎用フォントファミリーがどのように表示されるかを確認します。<br>実際の表示はOSやブラウザに依存します。</p>
+        </header>
+
+        <div class="font-sample-container">
+            <h3>Serif (セリフ体) - <code class="font-label">serif</code></h3>
+            <p class="font-serif">
+<b>特質:</b>
+文字のストロークの端に「セリフ」と呼ばれる小さな飾りがあるフォントです。
+伝統的、公式、読み物などの印象を与えやすく、長文の可読性が高いとされることがあります。
+
+<strong>代表例:</strong> 
+Times New Roman, Georgia, MS P明朝, 游明朝
+</p>
+       
+        </div>
+
+        <div class="font-sample-container">
+            <h3>Sans-serif (サンセリフ体) - <code class="font-label">sans-serif</code></h3>
+            <p class="font-sans-serif">
+<b>特質:</b> 
+「サン (sans)」はフランス語で「〜なし」を意味し、セリフがないフォントです。
+モダン、シンプル、クリーンな印象を与えやすく、ウェブサイトの本文や見出し、UI要素など幅広く利用されます。
+
+<strong>代表例:</strong> 
+Arial, Helvetica, Verdana, MS Pゴシック, ヒラギノ角ゴ, メイリオ
+        </p>
+        </div>
+
+        <div class="font-sample-container">
+            <h3>Monospace (等幅フォント) - <code class="font-label">monospace</code></h3>
+<p class="font-monospace">
+<b>特質:</b> 
+すべての文字が同じ幅（等幅）で表示されるフォントです。
+主にプログラミングのソースコードや、テキストエディタ、ターミナル表示など、文字の位置を正確に揃えたい場合に使用されます。
+
+<strong>代表例:</strong>  
+Courier New, Consolas, Osaka−等幅, ＭＳ ゴシック (一部)
+</p>  
+        </div>
+
+        <div class="font-sample-container">
+            <h3>Cursive (筆記体フォント) - <code class="font-label">cursive</code></h3>
+<p class="font-cursive">
+<b>特質:</b> 
+手書きのような流れるような筆跡を持つフォントです。abcdefg
+エレガント、フォーマル、またはカジュアルな手書き感を表現するのに使われます。
+ただし、英語圏の筆記体を想定しており、日本語環境で適切なフォントが適用されることは少ないです。
+
+<strong>代表例:</strong>   
+Comic Sans MS (広い意味で), Zapf Chancery, Brush Script MT
+</p>
+<p class="text-sm text-gray-500 mt-2">（注: 日本語環境では適切な筆記体フォントが適用されない場合があります。）</p>
+        </div>
+
+        <div class="font-sample-container">
+            <h3>Fantasy (装飾フォント) - <code class="font-label">fantasy</code></h3>
+<p class="font-fantasy">
+<b>特質:</b>
+abcdeABCDE 通常のフォントとは異なり、非常に装飾的で、特定のテーマや雰囲気（例: ファンタジー、SF、レトロなど）を強く打ち出すためのフォントです。
+本文には不向きで、主にタイトルやロゴなど、デザインのアクセントとして使用されます。
+日本語環境では適切なフォントが適用されることは稀です。
+
+<strong>代表例:</strong> 
+Impact, Papyrus, Cooper Black
+<p class="text-sm text-gray-500 mt-2">（注: 日本語環境では適切な装飾フォントが適用されない場合があります。）</p>
+        </div>
+
+        <div class="font-sample-container">
+            <h3>System UI - <code class="font-label">system-ui</code></h3>
+<p class="font-system-ui">
+<b>特質:</b> 
+ユーザーが使用しているオペレーティングシステム（OS）のデフォルトユーザーインターフェース（UI）フォントを使用します。
+これにより、ウェブサイトやアプリケーションがOSのネイティブな見た目と調和し、ユーザーに親しみやすい体験を提供できます。
+<strong>代表例:</strong>  
+WindowsではSegoe UI、macOS/iOSではSan Francisco、AndroidではRobotoなど、OSによって異なります。      
+</p>        
+        </div>
+
+        <div class="font-sample-container">
+            <h3>UI Serif - <code class="font-label">ui-serif</code></h3>
+<p class="font-ui-serif">
+<b>特質:</b>  
+OSのデフォルトUIフォントのうち、セリフ体のフォントを使用します。
+system-uiがサンセリフ体の場合に、明示的にセリフ体を要求する際に使えます。
+</p>
+        </div>
+
+        <div class="font-sample-container">
+            <h3>UI Sans-serif - <code class="font-label">ui-sans-serif</code></h3>
+<p class="font-ui-sans-serif">
+<b>特質:</b> 
+OSのデフォルトUIフォントのうち、サンセリフ体のフォントを使用します。
+system-uiとほぼ同等か、より明示的にサンセリフを指定する場合に使います。 
+</p>        
+        </div>
+
+        <div class="font-sample-container">
+            <h3>UI Monospace - <code class="font-label">ui-monospace</code></h3>
+<p class="font-ui-monospace">
+<b>特質:</b> 
+OSのデフォルトUIフォントのうち、等幅フォントを使用します。
+</p>
+
+        </div>
+
+        <div class="font-sample-container">
+            <h3>UI Rounded - <code class="font-label">ui-rounded</code></h3>
+<p class="font-ui-rounded">
+<b>特質:</b> 
+OSのデフォルトUIフォントのうち、角が丸いデザインのフォントを使用します。
+</p>
+<p class="text-sm text-gray-500 mt-2">（注: OSやブラウザが対応する角丸フォントを持っている場合に効果が見られます。）</p>
+        </div>
+
+        <div class="font-sample-container">
+            <h3>Math - <code class="font-label">math</code></h3>
+<p class="font-math">
+これはMathフォントのサンプルです。∑ ∫ √ ± ∞ (x + y)² = x² + 2xy + y²。数式用。
+<b>特質:</b>  
+数学的な記号や数式を表現するために特別に設計されたグリフを含むフォントです。MathMLなどの数式表示に適しています。
+</p>            
+<p class="text-sm text-gray-500 mt-2">（注: 特定の数式文字やMathMLと組み合わせることで効果が顕著になります。）</p>
+        </div>
+
+        <div class="font-sample-container">
+            <h3>Emoji - <code class="font-label">emoji</code></h3>
+<p class="font-emoji">
+これはEmojiフォントのサンプルです。😀🎉👍💯 あいうえお。
+<b>特質:</b>   
+絵文字を表示するためのフォントです。カラー絵文字などをサポートします。        
+</p>
+        </div>
+
+        <div class="font-sample-container">
+            <h3>Fangsong (仿宋体) - <code class="font-label">fangsong</code></h3>
+<p class="font-fangsong">
+これは仿宋体のサンプルです。The quick brown fox jumps over the lazy dog. 12345. あいうえお。你好世界。
+<b>特質:</b>
+中国語のフォントスタイルの一つで、宋朝時代の木版印刷のスタイルに由来します。
+楷書体と宋体（明朝体）の中間のような特徴を持ち、やや硬筆で書いたような、整然としつつも流麗さのある書体です。
+主に中国語の文脈/で使用されますが、日本語の漢字表示にも影響する場合があります。
+</p>            
+<p class="text-sm text-gray-500 mt-2">（注: 主に中国語フォントとして利用可能か、日本語では明朝体に近い表示になることがあります。）</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>View Progress Timeline: Progress Visualization</title>
+
+	<!-- <script src="/shared/third_party/popover/popover.iife.min.js" type="module"></script> -->
+	
+    <script src="https://cdn.jsdelivr.net/npm/@oddbird/popover-polyfill@0.6.0/dist/popover.iife.min.js"></script>
+	<!-- Shared styles and scripts, applied to each page -->
+	<link rel="stylesheet" href="/static/styles.css">
+	<script src="/static/scripts.js"></script>
+	<style>
+		@layer reset {
+			.scroller, .scroller * {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				height: 100%;
+				width: 100%;
+			}
+
+			body {
+				display: grid;
+				place-content: safe center;
+				overscroll-behavior: none;
+				gap: 2em;
+			}
+		}
+
+		@layer ui {
+			:root {
+				--scrollbox-border-size: 1em;
+				--scrollbox-height: 40vmax;
+				--scrollbox-width: calc(var(--scrollbox-height) * 16 / 9);
+			}
+
+			.scroller {
+				border: var(--scrollbox-border-size) solid lightblue;
+				height: var(--scrollbox-height);
+				width: var(--scrollbox-width);
+				overflow: auto;
+				max-width: 90vw;
+				margin: 0 auto;
+
+				position: relative;
+				box-shadow:
+					inset 0px 0px 1em 0px rgb(0 0 0 / 0.5),
+					0px 0px 1em 0px rgb(0 0 0 / 0.5);
+				border-radius: 0.5em;
+			}
+
+			.scroller-content {
+				height: 400%;
+				background-color: aliceblue;
+				background-image: linear-gradient(to right, rgb(0 0 0 / 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgb(0 0 0 / 0.05) 1px, transparent 1px);
+				background-size: 10vh 10vh;
+				z-index: -1;
+			}
+
+			.scroll-progress {
+				position: fixed;
+				inset: 0;
+
+				display: grid;
+				place-content: center;
+				pointer-events: none;
+
+				font-size: 4rem;
+			}
+
+			[data-x] {
+				text-align: center;
+			}
+
+			[data-x]::before {
+				content: attr(data-x) " : ";
+			}
+
+			.animation-subject {
+				position: absolute;
+				top: 150%;
+				width: 100%;
+				height: 50%;
+				background-color: red;
+			}
+
+			.controls div {
+				text-align: center;
+			}
+
+			#controls_extra label {
+				display: block;
+			}
+		}
+
+		@layer timelines {
+			@keyframes the-animation {
+				from {
+					background-color: green;
+				}
+
+				to {
+					background-color: lime;
+				}
+			}
+
+			.animation-subject {
+				animation: the-animation linear;
+				animation-fill-mode: none;
+				animation-timeline: view();
+				animation-iteration-count: 1;
+				animation-range: exit;
+
+				--animation-range-start: 0%;
+				--animation-range-end: 100%;
+			}
+
+			.controls:has([name="do-not-use-full-ranges"]:checked)~.scroller .animation-subject {
+				--animation-range-start: 20%;
+				--animation-range-end: 80%;
+			}
+
+			.controls:has([value="cover"]:checked)~.scroller .animation-subject {
+				animation-range: cover var(--animation-range-start) cover var(--animation-range-end);
+			}
+
+			.controls:has([value="contain"]:checked)~.scroller .animation-subject {
+				animation-range: contain var(--animation-range-start) contain var(--animation-range-end);
+			}
+
+			.controls:has([value="entry"]:checked)~.scroller .animation-subject {
+				animation-range: entry var(--animation-range-start) entry var(--animation-range-end);
+			}
+
+			.controls:has([value="entry-crossing"]:checked)~.scroller .animation-subject {
+				animation-range: entry-crossing var(--animation-range-start) entry-crossing var(--animation-range-end);
+			}
+
+			.controls:has([value="exit"]:checked)~.scroller .animation-subject {
+				animation-range: exit var(--animation-range-start) exit var(--animation-range-end);
+			}
+
+			.controls:has([value="exit-crossing"]:checked)~.scroller .animation-subject {
+				animation-range: exit-crossing var(--animation-range-start) exit-crossing var(--animation-range-end);
+			}
+		}
+
+		@layer horizontal {
+			.controls:has([name="horizontal"]:checked) ~ .scroller .scroller-content {
+				height: 100%;
+				width: 400%;
+			}
+
+			.controls:has([name="horizontal"]:checked) ~ .scroller .animation-subject {
+				top: 0%;
+				width: 50%;
+				height: 100%;
+				left: 150%;
+
+				animation-timeline: view(inline);
+			}
+		}
+
+		.warning {
+			max-width: 90vw;
+			margin: 0 auto;
+		}
+	</style>
+	<script type="module">
+		const outputs = {
+			'animation': document.querySelector('.scroll-progress [data-x="animation"]'),
+			'effect': document.querySelector('.scroll-progress [data-x="effect"]'),
+		}
+		let curVals = {
+			'animation': 0.0,
+			'effect': 0.0
+		};
+		let newVals = {
+			'animation': 0.0,
+			'effect': 0.0
+		};
+
+		const updateValue = () => {
+			const animation = document.querySelector(".animation-subject").getAnimations()[0];
+			if (animation && animation.currentTime) {
+				// @note: This calculation is off, as currenTime is relative to the entire timeline, not the declared animation-range
+				newVals['animation'] = Math.max(0, animation.currentTime.value).toFixed(0);
+
+				newVals['effect'] = animation.effect.getComputedTiming().progress * 100;
+				if (animation.playState === 'finished') newVals['effect'] = 100;
+				newVals['effect'] = Math.max(0.0, Math.min(100.0, newVals['effect'])).toFixed(0);
+
+				for (const type in newVals) {
+					if (newVals[type] != curVals[type]) {
+						outputs[type].innerText = `${newVals[type]}%`;
+						curVals[type] = newVals[type];
+					}
+				}
+			}
+			requestAnimationFrame(updateValue);
+		}
+		requestAnimationFrame(updateValue);
+
+	</script>
+</head>
+
+<body>
+	<!-- metabox -->
+	<div id="metabox">
+		<button id="version-selector" popovertarget="version-selector-popover" data-activeversion="1/2" data-activelang="css">🔀</button>
+		<div id="version-selector-popover" popover anchor="version-selector">
+		  <h1>Version selector</h1>
+		  <p>This tool has several versions:</p>
+		  <ol>
+			<li data-lang="css" data-selected><a href="/tools/view-timeline/progress/">Single range progress</a></li>
+			<li data-lang="css"><a href='/tools/view-timeline/progress/alt'>All-in-one</a></li>
+		  </ol>
+		</div>
+		<a class="button" href="/" title="To index">🏠</a>
+		<button id="infobox-toggle" title="Show Information about this tool">ℹ️</button>
+		<dialog id="infobox">
+			<form method="dialog"><button id="infobox-close" tabindex="0" title="Close dialog">❌</button></form>
+			<h1>About this tool</h1>
+			<p>This tool is part of <a href="https://scroll-driven-animations.style/" target="_top">https://scroll-driven-animations.style/</a> and should help you get a grasp of how all View Timeline Progress works.</p>
+
+			<p>The scroller depicted contains a subject <em>(a red/green box)</em> that is being tracked using a View Timeline.</p>
+			<p>Use the controls at the top to tweak the range <em>(cover, contain, entry, entry-crossing, exit, exit-crossing)</em>, range-start and range-end position <em>(fixed to 20% and 80% respectively)</em>. When the subject is in view of the selected range, it will turn green. When outside, it will be red.</p>
+
+			<p>Shown in the scroller a three values, read through JavaScript:</p>
+
+			<ol>
+				<li>The <code>animation.currentTime.value</code></li>
+				<li>The <code>animation.timeline.getCurrentTime(animation.rangeStart.rangeName)</code></li>
+				<li>The <code>animation.effect.getComputedTiming().progress * 100</code></li>
+			</ol>
+
+			<p>For each of the methods someting is to say:</p>
+
+			<ol>
+				<li>This value is only correct for the <code>cover</code> range</li>
+				<li>This value is only correct when the range-start and range-end are <code>0%</code> and <code>100%</code> respectively <b>and</b> if the range-start and range-end target the same range-name.</li>
+				<li>This value will give you the correct effect progress. Do take <code>animation.playState</code> into account though; if that is <code>finished</code> return a value of <code>100</code></li>
+			</ol>
+		</dialog>
+	</div>
+
+	<div class="warning">
+		<p>⚠️ Your browser does not support Scroll-Linked Animations so these demos will not work. Please use Chrome 115 or newer.</p>
+	</div>
+
+	<div class="controls">
+		<div>
+			<label><input type="radio" name="range" value="cover" checked> cover</label>
+			<label><input type="radio" name="range" value="contain"> contain</label>
+			<label><input type="radio" name="range" value="entry"> entry</label>
+			<label><input type="radio" name="range" value="entry-crossing"> entry-crossing</label>
+			<label><input type="radio" name="range" value="exit"> exit</label>
+			<label><input type="radio" name="range" value="exit-crossing"> exit-crossing</label>
+		</div>
+		<div id="controls_extra">
+			<label><input type="checkbox" name="do-not-use-full-ranges"> set range-start to 20% and range-end to 80%</label>
+			<label><input type="checkbox" name="horizontal"> use horizontal scroller</label>
+		</div>
+	</div>
+	<div class="scroller">
+		<div class="scroller-content">
+			<div class="animation-subject">
+				<div class="scroll-progress">
+					<span data-x="animation">0%</span>
+					<span data-x="effect">0%</span>
+				</div>
+			</div>
+		</div>
+	</div>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"93b4e0d52cebafab","version":"2025.4.0-1-g37f21b1","r":1,"token":"4f175b1ac3204b9ca216125bb4bd6018","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}}}' crossorigin="anonymous"></script>
+</body>
+
+</html>

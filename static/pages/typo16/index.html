@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フラクタルフォントスケール テスター V2</title>
+    <style>
+        /* Google Fonts の読み込み */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght@8..144,-10..0,25..151,100..1000&display=swap');
+
+
+        /* 基本スタイル */
+        :root {
+            --base-font-size: 16px; /* ルートフォントサイズの基準 */
+            --text-box-padding: 10px;
+            font-family: 'Inter', sans-serif; /* デフォルトフォント */
+            font-size: var(--base-font-size);
+        }
+
+        body {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            padding: 1rem;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 2rem;
+            }
+        }
+
+        .app-container {
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 64rem; /* max-w-4xl */
+            background-color: #ffffff;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .app-container {
+                padding: 2rem;
+            }
+        }
+
+        header {
+            margin-bottom: 1rem; /* Reduced margin */
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.875rem; 
+            line-height: 2.25rem;
+            font-weight: 700; 
+            color: #2563eb; 
+        }
+
+        header p {
+            color: #4b5563; 
+            margin-top: 0.5rem; 
+        }
+        
+        .open-settings-button-container {
+            margin-bottom: 1.5rem; 
+            text-align: center;
+        }
+
+        button {
+            color: #ffffff; 
+            font-weight: 700; 
+            padding-top: 0.5rem; 
+            padding-bottom: 0.5rem;
+            padding-left: 1.5rem; 
+            padding-right: 1.5rem;
+            border-radius: 0.375rem; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+            transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+            transition-duration: 150ms;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: none;
+        }
+        button:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+        }
+
+        #openSettingsModal {
+            background-color: #4f46e5; 
+        }
+        #openSettingsModal:hover {
+            background-color: #4338ca; 
+        }
+
+        #generateScaleBtnInModal { 
+            background-color: #3b82f6; 
+        }
+        #generateScaleBtnInModal:hover {
+            background-color: #2563eb; 
+        }
+
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000; 
+        }
+        .modal-content {
+            background-color: white;
+            padding: 24px; /* Fixed padding in px */
+            border-radius: 8px; 
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); 
+            width: 90%;
+            max-width: 500px; 
+            position: relative; 
+        }
+        .modal-hidden {
+            display: none;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px; 
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .modal-header h2 {
+            font-size: 20px; /* Fixed font size in px */
+            line-height: 28px;
+            font-weight: 600; 
+            color: #111827; 
+        }
+        #closeSettingsModal {
+            color: #6b7280; 
+            font-size: 24px; /* Fixed font size in px */
+            line-height: 1;
+            background: none;
+            border: none;
+            padding: 4px;
+            box-shadow: none;
+            position: absolute;
+            top: 16px; /* Adjusted for fixed padding */
+            right: 16px; /* Adjusted for fixed padding */
+        }
+        #closeSettingsModal:hover {
+            color: #1f2937; 
+        }
+
+        /* Controls (Input/Select) Styles within Modal */
+        .modal-controls {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr)); 
+            gap: 16px; /* Fixed gap */
+        }
+        .modal-controls label {
+            display: block;
+            font-size: 14px; /* Fixed font size in px */
+            line-height: 20px;
+            font-weight: 500; 
+            color: #374151; 
+            margin-bottom: 4px; 
+        }
+        .modal-controls input[type="number"], .modal-controls select {
+            margin-top: 4px; 
+            display: block;
+            width: 100%;
+            padding: 8px 12px; /* Fixed padding */
+            background-color: #ffffff; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); 
+            font-size: 14px; /* Fixed font size */
+            line-height: 20px;
+        }
+        .modal-controls input[type="number"]:focus, .modal-controls select:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            border-color: #4f46e5; 
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3); 
+        }
+        .modal-footer {
+            margin-top: 24px; 
+            text-align: right; 
+        }
+
+
+        /* Font Scale Output Section Styles */
+        #outputArea {
+            margin-top: 1rem;
+        }
+        #outputArea h2 {
+            font-size: 1.5rem; 
+            font-weight: 600; 
+            margin-bottom: 1rem; 
+            color: #1f2937; 
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+        .root-units-display, .scale-display-container {
+            margin-bottom: 1.5rem; 
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+        }
+        .unit-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 0.75rem;
+        }
+        .unit-info {
+            font-size: 0.875rem; 
+            color: #4b5563; 
+        }
+        .unit-info strong {
+            color: #111827; 
+            min-width: 60px; 
+            display: inline-block;
+        }
+        .font-mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+         /* Scale Item Styles (Dynamically generated) */
+        #scaleContainer > font-scale-item + font-scale-item { 
+            margin-top: 1rem;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>フラクタルフォントスケール テスター V2</h1>
+            <p>ルートフォントサイズ、基準フォントサイズ、比率を入力して、フォントスケールと各種単位の挙動を確認します。</p>
+        </header>
+
+        <div class="open-settings-button-container">
+            <button id="openSettingsModal">スケール設定を開く</button>
+        </div>
+
+        <div id="outputArea">
+            <section class="root-units-display">
+                <h2>ルート要素の単位情報</h2>
+                <div class="unit-info-grid">
+                    <p class="unit-info">フォントファミリー: <strong id="currentFontFamilyDisplay"></strong></p>
+                    <p class="unit-info">ルート font-size: <strong id="rootFontSizeDisplay"></strong></p>
+                    <p class="unit-info">1rem: <strong id="remValueDisplay"></strong></p>
+                    <p class="unit-info">1em (ルート基準): <strong id="emAtRootDisplay"></strong></p>
+                    <p class="unit-info">1rlh: <strong id="rlhValueDisplay"></strong></p>
+                    <p class="unit-info">1rex: <strong id="rexValueDisplay"></strong></p>
+                    <p class="unit-info">1rcap: <strong id="rcapValueDisplay"></strong></p>
+                    <p class="unit-info">1rch: <strong id="rchValueDisplay"></strong></p>
+                </div>
+            </section>
+            
+            <section class="scale-display-container">
+                <h2>フォントスケール表示 (<span id="scaleBaseInfo"></span>)</h2>
+                <div id="scaleContainer">
+                    </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal-overlay modal-hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>スケール設定</h2>
+                <button id="closeSettingsModal" aria-label="閉じる">&times;</button>
+            </div>
+            <div class="modal-controls">
+                <div>
+                    <label for="rootFontSizeInput">ルート font-size (px):</label>
+                    <input type="number" id="rootFontSizeInput" value="16" min="1">
+                </div>
+                <div>
+                    <label for="fontFamilySelect">フォントファミリー:</label>
+                    <select id="fontFamilySelect">
+                        <option value="'Inter', sans-serif">Inter</option>
+                        <option value="'Roboto Flex', sans-serif">Roboto Flex</option>
+                        <option value="'Roboto Slab', serif">Roboto Slab</option>
+                        <option value="'Source Code Pro', monospace">Source Code Pro</option>
+                        <option value="'Merriweather', serif">Merriweather</option>
+                        <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
+                        <option value="serif">Serif (Generic)</option>
+                        <option value="sans-serif">Sans-serif (Generic)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="baseSize">スケール基準フォントサイズ (px):</label>
+                    <input type="number" id="baseSize" value="16" min="1">
+                </div>
+                <div>
+                    <label for="scaleRatio">スケール比率:</label>
+                    <select id="scaleRatio">
+                        <option value="1.2">1.200 (Minor Third)</option>
+                        <option value="1.25" selected>1.250 (Major Third)</option>
+                        <option value="1.333">1.333 (Perfect Fourth)</option>
+                        <option value="1.414">1.414 (Augmented Fourth)</option>
+                        <option value="1.5">1.500 (Perfect Fifth)</option>
+                        <option value="1.618">1.618 (Golden Ratio)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="scaleSteps">表示ステップ数 (上下各):</label>
+                    <input type="number" id="scaleSteps" value="5" min="1" max="10">
+                </div>
+            </div>
+            <div class="modal-footer">
+                 <button id="generateScaleBtnInModal">スケールを生成・更新</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Element References ---
+        const rootFontSizeInput = document.getElementById('rootFontSizeInput');
+        const fontFamilySelect = document.getElementById('fontFamilySelect');
+        const baseSizeInput = document.getElementById('baseSize');
+        const scaleRatioSelect = document.getElementById('scaleRatio');
+        const scaleStepsInput = document.getElementById('scaleSteps');
+        const generateScaleBtnInModal = document.getElementById('generateScaleBtnInModal');
+        const scaleContainer = document.getElementById('scaleContainer');
+        const scaleBaseInfo = document.getElementById('scaleBaseInfo');
+
+        const currentFontFamilyDisplay = document.getElementById('currentFontFamilyDisplay');
+        const rootFontSizeDisplay = document.getElementById('rootFontSizeDisplay');
+        const remValueDisplay = document.getElementById('remValueDisplay');
+        const emAtRootDisplay = document.getElementById('emAtRootDisplay');
+        const rlhValueDisplay = document.getElementById('rlhValueDisplay');
+        const rexValueDisplay = document.getElementById('rexValueDisplay');
+        const rcapValueDisplay = document.getElementById('rcapValueDisplay');
+        const rchValueDisplay = document.getElementById('rchValueDisplay');
+
+        // Modal elements
+        const settingsModal = document.getElementById('settingsModal');
+        const openSettingsModalButton = document.getElementById('openSettingsModal');
+        const closeSettingsModalButton = document.getElementById('closeSettingsModal');
+
+        // --- Web Component Definition: <font-scale-item> ---
+        class FontScaleItem extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
+                this._scaleValueRem = 1; 
+                this._baseFontSizePx = 16; 
+                this._rootFontSizePx = 16; 
+                this._stepLabel = '基準 (0)';
+                this._sampleText = 'Ag フライ';
+                this._currentEmInPx = 16; 
+            }
+
+            static get observedAttributes() {
+                return ['scale-value-rem', 'base-font-size-px', 'root-font-size-px', 'step-label', 'sample-text', 'current-em-px'];
+            }
+
+            attributeChangedCallback(name, oldValue, newValue) {
+                const parsedValue = parseFloat(newValue);
+                switch (name) {
+                    case 'scale-value-rem':
+                        this._scaleValueRem = parsedValue || 1;
+                        break;
+                    case 'base-font-size-px':
+                        this._baseFontSizePx = parsedValue || 16;
+                        break;
+                    case 'root-font-size-px':
+                        this._rootFontSizePx = parsedValue || 16;
+                        break;
+                    case 'step-label':
+                        this._stepLabel = newValue || 'N/A';
+                        break;
+                    case 'sample-text':
+                        this._sampleText = newValue || 'Ag フライ';
+                        break;
+                    case 'current-em-px':
+                        this._currentEmInPx = parsedValue || this._scaleValueRem * this._rootFontSizePx;
+                        break;
+                }
+                this._render();
+            }
+
+            connectedCallback() {
+                if (!this.shadowRoot.firstChild) { 
+                    this._render();
+                }
+            }
+
+            _render() {
+                const sizeInPx = this._scaleValueRem * this._rootFontSizePx;
+                const emValueForThisElement = this._currentEmInPx; 
+
+                this.shadowRoot.innerHTML = `
+                    <style>
+                        :host {
+                            display: flex;
+                            flex-direction: column;
+                            border-bottom: 1px solid #e5e7eb;
+                            padding-bottom: 1rem;
+                            margin-bottom: 1rem;
+                            font-size: ${this._scaleValueRem}rem; 
+                        }
+                        :host(:last-child) {
+                            border-bottom: none;
+                            margin-bottom: 0;
+                        }
+                        .info {
+                            font-size: 0.7rem; /* This will be 0.7 of the host's font-size */
+                            color: #4b5563;
+                            margin-bottom: 0.25em; 
+                        }
+                        .sample {
+                            line-height: 1; 
+                            background-color: rgba(255, 0, 0, 0.05);
+                            border: 1px solid rgba(255, 0, 0, 0.1);
+                            padding: 0.1em 0.2em; 
+                            display: inline-block;
+                        }
+                        .font-mono {
+                             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+                        }
+                        @media (min-width: 768px) {
+                            :host {
+                                flex-direction: row;
+                                align-items: center;
+                                justify-content: space-between;
+                            }
+                            .info {
+                                margin-bottom: 0;
+                                margin-right: 1rem;
+                            }
+                        }
+                    </style>
+                    <div class="info">
+                        <strong>${this._stepLabel}:</strong> 
+                        <span class="font-mono">${sizeInPx.toFixed(2)}px</span> / 
+                        <span class="font-mono">${this._scaleValueRem.toFixed(3)}rem</span> /
+                        <span class="font-mono">${(sizeInPx / emValueForThisElement).toFixed(3)}em (of current, ${emValueForThisElement.toFixed(2)}px)</span>
+                    </div>
+                    <div class="sample">
+                        <slot>${this._sampleText}</slot>
+                    </div>
+                `;
+            }
+        }
+        customElements.define('font-scale-item', FontScaleItem);
+
+        // --- Helper Functions ---
+        function measureDimension(unitToMeasure, options = {}) {
+            const tempEl = document.createElement('div'); 
+            const referenceElement = options.referenceElement || document.documentElement;
+            const refStyle = window.getComputedStyle(referenceElement);
+
+            tempEl.style.fontFamily = refStyle.fontFamily;
+            tempEl.style.fontSize = options.fontSizeToApply || refStyle.fontSize; 
+
+            tempEl.style.position = 'absolute';
+            tempEl.style.visibility = 'hidden';
+            tempEl.style.padding = '0';
+            tempEl.style.border = '0';
+            tempEl.style.lineHeight = 'normal'; 
+
+            let dimension = 0;
+
+            if (unitToMeasure.endsWith('ex') || unitToMeasure.endsWith('cap') || unitToMeasure.endsWith('lh') || unitToMeasure.endsWith('rem') || unitToMeasure.endsWith('em')) {
+                tempEl.style.height = unitToMeasure;
+                tempEl.style.width = '1px'; 
+            } else if (unitToMeasure.endsWith('ch')) {
+                tempEl.style.width = unitToMeasure;
+                tempEl.style.height = '1px'; 
+            } else {
+                console.warn("Unsupported unit for measurement:", unitToMeasure);
+                return 0;
+            }
+            
+            document.body.appendChild(tempEl);
+            
+            if (unitToMeasure.endsWith('ex') || unitToMeasure.endsWith('cap') || unitToMeasure.endsWith('lh') || unitToMeasure.endsWith('rem') || unitToMeasure.endsWith('em')) {
+                dimension = tempEl.getBoundingClientRect().height;
+            } else if (unitToMeasure.endsWith('ch')) {
+                dimension = tempEl.getBoundingClientRect().width;
+            }
+            
+            document.body.removeChild(tempEl);
+            return dimension;
+        }
+
+
+        // --- Main Logic ---
+        function updateDisplays() {
+            const newRootFontSize = parseFloat(rootFontSizeInput.value);
+            if (!isNaN(newRootFontSize) && newRootFontSize > 0) {
+                document.documentElement.style.fontSize = `${newRootFontSize}px`;
+            }
+            document.documentElement.style.fontFamily = fontFamilySelect.value;
+            
+            requestAnimationFrame(() => {
+                const baseSizeForScale = parseFloat(baseSizeInput.value);
+                const ratio = parseFloat(scaleRatioSelect.value);
+                const steps = parseInt(scaleStepsInput.value, 10);
+
+                if (isNaN(baseSizeForScale) || isNaN(ratio) || isNaN(steps) || baseSizeForScale <= 0 || ratio <= 1 || steps < 1) {
+                    scaleContainer.innerHTML = '<p style="color: red;">有効な値を入力してください。</p>';
+                    return;
+                }
+
+                const rootStyle = window.getComputedStyle(document.documentElement);
+                const actualRootFontSizePx = parseFloat(rootStyle.fontSize);
+
+                currentFontFamilyDisplay.textContent = rootStyle.fontFamily.split(',')[0].trim().replace(/"/g, '');
+                rootFontSizeDisplay.textContent = `${actualRootFontSizePx.toFixed(2)}px`;
+                
+                remValueDisplay.textContent = `${measureDimension('1rem').toFixed(2)}px`;
+                emAtRootDisplay.textContent = `${measureDimension('1em', {referenceElement: document.documentElement}).toFixed(2)}px`;
+                rlhValueDisplay.textContent = `${measureDimension('1rlh').toFixed(2)}px`;
+                rexValueDisplay.textContent = `${measureDimension('1rex').toFixed(2)}px`;
+                rcapValueDisplay.textContent = `${measureDimension('1rcap').toFixed(2)}px`;
+                rchValueDisplay.textContent = `${measureDimension('1rch', {isWidth: true}).toFixed(2)}px`;
+
+
+                scaleContainer.innerHTML = ''; 
+                scaleBaseInfo.textContent = `基準: ${baseSizeForScale}px, 比率: ${ratio}`;
+
+                for (let i = -steps; i <= steps; i++) {
+                    const calculatedSizePx = baseSizeForScale * Math.pow(ratio, i);
+                    const calculatedSizeRem = calculatedSizePx / actualRootFontSizePx;
+                    
+                    const tempEmMeasureEl = document.createElement('div');
+                    tempEmMeasureEl.style.fontSize = `${calculatedSizePx}px`; 
+                    document.body.appendChild(tempEmMeasureEl);
+                    const currentEmInPx = measureDimension('1em', {referenceElement: tempEmMeasureEl});
+                    document.body.removeChild(tempEmMeasureEl);
+
+
+                    const item = document.createElement('font-scale-item');
+                    item.setAttribute('scale-value-rem', calculatedSizeRem.toFixed(5)); 
+                    item.setAttribute('base-font-size-px', baseSizeForScale); 
+                    item.setAttribute('root-font-size-px', actualRootFontSizePx); 
+                    item.setAttribute('step-label', `${i === 0 ? '基準 (0)' : (i < 0 ? i : '+' + i)}`);
+                    item.setAttribute('current-em-px', currentEmInPx.toFixed(5));
+                    scaleContainer.appendChild(item);
+                }
+                // settingsModal.classList.add('modal-hidden'); // Keep modal open if generate button wasn't the trigger
+            });
+        }
+
+        // --- Event Listeners ---
+        openSettingsModalButton.addEventListener('click', () => {
+            settingsModal.classList.remove('modal-hidden');
+        });
+
+        closeSettingsModalButton.addEventListener('click', () => {
+            settingsModal.classList.add('modal-hidden');
+        });
+
+        settingsModal.addEventListener('click', (event) => {
+            if (event.target === settingsModal) { 
+                settingsModal.classList.add('modal-hidden');
+            }
+        });
+        
+        generateScaleBtnInModal.addEventListener('click', () => {
+            updateDisplays();
+            settingsModal.classList.add('modal-hidden'); // Close modal after generating from modal button
+        });
+
+        // Root font size and family changes should update the display immediately
+        rootFontSizeInput.addEventListener('input', updateDisplays);
+        fontFamilySelect.addEventListener('input', updateDisplays);
+        
+        // --- Initial Display ---
+        updateDisplays();
+    </script>
+</body>
+</html>

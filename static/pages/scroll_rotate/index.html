@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>段階2: SDA + 横スクロールアニメーション (文書タイムライン連動デルタ調節)</title>
+    <style>
+        /* --- 基本スタイル --- */
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding-top: 2rem; /* ヘッダー用スペース */
+            color: #333;
+            background-color: black; /* 背景を黒に */
+        }
+        section {
+            min-height: 100vh; /* 各セクションの高さをビューポート程度に */
+            padding: 5rem 0;   /* 左右パディングを0に */
+            border-bottom: 1px solid #444; /* ボーダー色変更 */
+            position: relative;
+            /* overflow: hidden; */ /* パララックス効果のためにコメントアウト */
+        }
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #eee; /* 文字色変更 */
+        }
+        p {
+            line-height: 1.7;
+            max-width: 600px;
+            margin: 1rem auto;
+            color: #ccc; /* 文字色変更 */
+            padding: 0 1rem; /* 説明文の左右パディング */
+        }
+        code {
+            background-color: #333; /* 背景色変更 */
+            color: #eee; /* 文字色変更 */
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        /* --- 文書スクロール進行度取得用 --- */
+        #document-scroll-tracker {
+            position: fixed; /* 画面に固定 */
+            top: -10px; /* 画面外に隠す */
+            left: -10px;
+            width: 1px;
+            height: 1px;
+            opacity: 0; /* 見えないように */
+            pointer-events: none; /* 操作を妨げない */
+
+            /* ページ全体のスクロールに連動するアニメーション */
+            animation: doc-scroll-progress linear forwards;
+            animation-timeline: scroll(root block);
+            /* animation-range はデフォルト (0% to 100%) */
+        }
+        @keyframes doc-scroll-progress { /* opacityを変えるだけの単純なアニメーション */
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+
+        /* --- タスク 2.1: 星空パララックス (SDA適用) --- */
+        #parallax-section {
+            min-height: 180vh;
+            overflow: hidden; /* このセクション自体は overflow: hidden を維持 */
+        }
+
+        #universe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .starfield {
+            background-color: rgba(0,0,0,0);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation-fill-mode: forwards;
+            animation-timeline: scroll(root block);
+            animation-timing-function: linear;
+        }
+
+        #layer0 { animation-name: move-parallax-0; }
+        #layer1 { animation-name: move-parallax-1; }
+        #layer2 { animation-name: move-parallax-2; }
+        #layer3 { animation-name: move-parallax-3; }
+        #layer4 { animation-name: move-parallax-4; }
+
+        @keyframes move-parallax-0 { from { transform: translateY(-10%); } to { transform: translateY(10%); } }
+        @keyframes move-parallax-1 { from { transform: translateY(-10%); } to { transform: translateY(25%); } }
+        @keyframes move-parallax-2 { from { transform: translateY(-10%); } to { transform: translateY(45%); } }
+        @keyframes move-parallax-3 { from { transform: translateY(-10%); } to { transform: translateY(70%); } }
+        @keyframes move-parallax-4 { from { transform: translateY(-10%); } to { transform: translateY(100%); } }
+
+        .star-svg {
+            position: absolute;
+            overflow: visible;
+        }
+
+        .parallax-content {
+            position: relative;
+            z-index: 1;
+            background-color: rgba(50, 50, 50, 0.6);
+            color: #eee;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            margin-top: 20vh;
+        }
+        .parallax-content h2, .parallax-content p {
+             color: #eee;
+        }
+        .parallax-content code {
+            background-color: #555;
+            color: #eee;
+        }
+
+
+        /* --- タスク 2.2: 横スクロール連動の回転・スケール --- */
+        #horizontal-scroll-section {
+            background-color: #3d3d3d; /* 背景色変更 */
+            padding: 3rem 0; /* 上下パディング、左右は0 */
+        }
+        .horizontal-scroller {
+            display: flex; /* 要素を横並びに */
+            overflow-x: auto; /* 横スクロールを有効化 */
+            overflow-y: hidden; /* 縦スクロールは不要 */
+            width: 100%; /* ビューポート幅いっぱい */
+            height: 350px; /* スクロールコンテナの高さ */
+            padding: 2rem 0; /* アイテムが見えるように上下にパディング */
+            -webkit-overflow-scrolling: touch; /* iOSでの慣性スクロール */
+            scrollbar-width: thin; /* スクロールバーを細く (Firefox) */
+            scrollbar-color: #888 #333; /* スクロールバーの色 (Firefox) */
+            /* scroll-behavior: smooth; */ /* カクつきの原因となるためコメントアウト */
+        }
+        /* Webkit系ブラウザのスクロールバー */
+        .horizontal-scroller::-webkit-scrollbar {
+            height: 8px;
+        }
+        .horizontal-scroller::-webkit-scrollbar-track {
+            background: #333;
+            border-radius: 4px;
+        }
+        .horizontal-scroller::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .horizontal-scroller::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
+
+        .scroll-item {
+            flex: 0 0 300px; /* 各アイテムの幅を固定 */
+            height: 300px; /* 各アイテムの高さ */
+            margin: 0 15px; /* アイテム間のマージン */
+            background-color: darkcyan;
+            border-radius: 15px;
+            display: flex; /* 中身を中央寄せ */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            opacity: 0.3; /* 初期状態は少し透明 */
+            transform: scale(0.8) rotateY(30deg); /* 初期状態を少し変形 */
+
+            /* アニメーション設定 */
+            animation: reveal-item linear forwards;
+            /* 各アイテム自身の表示状態に連動、横軸(inline)を指定 */
+            animation-timeline: view(inline);
+            /* アイテムがコンテナに入り始めてから、完全にコンテナを覆うまで */
+            animation-range: entry 0% cover 100%;
+            animation-duration: 1ms; /* Firefox対応 */
+        }
+        .scroll-item:first-child {
+            margin-left: 30px; /* 最初の要素の左マージン */
+        }
+        .scroll-item:last-child {
+            margin-right: 30px; /* 最後の要素の右マージン */
+        }
+
+        @keyframes reveal-item {
+            50% { /* アニメーションの中間点 (要素が中央に来たとき) */
+                opacity: 1;
+                transform: scale(1) rotateY(0deg);
+                background-color: coral;
+            }
+            to { /* アニメーションの終了点 (要素が画面から出始める) */
+                opacity: 0.3;
+                transform: scale(0.8) rotateY(-30deg);
+                background-color: darkcyan;
+            }
+        }
+
+        /* deltaY表示用スタイル */
+        #delta-y-display {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(255,255,255,0.8);
+            color: black;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 1rem;
+            z-index: 200;
+            pointer-events: none; /* 表示が操作の邪魔にならないように */
+        }
+        /* 文書スクロール進行度表示用 */
+        #doc-progress-display {
+            position: fixed;
+            bottom: 40px; /* deltaY表示の上 */
+            left: 10px;
+            background-color: rgba(255,255,255,0.8);
+            color: black;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 1rem;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+
+        /* --- タスク 2.3: 3D空間での応用 (変更なし) --- */
+        #section-3d {
+            background-color: #5c404a;
+            display: grid;
+            place-items: center;
+        }
+        .perspective-container {
+            width: 300px;
+            height: 300px;
+            perspective: 800px;
+            perspective-origin: 50% 50%;
+            view-timeline-name: --cube-timeline;
+            view-timeline-axis: block;
+        }
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-origin:center;
+            transform-style: preserve-3d;
+            animation: rotate-3d linear forwards;
+            animation-timeline: --cube-timeline;
+            animation-range: cover 0% cover 100%;
+            animation-duration: 1ms;
+        }
+        .cube-face {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background-color: rgba(233, 30, 99, 0.7);
+            border: 2px solid white;
+            color: white;
+            font-size: 1.5rem;
+            display: grid;
+            place-items: center;
+            font-weight: bold;
+            backface-visibility: hidden;
+        }
+        .front  { transform: translateZ(150px); }
+        .back   { transform: rotateY(180deg) translateZ(150px); }
+        .right  { transform: rotateY(90deg) translateZ(150px); }
+        .left   { transform: rotateY(-90deg) translateZ(150px); }
+        .top    { transform: rotateX(90deg) translateZ(150px); }
+        .bottom { transform: rotateX(-90deg) translateZ(150px); }
+        @keyframes rotate-3d {
+            from { transform: rotateX(0deg) rotateY(0deg) translateZ(0px) scale(0.5); }
+            to { transform: rotateX(360deg) rotateY(360deg) translateZ(-100px) scale(0.6); }
+        }
+
+
+    </style>
+</head>
+<body>
+    <div id="document-scroll-tracker"></div> {/* 文書スクロール追跡用 */}
+
+    <h1>段階2: SDA + 横スクロールアニメーション</h1>
+
+    <section id="parallax-section">
+        <div id="universe"></div>
+        <div class="parallax-content">
+            <h2>タスク 2.1: 星空パララックス (SDA + SVG)</h2>
+            <p>JavaScriptで星(SVG)を生成し、CSS Scroll-driven Animations (<code>scroll(root block)</code>) を使って各星空レイヤーに異なる速度で <code>translateY</code> アニメーションを適用しています。</p>
+            <p>奥のレイヤーほどゆっくり動き、手前のレイヤーほど速く動くことで奥行きを表現します。</p>
+            <p><code>#layerN { animation-timeline: scroll(root block); animation-name: move-parallax-N; }</code></p>
+        </div>
+    </section>
+
+    <section id="horizontal-scroll-section">
+        <h2>タスク 2.2: 横スクロール連動アニメーション (マウスホイール対応)</h2>
+        <p><code>view(inline)</code> タイムラインと <code>animation-range</code> を使って、横スクロールコンテナ内の要素がビューポート（またはコンテナの表示領域）を通過する際にアニメーションさせます。マウスホイールの上下で横スクロールできます。</p>
+        <p>ページのスクロール位置によって横スクロールの感度が変わります。</p>
+        <div class="horizontal-scroller">
+            <div class="scroll-item">アイテム 1</div>
+            <div class="scroll-item">アイテム 2</div>
+            <div class="scroll-item">アイテム 3</div>
+            <div class="scroll-item">アイテム 4</div>
+            <div class="scroll-item">アイテム 5</div>
+            <div class="scroll-item">アイテム 6</div>
+            <div class="scroll-item">アイテム 7</div>
+            <div class="scroll-item">アイテム 8</div>
+        </div>
+        <p style="text-align: center;"><code>.scroll-item { animation-timeline: view(inline); animation-range: entry 0% cover 100%; }</code></p>
+        <div id="delta-y-display">deltaY: 0</div>
+        <div id="doc-progress-display">Doc Progress: 0.00</div> {/* 文書スクロール進行度表示 */}
+    </section>
+
+    <section id="section-3d">
+        <h2>タスク 2.3: 3D空間での応用</h2>
+        <div class="perspective-container">
+            <div class="cube">
+                <div class="cube-face front">Front</div>
+                <div class="cube-face back">Back</div>
+                <div class="cube-face right">Right</div>
+                <div class="cube-face left">Left</div>
+                <div class="cube-face top">Top</div>
+                <div class="cube-face bottom">Bottom</div>
+            </div>
+        </div>
+         <p style="text-align: center;"><code>animation-timeline: --cube-timeline;</code><br><code>animation-range: cover 0% cover 100%;</code></p>
+    </section>
+
+    <section style="min-height: 50vh; background-color: #222; text-align: center;">
+        <p style="color:#aaa;">ページの終わり</p>
+    </section>
+
+<script>
+  // --- 星空生成スクリプト (SVG版) ---
+  const layerCount = 5;
+  const starCount = [300, 200, 100, 50, 30];
+  const universe = document.getElementById('universe');
+  const w = window;
+  const d = document;
+  const e = d.documentElement;
+  const g = d.body;
+  let width = w.innerWidth || e.clientWidth || g.clientWidth;
+  let height = w.innerHeight|| e.clientHeight|| g.clientHeight;
+  const svgNS = "http://www.w3.org/2000/svg";
+
+  let resizeTimeout;
+  w.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+          width = w.innerWidth || e.clientWidth || g.clientWidth;
+          height = w.innerHeight|| e.clientHeight|| g.clientHeight;
+          if(universe) {
+            while (universe.firstChild) {
+                universe.removeChild(universe.firstChild);
+            }
+            createStarfield();
+          }
+      }, 250);
+  });
+
+  function createStarfield() {
+      if(!universe) return;
+      const starRadii = [0.5, 1, 1.5, 2, 2];
+
+      for (let l = 0; l < layerCount; ++l) {
+          const layer = document.createElement('div');
+          layer.setAttribute('id', 'layer' + l);
+          layer.setAttribute('class', 'starfield');
+          universe.appendChild(layer);
+
+          for (let i = 0; i < starCount[l]; ++i) {
+              const xpos = Math.round(Math.random() * width);
+              const ypos = Math.round(Math.random() * height * 2 - height * 0.5);
+              const radius = starRadii[l];
+              const svg = document.createElementNS(svgNS, "svg");
+              svg.setAttribute('class', 'star-svg');
+              svg.setAttribute('width', (radius * 2 + 2).toString());
+              svg.setAttribute('height', (radius * 2 + 2).toString());
+              svg.style.transform = `translate(${xpos}px, ${ypos}px)`;
+              const circle = document.createElementNS(svgNS, "circle");
+              circle.setAttribute('cx', (radius + 1).toString());
+              circle.setAttribute('cy', (radius + 1).toString());
+              circle.setAttribute('r', radius.toString());
+              circle.setAttribute('fill', 'white');
+              svg.appendChild(circle);
+              layer.appendChild(svg);
+          }
+      }
+  }
+  if (universe) {
+    createStarfield();
+  }
+
+  // --- 文書スクロール進行度取得 & 横スクロール制御 ---
+  const docScrollTracker = document.getElementById('document-scroll-tracker');
+  const horizontalScroller = document.querySelector('.horizontal-scroller');
+  const deltaYDisplay = document.getElementById('delta-y-display');
+  const docProgressDisplay = document.getElementById('doc-progress-display');
+
+  let docScrollAnimation = null;
+
+  function getDocScrollAnimation() {
+      if (docScrollTracker) {
+          const animations = docScrollTracker.getAnimations();
+          if (animations && animations.length > 0) {
+              docScrollAnimation = animations[0];
+          } else {
+              requestAnimationFrame(getDocScrollAnimation); // 再試行
+          }
+      }
+  }
+  getDocScrollAnimation(); // 最初に取得開始
+
+  if (horizontalScroller && deltaYDisplay && docProgressDisplay) {
+    const baseScrollAmount = 30; // 基本のスクロール量
+
+    horizontalScroller.addEventListener('wheel', (event) => {
+      if (event.target === horizontalScroller || horizontalScroller.contains(event.target)) {
+        event.preventDefault();
+        deltaYDisplay.textContent = `deltaY: ${event.deltaY.toFixed(0)}`;
+
+        let currentDocScrollProgress = 0;
+        if (docScrollAnimation && docScrollAnimation.effect) {
+            const progress = docScrollAnimation.effect.getComputedTiming().progress;
+            if (progress !== null && typeof progress !== 'undefined') {
+                currentDocScrollProgress = Math.max(0, Math.min(1, Number(progress)));
+            }
+        }
+       
+        // 文書スクロール進行度に応じてスクロール量を調整
+        // 例: ページ上部(0.0)では感度低く、下部(1.0)では感度高く
+        // 最小感度 0.5倍、最大感度 2倍 としてみる
+        const sensitivityMultiplier = 0.5 + (currentDocScrollProgress * 1.5);
+        
+        docProgressDisplay.textContent = `Doc Multiplier: ${sensitivityMultiplier}    Progress:  ${currentDocScrollProgress.toFixed(2)}`;
+
+        const dynamicScrollAmount = baseScrollAmount * sensitivityMultiplier;
+
+        if (event.deltaY > 0) {
+          horizontalScroller.scrollLeft += dynamicScrollAmount;
+        } else if (event.deltaY < 0) {
+          horizontalScroller.scrollLeft -= dynamicScrollAmount;
+        }
+      }
+    }, { passive: false });
+  }
+</script>
+
+</body>
+</html>

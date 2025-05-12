@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Scroll Progress Timeline: scroll() params</title>
+
+	<!-- Shared styles and scripts, applied to each page -->
+	<link rel="stylesheet" href="/shared/styles.css">
+	<script src="/shared/scripts.js"></script>
+
+	<!-- Page-specific styles -->
+	<style>
+		@layer demo {
+			@layer reset, layout;
+
+			@keyframes bg {
+				from {
+					background: hotpink;
+					border-color: hotpink;
+				}
+				to {
+					background: lime;
+					border-color: lime;
+				}
+			}
+
+			@layer layout {
+				@layer general {
+					html {
+						font-family: sans-serif;
+						font-size: 1.25rem;
+					}
+					html, body {
+						overscroll-behavior: none;
+					}
+					h1, h2 {
+						text-align: center;
+					}
+					h1 {
+						font-size: 1.75em;
+					}
+					a {
+						color: #0000aa;
+						text-decoration: none;
+						&:hover {
+							color: blue;
+						}
+					}
+					footer {
+						text-align: center;
+						font-style: italic;
+						margin: 4em 0;
+					}
+					label {
+						user-select: none;
+						cursor: pointer;
+					}
+				}
+
+				@layer scrollbars {
+					::-webkit-scrollbar {
+						max-width: 16px;
+						max-height: 16px;
+					}
+					::-webkit-scrollbar-track {
+						background: transparent;
+					}
+					::-webkit-scrollbar-thumb {
+						background: #666;
+						border-radius: 9999px;
+						border: 2px solid black;
+					}
+					::-webkit-scrollbar-thumb:hover {
+						background: #5a5a5a;
+					}
+				}
+
+				@layer columns {
+					.cols {
+						display: flex;
+						gap: 2em;
+						width: 100%;
+						justify-content: space-around;
+						margin: 2em 0;
+					}
+				}
+
+				@layer components {
+					@layer box {
+						.box {
+							width: 100%;
+							aspect-ratio: 1;
+							background: hotpink;
+							padding: 1em;
+							overflow-y: scroll;
+							color: white;
+							border: 4px solid hotpink; /* Haha! */
+							outline: 2px solid black;
+							border-radius: 9px;
+							text-align: justify;
+						}
+
+						.box > *:first-child {
+							margin-top: 0;
+						}
+						.box > *:last-child {
+							margin-bottom: 0;
+						}
+					}
+				}
+
+				@layer scroll-animations {
+					@layer block {
+						body {
+							height: 300vh; /* Create scroll estate in the root scroller */
+						}
+
+						main {
+							position: sticky;
+							top: 50vh;
+							left: 50vw;
+							transform: translateY(-50%) translateX(-50%);
+							width: min-content;
+						}
+
+						#demo {
+							background: aliceblue;
+
+							overflow-y: scroll;
+							height: 28em;
+							width: 28em;
+							padding: 4em;
+							border: 4px solid aliceblue;
+							outline: 2px solid black;
+							border-radius: 9px;
+						}
+
+						.wide {
+							width: 50em;
+						}
+
+						.spacer {
+							height: 60em; /* Create scroll estate */
+						}
+
+						.box {
+							animation: bg linear both;
+							position: sticky;
+							top: 0;
+							left: 0;
+
+							#controls:has(input[value="root"]:checked) ~ #demo & {
+								animation-timeline: scroll(root);
+							}
+
+							#controls:has(input[value="nearest"]:checked) ~ #demo & {
+								animation-timeline: scroll(nearest);
+							}
+
+							#controls:has(input[value="self"]:checked) ~ #demo & {
+								animation-timeline: scroll(self);
+							}
+
+							#controls:has(input[value="root"]:checked):has(input[value="inline"]:checked) ~ #demo & {
+								animation-timeline: scroll(root inline);
+							}
+						}
+					}
+
+					@layer inline {
+
+						html:has(input[value="root"]:checked):has(input[value="inline"]:checked) {
+
+							overflow-y: hidden;
+							overflow-x: scroll;
+
+							body {
+								height: 100vh;
+								width: 250vw;
+							}
+
+							.box {
+								animation-timeline: scroll(root inline);
+							}
+						}
+
+						#controls:has(input[value="nearest"]:checked):has(input[value="inline"]:checked) ~ #demo {
+
+							display: flex;
+							flex-direction: row;
+							flex-wrap: nowrap;
+
+							overflow-y: hidden;
+							overflow-x: auto;
+
+							.box, .spacer {
+								flex: 0 0 auto;
+							}
+
+							.spacer {
+								height: auto;
+								width: 60em;
+							}
+
+							.box {
+								animation-timeline: scroll(nearest inline);
+							}
+						}
+
+						#controls:has(input[value="self"]:checked):has(input[value="inline"]:checked) ~ #demo .box {
+							animation-timeline: scroll(self inline);
+
+							overflow-y: hidden;
+							overflow-x: auto;
+
+							& p {
+								white-space: nowrap;
+								width: max-content;
+							}
+						}
+					}
+
+				}
+			}
+
+			@layer reset {
+				* {
+					box-sizing: border-box;
+				}
+				html,
+				body {
+					margin: 0;
+					padding: 0;
+				}
+			}
+		}
+	</style>
+</head>
+<body>
+	<!-- metabox -->
+	<div id="metabox">
+		<button id="version-selector" disabled title="This page has no alternative versions">🔀</button>
+		<a class="button" href="/" title="To index">🏠</a>
+		<button id="infobox-toggle" title="Show Information about this tool">ℹ️</button>
+		<dialog id="infobox">
+			<form method="dialog"><button id="infobox-close" tabindex="0" title="Close dialog">❌</button></form>
+			<h1>About this tool</h1>
+			<p>This tool is part of <a href="https://scroll-driven-animations.style/" target="_top">https://scroll-driven-animations.style/</a> and should help you get a grasp of the params for the <code>scroll()</code> function.</p>
+
+			<p>Use the radio buttons to change the params</p>
+		</dialog>
+	</div>
+
+	<div class="warning">
+		<p>⚠️ Your browser does not support Scroll-Linked Animations so these demos will not work. Please use Chrome 115 or newer.</p>
+	</div>
+
+	<main>
+		<div id="controls">
+			<h1><code>scroll(&lt;scroller&gt; &lt;axis&gt;)</code></h1>
+			<div class="cols">
+				<span><code>&lt;scroller&gt;</code></span>
+				<label><input type="radio" name="scroller" value="nearest" checked> nearest</label>
+				<label><input type="radio" name="scroller" value="root"> root</label>
+				<label><input type="radio" name="scroller" value="self"> self</label>
+			</div>
+			<div class="cols">
+				<span><code>&lt;axis&gt;</code></span>
+				<label><input type="radio" name="axis" value="block" checked> block</label>
+				<label><input type="radio" name="axis" value="inline"> inline</label>
+				<span></span>
+			</div>
+		</div>
+		<div id="demo">
+				<div class="box">
+					<p>I am the box. My background animates on a Scroll Timeline. Use the controls above the change the <code>&lt;scroller&gt;</code> and <code>&lt;axis&gt;</code></p>
+					<p>Here is some more text to make sure this box itself is scrollable:</p>
+					<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Cupiditate quo magnam enim inventore tenetur corrupti. Ex fuga laudantium reiciendis aliquam cumque molestiae quibusdam similique doloribus voluptas et ullam, tenetur dicta.</p>
+					<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Cupiditate quo magnam enim inventore tenetur corrupti. Ex fuga laudantium reiciendis aliquam cumque molestiae quibusdam similique doloribus voluptas et ullam, tenetur dicta.</p>
+				</div>
+				<div class="spacer"></div>
+		</div>
+	</main>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"93b597e9fcdd268d","version":"2025.4.0-1-g37f21b1","r":1,"token":"4f175b1ac3204b9ca216125bb4bd6018","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}}}' crossorigin="anonymous"></script>
+</body>
+</html>

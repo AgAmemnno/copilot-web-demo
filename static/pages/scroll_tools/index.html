@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en" data-loading>
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>View Progress Timeline: Ranges and Animation Progress Visualizer</title>
+	<link rel="stylesheet" href="/static/styles.css">
+	<script type="module">
+		const sync = true;
+
+		// Get params from URL
+		const urlParams = new URLSearchParams(window.location.hash.replace('#',''));
+
+		// Set values based on params, falling back to an initial value.
+		let animation_range_start_name = urlParams.get('range-start-name') ?? 'cover';
+		let animation_range_start_percentage = urlParams.get('range-start-percentage') ?? 0;
+		let animation_range_end_name = urlParams.get('range-end-name') ?? 'cover';
+		let animation_range_end_percentage = urlParams.get('range-end-percentage') ?? 100;
+		let view_timeline_axis = 'block';
+		let view_timeline_inset = urlParams.get('view-timeline-inset') ?? 0;
+		let subject_size = urlParams.get('subject-size') ?? 'smaller';
+		let progress = 0;
+		let subject_animation = urlParams.get('subject-animation') ?? 'reveal';
+		let interactivity = 'clicktodrag';
+		let show_areas = ((urlParams.get('show-areas') ?? 'yes') === 'yes') ? true : false;
+		let show_fromto = ((urlParams.get('show-fromto') ?? 'yes') === 'yes') ? true : false;
+		let show_labels = ((urlParams.get('show-labels') ?? 'yes') === 'yes') ? true : false;
+
+		const $animationLine = document.getElementById('animation-line');
+		const $subject = document.getElementById('subject');
+		const $subjectInner = document.getElementById('subject-inner');
+		const $progress = document.getElementById('progress');
+		const $scrollport = document.getElementById('scrollport');
+		const $scrollbar = document.querySelector('#scrollbar');
+		const $thumb = document.querySelector('#scrollbar #thumb');
+		const $from = document.getElementById('from');
+		const $to = document.getElementById('to');
+		const $fromLabel = $from.querySelector('span');
+		const $toLabel = $to.querySelector('span');
+		const $pageContent = document.querySelector('.page-content');
+
+		const $boxEndEdgeOutside = document.querySelector('.box[data-zone="end-edge-outside"]');
+		const $boxEndEdgeInside = document.querySelector('.box[data-zone="end-edge-inside"]');
+		const $boxStartEdgeOutside = document.querySelector('.box[data-zone="start-edge-outside"]');
+		const $boxStartEdgeInside = document.querySelector('.box[data-zone="start-edge-inside"]');
+
+		const render = () => {
+			// Calculate positions for all ranges
+			const rangePositions = {
+				cover: {
+					start: $boxEndEdgeOutside.getBoundingClientRect().y,
+					end: $boxStartEdgeOutside.getBoundingClientRect().y,
+				},
+				contain: {
+					start: subject_size == 'smaller' ? $boxEndEdgeInside.getBoundingClientRect().y : $boxStartEdgeInside.getBoundingClientRect().y,
+					end: subject_size == 'smaller' ? $boxStartEdgeInside.getBoundingClientRect().y : $boxEndEdgeInside.getBoundingClientRect().y,
+				},
+				'entry-crossing': {
+					start: $boxEndEdgeOutside.getBoundingClientRect().y,
+					end: $boxEndEdgeInside.getBoundingClientRect().y,
+				},
+				'exit-crossing': {
+					start: $boxStartEdgeInside.getBoundingClientRect().y,
+					end: $boxStartEdgeOutside.getBoundingClientRect().y,
+				},
+				entry: {
+					start: $boxEndEdgeOutside.getBoundingClientRect().y,
+					end: subject_size == 'smaller' ? $boxEndEdgeInside.getBoundingClientRect().y : $boxStartEdgeInside.getBoundingClientRect().y,
+				},
+				exit: {
+					start: subject_size == 'smaller' ? $boxStartEdgeInside.getBoundingClientRect().y : $boxEndEdgeInside.getBoundingClientRect().y,
+					end: $boxStartEdgeOutside.getBoundingClientRect().y,
+				}
+			};
+
+			// Position #from
+			const startRangePosition = rangePositions[animation_range_start_name];
+			$from.style.top = `${document.documentElement.scrollTop + startRangePosition.start + ((startRangePosition.end - startRangePosition.start) * animation_range_start_percentage / 100)}px`;
+
+			// Position #to
+			const endRangePosition = rangePositions[animation_range_end_name];
+			$to.style.top = `${document.documentElement.scrollTop + endRangePosition.start + ((endRangePosition.end - endRangePosition.start) * animation_range_end_percentage / 100)}px`;
+
+			// Position #animation-line
+			$animationLine.style.top = `${$to.style.top}`;
+			$animationLine.style.height = `${parseInt($from.style.top) + parseInt(getComputedStyle($from).height) - parseInt($to.style.top)}px`;
+
+			// Sync some values
+			document.documentElement.setAttribute('subject-size', subject_size);
+			document.documentElement.setAttribute('subject-animation', subject_animation);
+			document.documentElement.setAttribute('show-areas', show_areas ? 'yes' : 'no');
+			document.documentElement.setAttribute('show-fromto', show_fromto ? 'yes' : 'no');
+			document.documentElement.setAttribute('show-labels', show_labels ? 'yes' : 'no');
+			document.documentElement.setAttribute('interactivity', interactivity);
+
+			// Labels
+			$fromLabel.innerText = `${animation_range_start_name} ${animation_range_start_percentage}%`;
+			$toLabel.innerText = `${animation_range_end_name} ${animation_range_end_percentage}%`;
+
+			// URL
+			window.history.replaceState(null, null, `/tools/view-timeline/ranges/#range-start-name=${animation_range_start_name}&range-start-percentage=${animation_range_start_percentage}&range-end-name=${animation_range_end_name}&range-end-percentage=${animation_range_end_percentage}&view-timeline-axis=${view_timeline_axis}&view-timeline-inset=${view_timeline_inset}&subject-size=${subject_size}&subject-animation=${subject_animation}&interactivity=${interactivity}&show-areas=${show_areas ? 'yes' : 'no'}&show-fromto=${show_fromto ? 'yes' : 'no'}&show-labels=${show_labels ? 'yes' : 'no'}`);
+
+			const output = [];
+			output.push('#subject {');
+			output.push(`  animation: ${subject_animation} linear both;`);
+			output.push(`  animation-timeline: view(${view_timeline_axis});`);
+			output.push(`  animation-range: ${animation_range_start_name} ${animation_range_start_percentage}% ${animation_range_end_name} ${animation_range_end_percentage}%;`);
+			if (view_timeline_inset != 0) output.push(`  view-timeline-inset: ${view_timeline_inset}%;`);
+			output.push(`}`);
+			document.getElementById('output').textContent = output.join('\n');
+			document.getElementById('output').setAttribute('data-lines', output.length);
+
+			document.getElementById('range').innerText = `animation-range: ${animation_range_start_name} ${animation_range_start_percentage}% ${animation_range_end_name} ${animation_range_end_percentage}%;`;
+		}
+
+		const waitForTransitionAndRender = () => {
+			$scrollport.addEventListener('transitionend', function() {
+				setTimeout(render, 0);
+			}, { once: true});
+		}
+
+		document.getElementById('animation-range-start-name').addEventListener('change', function (e) {
+			animation_range_start_name = this.options[this.selectedIndex].value;
+			if (document.getElementById('animation-range-end-name').selectedIndex == 0) animation_range_end_name = animation_range_start_name;
+			render();
+		});
+		document.getElementById('animation-range-start-percentage').addEventListener('change', function (e) {
+			animation_range_start_percentage = this.valueAsNumber;
+			render();
+		});
+		document.getElementById('animation-range-end-name').addEventListener('change', function (e) {
+			if (this.selectedIndex == 0) {
+				animation_range_end_name = animation_range_start_name;
+			} else {
+				animation_range_end_name = this.options[this.selectedIndex].value;
+			}
+			render();
+		});
+		document.getElementById('animation-range-end-percentage').addEventListener('change', function (e) {
+			animation_range_end_percentage = this.valueAsNumber;
+			render();
+		});
+		document.getElementById('view-timeline-axis').addEventListener('change', function (e) {
+			view_timeline_axis = this.options[this.selectedIndex].value;
+			render();
+		});
+		document.getElementById('view-timeline-inset').addEventListener('change', function (e) {
+			view_timeline_inset = this.valueAsNumber;
+			document.documentElement.style.setProperty('--view-timeline-inset', view_timeline_inset); // CSS will take this into account
+			waitForTransitionAndRender();
+		});
+		document.getElementById('subject-size-taller').addEventListener('change', function (e) {
+			if (!this.checked) return;
+			subject_size = this.value;
+			document.documentElement.setAttribute('subject-size', subject_size); // CSS will take this into account
+			waitForTransitionAndRender();
+		});
+		document.getElementById('subject-size-smaller').addEventListener('change', function (e) {
+			if (!this.checked) return;
+			subject_size = this.value;
+			document.documentElement.setAttribute('subject-size', subject_size); // CSS will take this into account
+			waitForTransitionAndRender();
+		});
+		// document.getElementById('interactivity-autoplay').addEventListener('change', function (e) {
+		// 	if (!this.checked) return;
+		// 	interactivity = this.value;
+		// 	render();
+		// });
+		// document.getElementById('interactivity-clicktodrag').addEventListener('change', function (e) {
+		// 	if (!this.checked) return;
+		// 	interactivity = this.value;
+		// 	render();
+		// });
+		document.getElementById('show-fromto').addEventListener('change', function (e) {
+			show_fromto = this.checked;
+			render();
+		});
+		document.getElementById('show-areas').addEventListener('change', function (e) {
+			show_areas = this.checked;
+			render();
+		});
+		document.getElementById('show-labels').addEventListener('change', function (e) {
+			show_labels = this.checked;
+			render();
+		});
+		document.getElementById('subject-animation').addEventListener('change', function (e) {
+			subject_animation = this.options[this.selectedIndex].value;
+			document.documentElement.style.setProperty('--subject-animation', `subject-animation--${subject_animation}`); // CSS will take this into account
+			setTimeout(function() {
+				$subjectInner.getAnimations()[0].currentTime = Math.min((progress * 10).toFixed(5), 1000);
+			}, 0);
+			render();
+		});
+		document.getElementById('reset').addEventListener('click', function (e) {
+			if (!confirm('Are you sure?')) return;
+
+			resetValues();
+			syncValuesToDOM();
+			setTimeout(() => {
+				document.documentElement.removeAttribute('data-loading');
+				render();
+			}, 250); // @TODO: Find some nicer way to do this …
+		});
+
+		const resetValues = () => {
+			animation_range_start_name = 'cover';
+			animation_range_start_percentage = 0;
+			animation_range_end_name = 'cover';
+			animation_range_end_percentage = 100;
+			view_timeline_axis = 'block';
+			view_timeline_inset = 0;
+			subject_size = 'smaller';
+			progress = 0;
+			subject_animation = 'reveal';
+			interactivity = 'clicktodrag';
+			show_areas = true;
+			show_fromto = true;
+			show_labels = true;
+		}
+
+		const syncValuesToDOM = () => {
+			// Sync up controls to reflect the actual values
+			document.querySelector('#animation-range-start-name').value = animation_range_start_name;
+			document.querySelector('#animation-range-start-percentage').value = animation_range_start_percentage;
+			document.querySelector('#animation-range-end-name').value = animation_range_end_name;
+			document.querySelector('#animation-range-end-percentage').value = animation_range_end_percentage;
+			document.querySelector('#view-timeline-axis').value = view_timeline_axis;
+			document.querySelector('#view-timeline-inset').value = view_timeline_inset;
+			document.querySelector('#subject-animation').value = subject_animation;
+			document.querySelector('#subject-size-taller').checked = subject_size === 'taller';
+			document.querySelector('#subject-size-smaller').checked = subject_size === 'smaller';
+			document.querySelector('#interactivity-autoplay').checked = interactivity === 'autoplay';
+			document.querySelector('#interactivity-clicktodrag').checked = interactivity === 'clicktodrag';
+			document.querySelector('#show-fromto').checked = show_fromto;
+			document.querySelector('#show-areas').checked = show_areas;
+			document.querySelector('#show-labels').checked = show_labels;
+
+			// Sync up DOM to reflect actual values
+			document.documentElement.setAttribute('subject-size', subject_size);
+			document.documentElement.setAttribute('subject-animation', subject_animation);
+			document.documentElement.setAttribute('show-areas', show_areas ? 'yes' : 'no');
+			document.documentElement.setAttribute('show-fromto', show_fromto ? 'yes' : 'no');
+			document.documentElement.setAttribute('show-labels', show_labels ? 'yes' : 'no');
+			document.documentElement.setAttribute('interactivity', interactivity);
+			document.documentElement.style.setProperty('--view-timeline-inset', view_timeline_inset);
+			document.documentElement.style.setProperty('--subject-animation', `subject-animation--${subject_animation}`);
+		}
+
+		window.addEventListener('resize', (e) => { setTimeout(render, 500); }); // @TODO: Make this nicer or fix the CSS transition
+		window.addEventListener('orientationchange', (e) => { setTimeout(render, 500); }); // @TODO: Make this nicer or fix the CSS transition
+
+		const updateProgress = (e) => {
+			const animatedBoundingRect = $subject.getBoundingClientRect();
+			const animationLineBoundingRect = $animationLine.getBoundingClientRect();
+
+			let newProgress = 0;
+
+			if ((animatedBoundingRect.y >= animationLineBoundingRect.y) && (animatedBoundingRect.y <= (animationLineBoundingRect.y + animationLineBoundingRect.height - animatedBoundingRect.height))) {
+				$subject.classList.add('intersecting');
+				newProgress = (1 - (animatedBoundingRect.y - animationLineBoundingRect.y) / (animationLineBoundingRect.height - animatedBoundingRect.height)) * 100;
+			} else {
+				if ((animatedBoundingRect.y >= animationLineBoundingRect.y)) {
+					newProgress = 0;
+				} else if((animatedBoundingRect.y <= (animationLineBoundingRect.y + animationLineBoundingRect.height - animatedBoundingRect.height))) {
+					newProgress = 100;
+				}
+				$subject.classList.remove('intersecting');
+			}
+			if (newProgress !== progress) {
+				$progress.innerText = `${newProgress.toFixed(5)}%`;
+				progress = newProgress;
+				$subjectInner.getAnimations()[0].currentTime = Math.min((newProgress * 10).toFixed(5), 1000);
+			}
+			requestAnimationFrame(updateProgress);
+		};
+		requestAnimationFrame(updateProgress); // @TODO: Use an IntersectionObserver for this.
+
+		// Make scrollbar usable
+		$thumb.addEventListener('pointerdown', (e) => {
+			if (interactivity != 'clicktodrag') return;
+
+			const duration = 10000;
+			const scrollbarBox = $scrollbar.getBoundingClientRect();
+			const thumbBox = $thumb.getBoundingClientRect();
+			const minY = scrollbarBox.top;
+			const maxY = scrollbarBox.top + scrollbarBox.height - thumbBox.height;
+			const offsetInThumb = e.offsetY;
+
+			const onMove = (e) => {
+				const dragProgress = (e.clientY - offsetInThumb - minY) / (maxY - minY);
+				$thumb.getAnimations()[0].currentTime = Math.max(0, Math.min(dragProgress, 1)) * duration;
+				$pageContent.getAnimations()[0].currentTime = Math.max(0, Math.min(dragProgress, 1)) * duration;
+			}
+
+			const removeEventListener = () => {
+				document.removeEventListener('pointermove', onMove);
+			}
+			document.addEventListener('pointermove', onMove);
+			document.addEventListener('pointerup', removeEventListener);
+		});
+
+		syncValuesToDOM();
+		setTimeout(() => {
+			document.documentElement.removeAttribute('data-loading');
+			render();
+		}, 250); // @TODO: Find some nicer way to do this …
+
+		document.documentElement.addEventListener('pointerdown', (e) => {
+			document.documentElement.classList.add('interacted');
+		}, { once: true });
+
+		const $toggleControls = document.querySelector('#toggle-controls');
+		$toggleControls.addEventListener('click', (e) => {
+			const value = $toggleControls.getAttribute('aria-expanded');
+			$toggleControls.setAttribute('aria-expanded', value === 'true' ? 'false' : 'true');
+		});
+
+		if (!document.documentElement.classList.contains('is-embed')) $toggleControls.setAttribute('aria-expanded', true);
+
+		document.getElementById('range').addEventListener('click', (e) => {
+			window.alert('Use the controls at the top right to change these values');
+		})
+	</script>
+	<style>
+		:root {
+			--scrollbox-border-size: 1em;
+			--scrollbox-height: 40vmin;
+			--scrollbox-width: calc(var(--scrollbox-height) * 16 / 9);
+
+			--box-height: 10vmin;
+			--box-border-size: 0.25rem;
+
+			--thumb-size: 15vmin;
+			--scrollbar-width: 0.75rem;
+
+			--shaded-size: 2px;
+			--shaded-color: rgba(0 0 0 / 0.12);
+
+			--animation-line-width: 4px;
+			--animation-line-color: limegreen;
+
+			--view-timeline-inset: 0;
+			--visual-inset: calc(var(--scrollbox-height) * var(--view-timeline-inset) / 100);
+
+			--content-height: calc(var(--scrollbox-height) * 3.25);
+			--subject-animation: subject-animation--reveal;
+		}
+
+		:root[subject-size="taller"] {
+			--box-height: calc(var(--scrollbox-height) * 1.1);
+			--content-height: calc(var(--scrollbox-height) * 4.5);
+		}
+
+		#browser *,
+		#browser *::after,
+		#browser *::before,
+		#animation-line,
+		#from,
+		#to {
+			transition: all 0.25s ease-in-out;
+		}
+
+		html,
+		body {
+			width: 100%;
+			height: 100%;
+			background: #fff;
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+
+		body {
+			display: grid;
+			place-content: safe center;
+		}
+
+		#browser {
+			width: var(--scrollbox-width);
+			height: var(--scrollbox-height);
+			border: max(1em, var(--scrollbox-border-size)) solid lightblue; /* This border is just to reserve some space*/
+			border-radius: 0.5em;
+
+			display: grid;
+			grid-template-columns: 1fr var(--scrollbar-width);
+			grid-template-rows: 1fr;
+			grid-template-areas: "content scrollbar";
+
+			position: relative;
+			z-index: 1;
+
+			position: fixed;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+		}
+
+		/* Inject the border on top of the browser, so that the content slides underneath */
+		#browser::before {
+			content: "";
+			top: calc(var(--scrollbox-border-size) * -1);
+			left: calc(var(--scrollbox-border-size) * -1);
+			width: var(--scrollbox-width);
+			height: var(--scrollbox-height);
+			border: max(1em, var(--scrollbox-border-size)) solid lightblue;
+			border-left-color: transparent;
+			border-right-color: transparent;
+
+			position: absolute;
+			z-index: 2;
+			pointer-events: none;
+			box-shadow: 0px 0px 1em 0px rgb(0 0 0 / 0.5);
+			border-radius: 0.5em;
+		}
+
+		#browser * {
+			margin: 0;
+			padding: 0;
+			-webkit-user-select: none;
+			user-select: none;
+		}
+
+		main {
+			position: relative;
+			background: transparent;
+			z-index: 3;
+			width: calc(var(--scrollbox-width) - var(--scrollbar-width));
+			box-shadow: inset 0px 0px 1em 0px rgb(0 0 0 / 0.5);
+			pointer-events: none;
+		}
+
+		main::before,
+		main::after {
+			white-space: nowrap;
+			display: inline-block;
+			position: absolute;
+			left: -1rem;
+			text-transform: uppercase;
+			font-size: 0.8rem;
+		}
+
+		main::before {
+			content: 'start edge + inset';
+			top: 0;
+			transform: translate3d(calc((1em + var(--scrollbox-border-size) + 100%) * -1), calc(0% - (var(--scrollbox-border-size) / 2) + var(--visual-inset)), 0);
+		}
+
+		main::after {
+			content: 'end edge + inset';
+			bottom: 0;
+			transform: translate3d(calc((1em + var(--scrollbox-border-size) + 100%) * -1), calc(0% + (var(--scrollbox-border-size) / 2) - var(--visual-inset)), 0);
+		}
+
+		#scrollbar {
+			grid-area: scrollbar;
+			height: 100%;
+			align-self: start;
+
+			background: #ccc;
+			padding: 0 1px;
+		}
+
+		#scrollbar #thumb {
+			margin-top: 0;
+			height: var(--thumb-size);
+			width: 100%;
+			background: #555;
+			border-radius: 9999px;
+		}
+
+		#scrollbar #thumb::after {
+			content: 'Drag Me ➡';
+			color: red;
+			position: absolute;
+			right: calc(100% + 0.5rem);
+			top: 2rem;
+			display: block;
+			white-space: nowrap;
+			font-size: 2em;
+			font-style: italic;
+			transform: rotate(-2.5deg);
+			transform-origin: 50% 50%;
+		}
+
+		.interacted #scrollbar #thumb::after {
+			opacity: 0;
+		}
+
+		.box {
+			height: var(--box-height);
+			position: absolute;
+			left: 0;
+			right: 0;
+			z-index: 1;
+		}
+
+		:root[data-loading] :is(.box, #subject) {
+			opacity: 0 !important;
+		}
+
+		.box::after {
+			text-transform: uppercase;
+			font-size: 0.8rem;
+			display: inline-block;
+			position: absolute;
+			left: -1rem;
+			top: 50%;
+			display: inline-block;
+			content: attr(data-zone);
+			transform: translate3d(calc((1em + var(--scrollbox-border-size) + 100%) * -1), calc(0% - (var(--scrollbox-border-size) / 2)), 0);
+		}
+
+		.box[data-zone] {
+			background: repeating-linear-gradient(-45deg,
+					var(--shaded-color),
+					var(--shaded-color) var(--shaded-size),
+					transparent var(--shaded-size),
+					transparent calc(var(--shaded-size) * 5));
+			opacity: 0.5;
+			pointer-events: all;
+		}
+
+		.box[data-zone]:hover {
+			opacity: 1;
+		}
+
+		:root[show-areas="no"] .box[data-zone] {
+			opacity: 0;
+		}
+
+		:is(:root[show-labels="no"], :root.is-embed) main::before,
+		:is(:root[show-labels="no"], :root.is-embed) main::after,
+		:is(:root[show-labels="no"], :root.is-embed) .box[data-zone]::after {
+			opacity: 0;
+		}
+
+		.box[data-zone]::after {
+			content: attr(data-title-small);
+			display: block;
+		}
+
+		.box[data-zone="end-edge-outside"] {
+			transform: translateY(calc(var(--scrollbox-height) - var(--visual-inset)));
+			border-top: var(--box-border-size) dashed #333;
+		}
+
+		.box[data-zone="end-edge-inside"] {
+			transform: translateY(calc(var(--scrollbox-height) - var(--box-height) - var(--box-border-size) - var(--visual-inset)));
+			border-bottom: var(--box-border-size) dashed #333;
+		}
+
+		.box[data-zone="start-edge-inside"] {
+			transform: translateY(var(--visual-inset));
+			border-top: var(--box-border-size) dashed #333;
+		}
+
+		.box[data-zone="start-edge-outside"] {
+			transform: translateY(calc(-1 * (var(--box-height) + var(--box-border-size) - var(--visual-inset))));
+			border-bottom: var(--box-border-size) dashed #333;
+		}
+
+		#base-line,
+		#animation-line {
+			width: 0;
+			height: auto;
+
+			border: 0.5em solid transparent;
+			position: absolute;
+			left: calc(50% - (var(--scrollbar-width) / 2));
+			top: 50%;
+			bottom: 50%;
+			opacity: 0.8;
+		}
+
+		#animation-line {
+			z-index: 0;
+			left: calc(50% - ((var(--scrollbar-width) + var(--animation-line-width)) / 2));
+
+			border-top: 0;
+			border-bottom: 0;
+			top: 50vh;
+			height: 0;
+			width: var(--animation-line-width);
+			background: var(--animation-line-color);
+			background-clip: content-box;
+			opacity: 0;
+		}
+
+		#base-line {
+			top: 0;
+			bottom: 0;
+			border-color: #ccc;
+			min-height: calc(var(--scrollbox-height) + (var(--box-height) * 1.1 * 2) + (var(--scrollbox-border-size) * 2));
+			display: none;
+		}
+
+
+		#from,
+		#to,
+		#subject {
+			--shaded-color: #333;
+			width: calc(var(--scrollbox-width) / 1.5);
+			left: calc(50% - var(--scrollbox-width) / 3);
+
+			height: calc(var(--box-height) + var(--box-border-size));
+
+			background: repeating-linear-gradient(45deg,
+					var(--shaded-color),
+					var(--shaded-color) var(--shaded-size),
+					transparent var(--shaded-size),
+					transparent calc(var(--shaded-size) * 10));
+			/* 	border-top: var(--box-border-size) solid lime; */
+
+			position: absolute;
+
+			outline: 2px dashed var(--shaded-color);
+
+			display: grid;
+			justify-content: start;
+			align-items: start;
+			font-size: 1.2em;
+			-webkit-user-select: none;
+			user-select: none;
+		}
+		#subject {
+			justify-content: end;
+		}
+
+		#from,
+		#to {
+			opacity: 0.6;
+		}
+
+		:is(#from, #to, #subject) span {
+			background-color: #FFF;
+			padding: 0.25em;
+		}
+
+		:root[show-fromto="no"] :is(#from, #to) {
+			opacity: 0;
+		}
+
+		#controls {
+			position: fixed;
+			right: 0;
+			top: 0;
+			background-color: #fff;
+			padding: 1em;
+			border-left: 0.5em solid #ccc;
+			border-bottom: 0.5em solid #ccc;
+			border-bottom-left-radius: 0.5em;
+			z-index: 100;
+		}
+
+		body > h1 { /* sr-only */
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			margin: -1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
+			border-width: 0;
+		}
+
+		@keyframes slide {
+			to {
+				translate: 0 calc((100% - var(--scrollbox-height)) * -1);
+			}
+		}
+
+		:is(.page-content, #scrollbar #thumb) {
+			animation: slide 10s linear 0s infinite alternate forwards;
+			pointer-events: all;
+			transition: none;
+		}
+
+		html[interactivity="clicktodrag"] :is(.page-content, #scrollbar #thumb) {
+			animation-play-state: paused;
+		}
+		html[interactivity="clicktodrag"] #scrollbar #thumb {
+			cursor: grab;
+		}
+		html[interactivity="clicktodrag"] #scrollbar #thumb:active,
+		html[interactivity="clicktodrag"]:has(#scrollbar #thumb:active) {
+			cursor: grabbing;
+		}
+
+		.page-content {
+			height: var(--content-height);
+			width: calc(var(--scrollbox-width) - var(--scrollbar-width));
+			position: absolute;
+			top: 0;
+			left: 0;
+			background-color: aliceblue;
+			background-image: linear-gradient(to right, rgb(0 0 0 / 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgb(0 0 0 / 0.05) 1px, transparent 1px);
+			background-size: 10vh 10vh;
+			z-index: -1;
+		}
+
+		#subject {
+			top: calc(var(--scrollbox-height) * 1.5);
+			left: calc(50% - (var(--scrollbox-width) / 3) + (var(--scrollbar-width) / 2));
+			outline-color: rgba(255, 0, 0, 1);
+			background: transparent;
+		}
+
+		#subject.intersecting {
+			outline-color: rgba(50, 205, 50, 1);
+		}
+
+		#toggle-controls {
+			font-size: .8em;
+			margin-left: 100%;
+			transform: translateX(-100%);
+		}
+		#toggle-controls[aria-expanded="true"]::after {
+			content: 'hide controls';
+			white-space: nowrap;
+		}
+		#toggle-controls[aria-expanded="false"]::after {
+			content: 'show controls';
+			white-space: nowrap;
+		}
+
+		#controls:has(#toggle-controls[aria-expanded="false"]) > *:not(#toggle-controls) {
+			display: none;
+		}
+
+		fieldset:has(> #reset) {
+			border: 0;
+			text-align: center;
+			padding: 14px 0 0 0;
+		}
+
+		@keyframes subject-animation--none /* Faked */ {
+			from {
+				opacity: 0;
+			}
+			to {
+				opacity: 0;
+			}
+		}
+		@keyframes subject-animation--scale-up {
+			from {
+				transform-origin: 50% 50%;
+				scale: 0;
+			}
+			to {
+				transform-origin: 50% 50%;
+				scale: 1;
+			}
+		}
+		@keyframes subject-animation--scale-down {
+			from {
+				transform-origin: 50% 50%;
+				scale: 1;
+			}
+			to {
+				transform-origin: 50% 50%;
+				scale: 0;
+			}
+		}
+		@keyframes subject-animation--reveal {
+			from {
+				opacity: 0;
+				clip-path: inset(0% 60% 0% 50%);
+			}
+			to {
+				opacity: 1;
+				clip-path: inset(0% 0% 0% 0%);
+			}
+		}
+		@keyframes subject-animation--fly-in {
+			from {
+				opacity: 0;
+				translate: -100% 0 0;
+			}
+			to {
+				opacity: 1;
+				translate: 0 0 0;
+			}
+		}
+		@keyframes subject-animation--fly-out {
+			from {
+				opacity: 1;
+				translate: 0 0 0;
+			}
+			to {
+				opacity: 0;
+				translate: 100% 0 0;
+			}
+		}
+
+		#subject-inner {
+			position: absolute;
+			height: 100%;
+			width: 100%;
+			z-index: -1;
+			outline: 1px solid #333;
+			animation: var(--subject-animation) 1s linear paused forwards;
+			background-color: grey;
+		}
+
+		#range {
+			position: absolute;
+			width: max-content;
+			text-align: center;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+		}
+
+		.is-embed .hide-when-embedded {
+			display: none !important;
+		}
+		.hide {
+			display: none !important;
+		}
+
+		body > *:not(#controls, #metabox) {
+			-webkit-touch-callout: none;
+		}
+
+		#output {
+			box-sizing: border-box;
+			width: 100%;
+			resize: none;
+			height: calc(84px + 20px);
+			padding: 10px;
+			overflow: auto;
+			font-family: "Monaspace", monospace;
+			font-palette: --kung-fury;
+			font-size: 12px;
+			white-space: pre;
+		}
+		#output[data-lines="5"] {
+			height: calc(72px + 20px);
+		}
+	</style>
+	<link rel="stylesheet" href="/shared/styles.css">
+	<script src="/shared/scripts.js"></script>
+</head>
+
+<body>
+	<!-- metabox -->
+	<div id="metabox">
+		<button id="version-selector" disabled title="This page has no alternative versions">🔀</button>
+		<a class="button" href="/" title="To index">🏠</a>
+		<button id="infobox-toggle" title="Show Information about this tool">ℹ️</button>
+		<dialog id="infobox">
+			<form method="dialog"><button id="infobox-close" tabindex="0" title="Close dialog">❌</button></form>
+			<h1>About this tool</h1>
+			<p>This tool is part of <a href="https://scroll-driven-animations.style/" target="_top">https://scroll-driven-animations.style/</a> and should help you get a grasp of how all View Timeline Ranges work.</p>
+			<ul>
+				<li><code>cover</code>: Represents the full range of the view progress timeline.</li>
+				<li><code>entry</code>: Represents the range during which the principal box is entering the view progress visibility range.</li>
+				<li><code>exit</code>: Represents the range during which the principal box is exiting the view progress visibility range.</li>
+				<li><code>entry-crossing</code>: Represents the range during which the principal box crosses the end border edge.</li>
+				<li><code>exit-crossing</code>: Represents the range during which the principal box crosses the start border edge.</li>
+				<li><code>contain</code>: Represents the range during which the principal box is either fully contained by, or fully covers, its view progress visibility range within the scrollport. This depends on whether the subject is taller or shorter than the scroller.</li>
+			</ul>
+			<p>Use the controls at the top right of the page to see how choosing a different setting affects the start and end positions when an animation runs.</p>
+		</dialog>
+	</div>
+
+	<!-- Controls -->
+	<div id="controls">
+		<button id="toggle-controls" aria-expanded="false"></button>
+		<fieldset>
+			<legend>animation-range</legend>
+			<label for="animation-range-start-name">animation-range-start <em>(name + %)</em></label>
+			<div>
+				<select name="animation-range-start-name" id="animation-range-start-name">
+					<option value="cover">cover</option>
+					<option value="contain">contain</option>
+					<option value="entry-crossing">entry-crossing</option>
+					<option value="entry">entry</option>
+					<option value="exit-crossing">exit-crossing</option>
+					<option value="exit">exit</option>
+				</select>
+				<input type="number" min="0" max="100" step="5" value="0" name="animation-range-start-percentage" id="animation-range-start-percentage">
+			</div>
+			<label for="animation-range-end-name">animation-range-end <em>(name + %)</em></label>
+			<div>
+				<select name="animation-range-end-name" id="animation-range-end-name">
+					<option value="mirrored">(mirrored)</option>
+					<option value="cover">cover</option>
+					<option value="contain">contain</option>
+					<option value="entry-crossing">entry-crossing</option>
+					<option value="entry">entry</option>
+					<option value="exit-crossing">exit-crossing</option>
+					<option value="exit">exit</option>
+				</select>
+				<input type="number" min="0" max="100" step="5" value="100" name="animation-range-end-percentage" id="animation-range-end-percentage">
+			</div>
+		</fieldset>
+
+		<fieldset>
+			<legend>view-timeline</legend>
+			<label for="view-timeline-axis">axis</label>
+			<select name="view-timeline-axis" id="view-timeline-axis" disabled>
+				<option value="block">block</option>
+				<option value="inline">inline</option>
+			</select>
+			<label for="view-timeline-inset">inset <em>(%)</em></label>
+			<input type="number" min="0" max="30" step="5" value="0" name="view-timeline-inset" id="view-timeline-inset">
+		</fieldset>
+
+		<fieldset>
+			<legend>subject</legend>
+			<label for="subject-animation">Animation</label>
+			<div>
+				<select name="subject-animation" id="subject-animation">
+					<option value="none">(none)</option>
+					<option value="scale-up">scale-up</option>
+					<option value="scale-down">scale-down</option>
+					<option value="reveal" selected>reveal</option>
+					<option value="fly-in">fly-in</option>
+					<option value="fly-out">fly-out</option>
+				</select>
+			</div>
+			<label>Size</label>
+			<div>
+				<label><input type="radio" name="subject-size" id="subject-size-smaller" value="smaller" checked> Smaller than scrollport</label><br>
+				<label><input type="radio" name="subject-size" id="subject-size-taller" value="taller"> Taller than scrollport</label>
+			</div>
+		</fieldset>
+
+		<fieldset class="hide hide-when-embedded">
+			<legend>Interactivity</legend>
+			<div>
+				<label><input type="radio" name="interactivity" id="interactivity-autoplay" value="autoplay"> Autoplay</label><br>
+				<label><input type="radio" name="interactivity" id="interactivity-clicktodrag" value="clicktodrag" checked> Use scrollbar</label>
+			</div>
+		</fieldset>
+
+		<fieldset class="hide-when-embedded">
+			<legend>Visualization</legend>
+			<label><input type="checkbox" name="show-fromto" id="show-fromto" checked> Show From/To Boxes</label><br>
+			<label><input type="checkbox" name="show-areas" id="show-areas" checked> Show Areas</label><br>
+			<label><input type="checkbox" name="show-labels" id="show-labels" checked> Show Labels</label>
+		</fieldset>
+
+		<fieldset>
+			<legend>Output</legend>
+			<textarea name="output" id="output" readonly></textarea>
+		</fieldset>
+
+		<fieldset>
+			<button id="reset">Reset all values</button>
+		</fieldset>
+	</div>
+
+	<!-- Visualization -->
+	<h1><small>Scroll-driven Animations</small><br>View Progress Timeline<br>Ranges and Animation Progress Visualizer</h1>
+	<div id="browser">
+		<main id="scrollport" data-animation-range-start-name="cover" data-animation-range-start-percentage="0" data-animation-range-end-name="cover" data-animation-range-end-percentage="0" data-view-timeline-axis="block" data-view-timeline-inset="0">
+			<!-- The four main zones around the edges -->
+			<div class="box" data-zone="end-edge-outside" data-title-small="entry-crossing 0% – entry 0% – cover 0%"  data-title-tall="entry-crossing 0% – entry 0% – cover 0%"></div>
+			<div class="box" data-zone="end-edge-inside" data-title-small="entry-crossing 100% – entry 100% – contain 0%"  data-title-tall="entry-crossing 100% – exit 0% – contain 100%"></div>
+			<div class="box" data-zone="start-edge-inside" data-title-small="exit-crossing 0% – exit 0% – contain 100%"  data-title-tall="exit-crossing 0% – entry 100% – contain 0%"></div>
+			<div class="box" data-zone="start-edge-outside" data-title-small="exit-crossing 100% – exit 100% – cover 100%" data-title-tall="exit-crossing 100% – exit 100% – cover 100%"></div>
+		</main>
+		<div class="page-content">
+			<div id="subject">
+				<div id="subject-inner"></div>
+				<span id="progress">0.0000%</span>
+				<span id="range">animation-range: cover 0% cover 100%;</span>
+			</div>
+		</div>
+		<aside id="scrollbar">
+			<div id="thumb"></div>
+		</aside>
+	</div>
+
+	<!-- To from and to positions -->
+	<div class="box" id="from"><span>cover 0%</span></div>
+	<div class="box" id="to"><span>cover 100%</span></div>
+
+	<!-- Line indicating the length of the animation -->
+	<div id="animation-line"></div>
+	<div id="base-line"></div>
+	</div>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"93b5eb94baa5e373","version":"2025.4.0-1-g37f21b1","r":1,"token":"4f175b1ac3204b9ca216125bb4bd6018","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}}}' crossorigin="anonymous"></script>
+</body>
+
+</html>

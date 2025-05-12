@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>https://codepen.io/Josue-Orellana-the-reactor/pen/vEYqzej</title>
+      <style>
+html {
+  font-family: sans-serif;
+  height: 100%;
+}
+
+body {
+  /* --- 変更点 --- */
+  /* position: fixed; を削除またはコメントアウト */
+  /* height: inherit; を削除またはコメントアウト */
+  /* top: 100px; を削除またはコメントアウト (代わりにpadding-topを使用) */
+  /* overflow: scroll; を削除またはコメントアウト (ウィンドウがスクロールするようになります) */
+
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Flexアイテム (container, p要素) を水平方向の中央に配置 */
+  gap: 100px;
+
+  margin: 0; /* ブラウザのデフォルトマージンをリセット */
+  padding-top: 100px; /* 以前の top: 100px の効果をパディングで代替 */
+  padding-left: 20px;   /* ボーダーと内容の間に左右の余白（任意） */
+  padding-right: 20px;  /* ボーダーと内容の間に左右の余白（任意） */
+  padding-bottom: 20px; /* ボーダーと内容の間に下部の余白（任意） */
+
+  /* これでbodyのボーダーが全要素を含むようになります */
+  border: 3px solid green; /* 確認用のボーダー (色や太さは任意) */
+
+  /* (オプション) bodyの最小の高さをビューポートに合わせたい場合 */
+  /* min-height: calc(100vh - 100px - 20px - (3px * 2)); */
+  /* 上記は padding-top, padding-bottom, borderの太さを考慮した計算。
+     100vhを使わない場合は、htmlにheight:100%を設定し、bodyにmin-height:100%とbox-sizing:border-boxを設定するなどの方法もありますが、
+     内容にフィットさせるのが目的ならmin-heightは不要な場合もあります。 */
+}
+.container {
+    position:absolute;
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.75rem; /* 角丸 */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* ボックスシャドウ */
+    width: 100%;
+    max-width: 600px; /* 最大幅 */
+    text-align: center;
+}
+h1 {
+    font-size: 1.875rem; /* 文字サイズ (text-3xl相当) */
+    font-weight: bold; /* 太字 */
+    margin-bottom: 1.5rem; /* 下マージン */
+    color: #1e3a8a; /* 文字色 (blue-800相当) */
+}
+label {
+    font-size: 1rem; /* 文字サイズ (text-base相当) */
+    margin-right: 0.5rem; /* 右マージン */
+    color: #4a5568; /* 文字色 (gray-700相当) */
+}
+select {
+    padding: 0.5rem 1rem; /* 内側余白 */
+    border-radius: 0.375rem; /* 角丸 (rounded-md相当) */
+    border: 1px solid #d1d5db; /* 境界線 (gray-300相当) */
+    margin-bottom: 1.5rem; /* 下マージン */
+    font-size: 1rem; /* 文字サイズ */
+    background-color: white; /* 背景色 */
+    color: #333; /* 文字色 */
+}
+
+p {
+  margin: 0;
+  font-size: 6rem;
+  font-weight: bold;
+  display: inline-block;
+}
+
+p {
+  --border-size :10px;
+  text-box-edge: cap alphabetic;
+  border-top: var(--border-size) solid magenta;
+  border-bottom: var(--border-size) solid magenta;
+  border-left: var(--border-size) solid magenta;
+  border-right: var(--border-size) solid magenta;
+}
+
+.a {
+  text-box-trim: none;
+}
+
+.b {
+  text-box-trim: trim-start;
+}
+
+.c {
+  text-box-trim: trim-end;
+}
+
+.d {
+  text-box-trim: trim-both;
+}
+
+/* 6. 彫り込み風 (エンボス/デボス) */
+.engraved-effect {
+    background-color: #e2e8f0; /* Tailwindの gray-200 */
+    color: #a0aec0; /* Tailwindの gray-500 */
+    text-shadow: 1px 1px 1px #fff, -1px -1px 1px #718096; /* Tailwindの gray-600 */
+}
+.embossed-effect {
+    background-color: #e2e8f0; /* Tailwindの gray-200 */
+    color: #cbd5e0; /* Tailwindの gray-400 */
+    text-shadow: -1px -1px 1px #fff, 1px 1px 1px #718096; /* Tailwindの gray-600 */
+}
+
+
+/* 7. レトロ/ヴィンテージ風 */
+.retro-vintage-shadow {
+    color: #f6e05e; /* Tailwindの yellow-400 */
+    text-shadow:
+        3px 3px 0px #dd6b20, /* Tailwindの orange-600 */
+        -3px -3px 0px #38a169; /* Tailwindの green-600 */
+}
+
+/* 8. ファイアエフェクト風 */
+.fire-effect {
+    color: #fed7aa; /* Tailwindの orange-200 */
+    background-color: #2d3748; /* Tailwindの gray-800 */
+    text-shadow:
+        0 0 4px #fff,
+        0 -5px 4px #ff3,
+        2px -10px 6px #fd3,
+        -2px -15px 11px #f80,
+        2px -18px 18px #f20;
+}
+
+
+      </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>テキストスタイルチェンジャー</h1>
+
+    <div>
+        <label for="style-selector">スタイルを選択:</label>
+        <select id="style-selector">
+            <option value="no-shadow">影なし (デフォルト)</option>
+            <option value="simple-drop-shadow">ドロップシャドウ</option>
+            <option value="retro-vintage-shadow">レトロ調</option>
+            <option value="neon-glow-effect">ネオン光彩</option>
+            <option value="hard-edge-shadow">アウトライン</option>
+        </select>
+    </div>
+  </div>
+
+<p class="a">AmbgosQ</p>
+<p class="b">AmbgosQ</p>
+<p class="c">AmbgosQ</p>
+<p class="d">AmbgosQ</p>
+<p class="d retro-vintage-shadow">AmbgosQ</p>
+<p class="d fire-effect">AmbgosQ</p>
+
+<script>
+  // DOM要素を取得
+  const styleSelector = document.getElementById('style-selector');
+ 
+  const eleP        = document.querySelectorAll("p");
+  // select要素の変更を監視するイベントリスナーを追加
+  styleSelector.addEventListener('change', function() {
+      // 選択されたoptionのvalue値（クラス名）を取得
+      const selectedClass = this.value;
+
+      // 適用する可能性のある全てのカスタムクラスのリスト
+      // これにより、以前に適用されたクラスを確実に削除できます
+      const allClasses = [
+          'no-shadow',
+          'simple-drop-shadow',
+          'retro-vintage-shadow',
+          'neon-glow-effect',
+          'hard-edge-shadow'
+      ];
+
+      // まず、既存の関連クラスをすべて削除
+      allClasses.forEach(cls => {
+          textToStyle.classList.remove(cls);
+      });
+
+      // 新しく選択されたクラスを追加
+      // selectedClassが空でないことを確認（念のため）
+      if (selectedClass) {
+          textToStyle.classList.add(selectedClass);
+      }
+
+      // 特定のスタイルに応じて、テキスト要素の背景色と境界線色を直接変更
+      if (selectedClass === 'neon-glow-effect') {
+          textToStyle.style.backgroundColor = '#1a202c'; // 暗い背景 (gray-900相当)
+          textToStyle.style.borderColor = '#374151'; // 暗い境界線 (gray-700相当)
+      } else if (selectedClass === 'hard-edge-shadow') {
+          textToStyle.style.backgroundColor = '#6b7280'; // 中間のグレー背景 (gray-500相当)
+          textToStyle.style.borderColor = '#4b5563'; // 中間のグレー境界線 (gray-600相当)
+      } else {
+          // 他のスタイルの場合はデフォルトの背景色と境界線色に戻す
+          textToStyle.style.backgroundColor = ''; // CSSで定義されたもの、またはデフォルトに戻す
+          textToStyle.style.borderColor = '#cbd5e0'; // 元の境界線色 (gray-400相当)
+      }
+  });
+
+  // 初期表示時のスタイル適用について：
+  // HTMLの<div id="textToStyle" class="target-text no-shadow">で
+  // 'no-shadow' クラスが初期設定されているため、
+  // JavaScriptでの特別な初期設定は不要です。
+  // また、背景色と境界線色も、上記のelse節のロジックにより
+  // 初期状態（'no-shadow'）ではCSSで定義されたスタイルが適用されます。
+</script>
+</body>
+</html>

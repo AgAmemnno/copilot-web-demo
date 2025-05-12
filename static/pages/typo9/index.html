@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS white-space プロパティ デモ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif; /* 日本語表示に適したフォント */
+        }
+        .demo-box-container {
+            border: 1px solid #cbd5e1; /* tailwind: border-slate-300 */
+            padding: 1.5rem; /* tailwind: p-6 */
+            margin-bottom: 1.5rem; /* tailwind: mb-6 */
+            border-radius: 0.5rem; /* tailwind: rounded-lg */
+            background-color: #f8fafc; /* tailwind: bg-slate-50 */
+        }
+        .demo-box-container h3 {
+            margin-top: 0;
+            font-size: 1.25rem; /* tailwind: text-xl */
+            font-weight: 600; /* tailwind: font-semibold */
+            color: #0f172a; /* tailwind: text-slate-900 */
+        }
+        .demo-box-container h3 .prop-value {
+            font-family: monospace;
+            background-color: #e2e8f0; /* tailwind: bg-slate-200 */
+            padding: 0.125rem 0.375rem; /* tailwind: px-1.5 py-0.5 */
+            border-radius: 0.25rem; /* tailwind: rounded-md */
+            font-size: 0.9em;
+            color: #1e293b; /* tailwind: text-slate-800 */
+        }
+        .sample-text-display {
+            border: 2px dashed #94a3b8; /* tailwind: border-slate-400 */
+            padding: 1rem; /* tailwind: p-4 */
+            margin-top: 1rem; /* tailwind: mt-4 */
+            background-color: #ffffff; /* tailwind: bg-white */
+            font-size: 1rem; /* tailwind: text-base */
+            line-height: 1.6; /* tailwind: leading-relaxed */
+            width: 350px; /* 折り返し挙動確認のため幅を固定 */
+            overflow-wrap: break-word; /* 念のため設定 (white-spaceで制御されるが) */
+        }
+        .source-code-display {
+            background-color: #1e293b; /* tailwind: bg-slate-800 */
+            color: #e2e8f0; /* tailwind: text-slate-200 */
+            padding: 1rem; /* tailwind: p-4 */
+            border-radius: 0.375rem; /* tailwind: rounded-md */
+            font-family: monospace;
+            font-size: 0.875rem; /* tailwind: text-sm */
+            white-space: pre; /* ソースコード自体は整形を保つ */
+            overflow-x: auto; /* 横スクロール可能に */
+            margin-top: 0.5rem; /* tailwind: mt-2 */
+        }
+        .description {
+            font-size: 0.875rem; /* tailwind: text-sm */
+            color: #475569; /* tailwind: text-slate-600 */
+            margin-top: 0.75rem; /* tailwind: mt-3 */
+        }
+
+        /* white-space プロパティの各値を適用するクラス */
+        .ws-normal { white-space: normal; }
+        .ws-nowrap { white-space: nowrap; overflow-x: auto; } /* nowrapは見切れるためスクロールバー表示 */
+        .ws-pre { white-space: pre; overflow-x: auto; } /* preも見切れるためスクロールバー表示 */
+        .ws-pre-wrap { white-space: pre-wrap; }
+        .ws-pre-line { white-space: pre-line; }
+        .ws-break-spaces { white-space: break-spaces; }
+
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-900 p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-sky-600">CSS `white-space` プロパティ視覚デモ</h1>
+            <p class="text-slate-600 mt-2">各 `white-space` の値がテキストの表示にどう影響するかを確認します。</p>
+        </header>
+
+        <script>
+            const sampleTextContent = `これは  サンプル    テキストです。
+次の行はタブで始まります。\tタブの後。
+この行は非常に長いため、ボックスの幅に応じて折り返されるかどうかが重要になります。改行も含む。
+最後の行。`;
+        </script>
+
+        <div class="demo-box-container">
+            <h3>white-space: <code class="prop-value">normal</code> (デフォルト)</h3>
+            <p class="description">連続する空白・タブは1つに畳み込まれ、ソース内の改行も空白として扱われます。テキストはボックス幅に応じて自動で折り返します。</p>
+            <h4>HTMLソース:</h4>
+            <pre class="source-code-display" id="source-normal"></pre>
+            <h4>表示結果 (width: 350px):</h4>
+            <div class="sample-text-display ws-normal" id="display-normal"></div>
+        </div>
+
+        <div class="demo-box-container">
+            <h3>white-space: <code class="prop-value">nowrap</code></h3>
+            <p class="description">連続する空白・タブは1つに畳み込まれます。ソース内の改行も空白として扱われます。テキストは折り返されず、一行で表示されます（ボックスを超える場合はスクロール）。</p>
+            <h4>HTMLソース:</h4>
+            <pre class="source-code-display" id="source-nowrap"></pre>
+            <h4>表示結果 (width: 350px):</h4>
+            <div class="sample-text-display ws-nowrap" id="display-nowrap"></div>
+        </div>
+
+        <div class="demo-box-container">
+            <h3>white-space: <code class="prop-value">pre</code></h3>
+            <p class="description">連続する空白・タブ、ソース内の改行がそのまま表示されます。テキストは折り返されません（ボックスを超える場合はスクロール）。</p>
+            <h4>HTMLソース:</h4>
+            <pre class="source-code-display" id="source-pre"></pre>
+            <h4>表示結果 (width: 350px):</h4>
+            <div class="sample-text-display ws-pre" id="display-pre"></div>
+        </div>
+
+        <div class="demo-box-container">
+            <h3>white-space: <code class="prop-value">pre-wrap</code></h3>
+            <p class="description">連続する空白・タブ、ソース内の改行がそのまま表示されます。テキストはボックス幅に応じて自動で折り返します。</p>
+            <h4>HTMLソース:</h4>
+            <pre class="source-code-display" id="source-pre-wrap"></pre>
+            <h4>表示結果 (width: 350px):</h4>
+            <div class="sample-text-display ws-pre-wrap" id="display-pre-wrap"></div>
+        </div>
+
+        <div class="demo-box-container">
+            <h3>white-space: <code class="prop-value">pre-line</code></h3>
+            <p class="description">連続する空白・タブは1つに畳み込まれますが、ソース内の改行はそのまま表示されます。テキストはボックス幅に応じて自動で折り返します。</p>
+            <h4>HTMLソース:</h4>
+            <pre class="source-code-display" id="source-pre-line"></pre>
+            <h4>表示結果 (width: 350px):</h4>
+            <div class="sample-text-display ws-pre-line" id="display-pre-line"></div>
+        </div>
+        
+        <div class="demo-box-container">
+            <h3>white-space: <code class="prop-value">break-spaces</code></h3>
+            <p class="description">連続する空白・タブ（行末の空白も含む）、ソース内の改行がそのまま表示されます。テキストはボックス幅に応じて自動で折り返し、空白文字の位置でも折り返すことがあります。</p>
+            <h4>HTMLソース:</h4>
+            <pre class="source-code-display" id="source-break-spaces"></pre>
+            <h4>表示結果 (width: 350px):</h4>
+            <div class="sample-text-display ws-break-spaces" id="display-break-spaces"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // JavaScriptで各デモボックスにサンプルテキストとソースコードを挿入
+        document.addEventListener('DOMContentLoaded', function() {
+            const ids = ['normal', 'nowrap', 'pre', 'pre-wrap', 'pre-line', 'break-spaces'];
+            ids.forEach(id => {
+                const sourceDisplay = document.getElementById(`source-${id}`);
+                const textDisplay = document.getElementById(`display-${id}`);
+                if (sourceDisplay) {
+                    sourceDisplay.textContent = sampleTextContent;
+                }
+                if (textDisplay) {
+                    // preタグやtextareaを使わず、divに直接テキストノードとして設定することで、
+                    // HTMLのパースによる空白の挙動ではなく、CSSのwhite-spaceの純粋な効果を見る
+                    textDisplay.textContent = sampleTextContent;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

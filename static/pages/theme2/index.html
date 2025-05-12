@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ダークモード・ライトモード対応デモ (手動切替)</title>
+    <style>
+        /*
+         * 基本となるライトモードのカラースキームをCSS変数として定義します。
+         * JavaScriptによって html 要素に .dark-theme クラスが付与されると、
+         * 下記のダークテーマ用の変数値が適用されます。
+         */
+        :root {
+            --primary-text-color: #212529;
+            --secondary-text-color: #495057;
+            --background-color: #ffffff;
+            --surface-color: #f8f9fa;
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --border-color: #dee2e6;
+            --link-color: #007bff;
+            --link-hover-color: #0056b3;
+            --box-shadow-color: rgba(0, 0, 0, 0.1);
+            --button-text-color: #ffffff; /* プライマリ/セカンダリボタンのテキスト色 (ライトモード時) */
+            
+            /* テーマ切り替えボタン用の変数 (ライトモード) */
+            --toggle-button-bg: #f8f9fa;
+            --toggle-button-text: #212529;
+            --toggle-button-border: #dee2e6;
+            --toggle-button-hover-bg: #e9ecef;
+        }
+
+        html.dark-theme {
+            --primary-text-color: #e9ecef;
+            --secondary-text-color: #adb5bd;
+            --background-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #66b2ff;
+            --secondary-color: #868e96;
+            --border-color: #495057;
+            --link-color: #66b2ff;
+            --link-hover-color: #80c1ff;
+            --box-shadow-color: rgba(255, 255, 255, 0.1);
+            --button-text-color: #121212; /* プライマリ/セカンダリボタンのテキスト色 (ダークモード時) */
+
+            /* テーマ切り替えボタン用の変数 (ダークモード) */
+            --toggle-button-bg: #1e1e1e;
+            --toggle-button-text: #e9ecef;
+            --toggle-button-border: #495057;
+            --toggle-button-hover-bg: #343a40;
+        }
+
+        /* 基本的なスタイリング */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--primary-text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px var(--box-shadow-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-color);
+            transition: color 0.3s ease;
+        }
+
+        h1 {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+            transition: border-color 0.3s ease;
+        }
+
+        p {
+            color: var(--secondary-text-color);
+            margin-bottom: 1em;
+            transition: color 0.3s ease;
+        }
+
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: var(--link-hover-color);
+            text-decoration: underline;
+        }
+        
+        /* テーマ切り替えボタンのスタイル */
+        #theme-toggle {
+            background-color: var(--toggle-button-bg);
+            color: var(--toggle-button-text);
+            border: 1px solid var(--toggle-button-border);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        #theme-toggle:hover {
+            background-color: var(--toggle-button-hover-bg);
+        }
+
+        /* 通常のボタンのスタイル */
+        button:not(#theme-toggle) { /* ID指定でテーマ切り替えボタンを除外 */
+            background-color: var(--primary-color);
+            color: var(--button-text-color); /* テーマに合わせたテキスト色 */
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease, color 0.3s ease, opacity 0.3s ease;
+        }
+
+        button:not(#theme-toggle):hover {
+            opacity: 0.85;
+        }
+
+        .secondary-button {
+            background-color: var(--secondary-color);
+            color: var(--button-text-color); /* テーマに合わせたテキスト色 */
+        }
+
+        .secondary-button:hover {
+            opacity: 0.85;
+        }
+
+        .sample-content {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px dashed var(--border-color);
+            border-radius: 4px;
+            transition: border-color 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="text-align: right; margin-bottom: 20px;">
+            <button id="theme-toggle">テーマを切り替え</button>
+        </div>
+
+        <h1>カラーテーマデモ</h1>
+        <p>このページは、CSS変数とJavaScriptを使用して、ライトモードとダークモードの手動切り替えに対応しています。</p>
+        <p>右上のボタンでテーマを切り替えてみてください。選択したテーマはブラウザに保存され、次回アクセス時も維持されます。OSの設定よりも手動設定が優先されます。</p>
+
+        <h2>セクションタイトル</h2>
+        <p>これは、<a href="#">サンプルリンク</a> を含む段落です。CSS変数のおかげで、リンクの色もテーマに合わせて調整されます。</p>
+
+        <div class="sample-content">
+            <h3>サブセクション</h3>
+            <p>このボックスも、表面色 (<code>--surface-color</code>) と境界線色 (<code>--border-color</code>) の変数を使用しています。</p>
+        </div>
+
+        <p style="margin-top: 20px;">
+            <button>プライマリーボタン</button>
+            <button class="secondary-button" style="margin-left: 10px;">セカンダリーボタン</button>
+        </p>
+    </div>
+
+    <script>
+        // DOMが完全に読み込まれた後にスクリプトを実行
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('theme-toggle'); // テーマ切り替えボタン
+            const htmlEl = document.documentElement; // html要素
+
+            // テーマを適用し、ローカルストレージに保存する関数
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    htmlEl.classList.add('dark-theme'); // html要素に .dark-theme クラスを追加
+                    themeToggleBtn.textContent = 'ライトモードに切り替え'; // ボタンのテキストを変更
+                } else {
+                    htmlEl.classList.remove('dark-theme'); // html要素から .dark-theme クラスを削除
+                    themeToggleBtn.textContent = 'ダークモードに切り替え'; // ボタンのテキストを変更
+                }
+                localStorage.setItem('theme', theme); // 選択したテーマをローカルストレージに保存
+            }
+
+            // テーマ切り替えボタンのクリックイベントリスナー
+            themeToggleBtn.addEventListener('click', () => {
+                // 現在html要素に .dark-theme クラスが付いているか（＝ダークモードか）を判定
+                const isDarkMode = htmlEl.classList.contains('dark-theme');
+                // 現在のモードと逆のモードを適用
+                applyTheme(isDarkMode ? 'light' : 'dark');
+            });
+
+            // ページ読み込み時の初期テーマ設定
+            const savedTheme = localStorage.getItem('theme'); // ローカルストレージから保存されたテーマを取得
+            // OSのダークモード設定を検知 (matchMediaがサポートされている場合)
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme) {
+                // ローカルストレージに保存されたテーマがあればそれを適用
+                applyTheme(savedTheme);
+            } else if (prefersDark) {
+                // 保存されたテーマがなく、OSがダークモードであればダークテーマを適用
+                applyTheme('dark');
+            } else {
+                // 上記以外（保存されたテーマがなく、OSがライトモード）の場合はライトテーマを適用
+                applyTheme('light'); 
+            }
+        });
+    </script>
+</body>
+</html>

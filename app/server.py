@@ -16,7 +16,8 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 # 静的ページコンテンツのベースディレクトリ
-BASE_STATIC_PAGES_DIR = Path(__file__).parent.parent / "static"
+_file_  = "D:\\WorkSpace\\githubApp\\webdriver\\copilot-web-demo\\README.md"
+BASE_STATIC_PAGES_DIR = Path(_file_).parent / "static"
 ITEMS_PAGE_DIR = BASE_STATIC_PAGES_DIR / "pages"
 
 
@@ -72,12 +73,12 @@ async def master_handler(request: web.Request) -> web.StreamResponse:
             log.error(f"Error serving file {target_html_file}: {e}")
             raise web.HTTPInternalServerError(reason="Error serving page content")
   
-    pages_static = re.match(r"^/static/(?:[^/]+/)*([^/]+)\.(js|css|png|svg)$", path)
+    pages_static = re.match(r"^/static/(?:[^/]+/)*([^/]+)\.(js|css|png|svg|json)$", path)
     if pages_static:
         PagesID = "1"
         async with shared_lock: 
             PagesID = shared_dict['page_context']
-        target_file = f"{ITEMS_PAGE_DIR}/{PagesID}/static/{pages_static.group(1)}.{pages_static.group(2)}"
+        target_file = f"{ITEMS_PAGE_DIR}/{PagesID}{path}"
         try:
             return web.FileResponse(target_file)
 

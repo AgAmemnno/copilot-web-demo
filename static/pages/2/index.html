@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Aboreto&family=Bungee+Tint&family=Dela+Gothic+One&family=Special+Elite&display=swap" rel="stylesheet">
-
+   
     <style>
         .grid{
         --grid-color-major: rgba(0, 255, 255, 0.1);  /* Cyan lines */
@@ -42,6 +42,212 @@
             z-index:-1;
         }
     </style>
+        
+    <template id="theme-definitions">
+        <style>
+            /* :root ではなく、解析用のセレクタを使うことも可能 */
+            /* 例: .theme-default */
+            :root { /* または .theme-default */
+                --theme-color-primary: blue;
+                --theme-background-secondary: #ffffff;
+                --theme-background-tertiary: #f8f9fa;
+                --theme-text-primary: #333333;
+                --theme-spacing-medium: 1rem;
+                --theme-spacing-large: 2rem;
+                --theme-border-radius-small: 5px;
+                /* ... 他のテーマ変数 ... */
+            }
+            /* .theme-dark { ... } なども定義可能 */
+        </style>
+    </template>
+    
+    <template id="layout-definitions">
+        <style>
+            :root { /* または .layout-focus */
+                --layout-face-width: 80vw;
+                --layout-face-max-width: 1200px;
+                --layout-face-height: 70vh;
+                --layout-face-padding: var(--theme-spacing-large); /* CSS内での変数参照も可能 */
+                --layout-face-border-radius: 10px;
+                /* ... 他のレイアウト変数 ... */
+            }
+        </style>
+    </template>
+    <script>
+        // --- スタイル管理クラス (Template読み込み対応) ---
+        class StyleManager {
+            constructor() {
+                // 読み込んだテーマ/レイアウト変数を保持
+                this.themeVariables = {};
+                this.layoutVariables = {};
+                // コンポーネント変数の解決ルール
+                this.componentVarMap = {
+                    '--c-card-padding': '--theme-spacing-medium',
+                    '--c-card-bg-color': '--theme-background-tertiary',
+                    '--c-card-border-radius': '--theme-border-radius-small',
+                    '--c-card-text-color': '--theme-text-primary'
+                    // ...
+                };
+                 // 生成した StyleSheet オブジェクトを保持
+                this.rootStyleSheet = new CSSStyleSheet();
+                this.isInitialized = false;
+            }
+
+            /**
+             * CSSテキストから :root または指定されたクラス内の変数を解析する (簡易版)
+             * @param {string} cssText - 解析対象のCSSテキスト
+             * @param {string} [selector=':root'] - 変数を抽出するセレクタ
+             * @returns {object} 変数名と値のオブジェクト
+             */
+            parseCssVariables(cssText, selector = ':root') {
+                const variables = {};
+                const blockRegex = new RegExp(`${selector.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\s*\\{([^}]*)\\}`, 'i');
+                const match = cssText.match(blockRegex);
+
+                if (match && match[1]) {
+                    const content = match[1];
+                    const varRegex = /(--[\w-]+)\s*:\s*([^;]+);/g;
+                    let varMatch;
+                    while ((varMatch = varRegex.exec(content)) !== null) {
+                        const varName = varMatch[1].trim();
+                        const varValue = varMatch[2].trim();
+                        variables[varName] = varValue;
+                    }
+                }
+                return variables;
+            }
+
+            /**
+             * 指定されたIDの <template> タグからスタイル定義を読み込み、解析する
+             * @param {string} themeTemplateId - テーマ定義テンプレートのID
+             * @param {string} layoutTemplateId - レイアウト定義テンプレートのID
+             * @param {string} [themeSelector=':root'] - テーマCSS内の変数セレクタ
+             * @param {string} [layoutSelector=':root'] - レイアウトCSS内の変数セレクタ
+             * @returns {boolean} 読み込みと解析に成功したかどうか
+             */
+            loadStylesFromTemplates(
+                themeTemplateId = 'theme-definitions',
+                layoutTemplateId = 'layout-definitions',
+                themeSelector = ':root',
+                layoutSelector = ':root'
+            ) {
+                const themeTemplate = document.getElementById(themeTemplateId);
+                const layoutTemplate = document.getElementById(layoutTemplateId);
+
+                if (!themeTemplate || !layoutTemplate) {
+                    console.error("Required template elements not found.");
+                    this.isInitialized = false;
+                    return false;
+                }
+
+                try {
+                    const themeStyleElement = themeTemplate.content.querySelector('style');
+                    const layoutStyleElement = layoutTemplate.content.querySelector('style');
+
+                    if (!themeStyleElement || !layoutStyleElement) {
+                         console.error("Style tag not found within template elements.");
+                         this.isInitialized = false;
+                         return false;
+                    }
+
+                    const themeCSSText = themeStyleElement.textContent;
+                    const layoutCSSText = layoutStyleElement.textContent;
+
+                    // CSSテキストから変数を解析
+                    this.themeVariables = this.parseCssVariables(themeCSSText, themeSelector);
+                    this.layoutVariables = this.parseCssVariables(layoutCSSText, layoutSelector);
+
+                    this.isInitialized = true;
+                    console.log("Styles loaded successfully from templates:", this.themeVariables, this.layoutVariables);
+                    return true;
+
+                } catch (error) {
+                    console.error("Error loading styles from templates:", error);
+                    this.themeVariables = { /* フォールバック */ };
+                    this.layoutVariables = { /* フォールバック */ };
+                    this.isInitialized = false;
+                    return false;
+                }
+            }
+
+            /**
+             * 指定されたテーマとレイアウトに基づいて :root ルールを生成し、
+             * adoptedStyleSheets に適用する
+             * @param {string[]} componentClassNames - 使用するコンポーネントのクラス名配列
+             */
+            applyRootStyles(componentClassNames = []) {
+                if (!this.isInitialized) {
+                    console.error("StyleManager is not initialized. Call loadStylesFromTemplates first.");
+                    return;
+                }
+                // --- 変数収集、解決、スタイル適用ロジック (変更なし) ---
+                const requiredVars = new Set();
+                componentClassNames.forEach(className => {
+                    const componentClass = window[className];
+                    if (componentClass && Array.isArray(componentClass.requiredVariables)) {
+                        componentClass.requiredVariables.forEach(varName => requiredVars.add(varName));
+                    } else {
+                         console.warn(`Class or requiredVariables not found for: ${className}`);
+                    }
+                });
+
+                const resolvedValues = {};
+                Object.assign(resolvedValues, this.themeVariables, this.layoutVariables);
+
+                requiredVars.forEach(varName => {
+                    const sourceVar = this.componentVarMap[varName];
+                    if (sourceVar && resolvedValues[sourceVar]) {
+                        resolvedValues[varName] = resolvedValues[sourceVar];
+                    } else {
+                        console.warn(`Could not resolve value for ${varName}`);
+                    }
+                });
+
+                let rootRule = ':root {\n';
+                for (const [key, value] of Object.entries(resolvedValues)) {
+                    if (typeof value === 'string' || typeof value === 'number') {
+                        rootRule += `  ${key}: ${value};\n`;
+                    }
+                }
+                rootRule += '  --scale-factor: 1.0;\n';
+                rootRule += '}';
+
+                while (this.rootStyleSheet.cssRules.length > 0) {
+                    this.rootStyleSheet.deleteRule(0);
+                }
+                try {
+                    this.rootStyleSheet.insertRule(rootRule, 0);
+                    console.log("Applied :root styles to adoptedStyleSheet:", rootRule);
+                    if (!document.adoptedStyleSheets.includes(this.rootStyleSheet)) {
+                        document.adoptedStyleSheets = [...document.adoptedStyleSheets, this.rootStyleSheet];
+                        console.log("Adopted stylesheet added to document.");
+                    }
+                } catch (error) {
+                    console.error("Failed to insert CSS rule:", error, rootRule);
+                }
+            }
+        }
+
+        // --- スタイルマネージャーのインスタンス化と実行 ---
+        const styleManager = new StyleManager();
+
+        document.addEventListener('DOMContentLoaded', () => {
+             // テンプレートからスタイル定義を読み込み・解析
+            const loaded = styleManager.loadStylesFromTemplates();
+
+            if (loaded) {
+                // ページで使用するコンポーネントクラス名のリスト
+                const componentList = ['PolyhedronComponent', /* 'MyButtonComponent' など */];
+                // スタイルを適用
+                styleManager.applyRootStyles(componentList);
+            } else {
+                console.error("Could not apply styles due to loading errors.");
+            }
+        });
+
+    </script>
+
+
 </head>
 <body class="grid">
     <p class="elite">asdasdbni 123456k asocjaposd ascnPANSCaknascn </p>

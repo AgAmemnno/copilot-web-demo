@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS論理プロパティ デモ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .control-panel {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: calc(100vh - 120px); /* ヘッダー等を考慮した高さ制限 */
+            overflow-y: auto; /* コントロールが多い場合にスクロール可能に */
+        }
+        .control-group {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .control-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .control-group h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+            font-weight: 600;
+            color: #1a202c;
+        }
+        label {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 0.85em;
+            color: #4a5568;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 3px;
+        }
+        select {
+            width: 100%;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e0;
+            background-color: white;
+            font-size: 0.9em;
+        }
+        .output-value {
+            font-size: 0.8em;
+            color: #718096;
+            text-align: right;
+        }
+        .toggle-auto-btn {
+            padding: 2px 6px;
+        }
+
+        #demo-container-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 350px; 
+            padding: 15px;
+            background-color: #e2e8f0;
+            border-radius: 8px;
+            overflow: auto;
+        }
+        #demo-container {
+            border: 2px dashed #a0aec0;
+            padding: 10px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        #logical-box {
+            margin-block-start: var(--margin-bs, 10px);
+            margin-block-end: var(--margin-be, 10px);
+            margin-inline-start: var(--margin-is, 10px);
+            margin-inline-end: var(--margin-ie, 10px);
+
+            padding-block-start: var(--padding-bs, 15px);
+            padding-block-end: var(--padding-be, 15px);
+            padding-inline-start: var(--padding-is, 15px);
+            padding-inline-end: var(--padding-ie, 15px);
+
+            border-block-start-width: var(--border-bs-width, 2px);
+            border-block-end-width: var(--border-be-width, 2px);
+            border-inline-start-width: var(--border-is-width, 2px);
+            border-inline-end-width: var(--border-ie-width, 2px);
+            border-style: solid;
+            border-color: var(--border-color, #4299e1);
+
+            inline-size: var(--inline-size, 250px); /* CJKテキストが見やすいように少し幅を広げる */
+            block-size: var(--block-size, 200px); /* CJKテキストが見やすいように少し高さを広げる */
+
+            background-color: #bee3f8;
+            color: #2c5282;
+            text-align: var(--text-align, start);
+            
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        #logical-box p {
+            margin: 0;
+            padding: 10px; /* テキストが見やすいようにパディングを調整 */
+            font-size: 1.1em; /* CJK文字が見やすいようにフォントサイズ調整 */
+            line-height: 1.8; /* 行間を調整 */
+            /* CJKスペーシングプロパティはここに適用されます */
+            text-spacing-trim: var(--text-spacing-trim, normal);
+            text-autospace: var(--text-autospace, normal);
+        }
+        #positioned-child {
+            position: absolute;
+            inset-block-start: var(--inset-bs, 10px);
+            inset-block-end: var(--inset-be, auto);
+            inset-inline-start: var(--inset-is, 10px);
+            inset-inline-end: var(--inset-ie, auto);
+            
+            background-color: #fbd38d;
+            color: #9c4221;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            box-sizing: border-box;
+            min-width: 50px;
+            min-height: 30px;
+        }
+
+        #demo-container[style*="writing-mode: vertical"] #logical-box {
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+         #demo-container[style*="writing-mode: vertical"] #logical-box p,
+         #demo-container[style*="writing-mode: vertical"] #positioned-child {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+         }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+    <div class="max-w-screen-xl mx-auto">
+        <header class="mb-6 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">CSS論理プロパティ インタラクティブデモ</h1>
+            <p class="text-gray-600 mt-2">各種論理プロパティやCJKスペーシングを操作して、書字方向による変化を確認しましょう。</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="control-panel lg:col-span-1">
+                <div class="control-group">
+                    <h3>全体設定</h3>
+                    <label for="writing-mode">書字方向 (Writing Mode):</label>
+                    <select id="writing-mode" class="mb-2">
+                        <option value="horizontal-tb">horizontal-tb (水平、上から下)</option>
+                        <option value="vertical-rl">vertical-rl (垂直、右から左)</option>
+                        <option value="vertical-lr">vertical-lr (垂直、左から右)</option>
+                    </select>
+                    <label for="direction">方向 (Direction):</label>
+                    <select id="direction">
+                        <option value="ltr">ltr (左から右)</option>
+                        <option value="rtl">rtl (右から左)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <h3>マージン (Margin)</h3>
+                    <label for="margin-bs">margin-block-start: <span class="output-value" id="margin-bs-val">10px</span></label>
+                    <input type="range" id="margin-bs" min="0" max="50" value="10">
+                    <label for="margin-be">margin-block-end: <span class="output-value" id="margin-be-val">10px</span></label>
+                    <input type="range" id="margin-be" min="0" max="50" value="10">
+                    <label for="margin-is">margin-inline-start: <span class="output-value" id="margin-is-val">10px</span></label>
+                    <input type="range" id="margin-is" min="0" max="50" value="10">
+                    <label for="margin-ie">margin-inline-end: <span class="output-value" id="margin-ie-val">10px</span></label>
+                    <input type="range" id="margin-ie" min="0" max="50" value="10">
+                </div>
+
+                <div class="control-group">
+                    <h3>パディング (Padding)</h3>
+                    <label for="padding-bs">padding-block-start: <span class="output-value" id="padding-bs-val">15px</span></label>
+                    <input type="range" id="padding-bs" min="0" max="50" value="15">
+                    <label for="padding-be">padding-block-end: <span class="output-value" id="padding-be-val">15px</span></label>
+                    <input type="range" id="padding-be" min="0" max="50" value="15">
+                    <label for="padding-is">padding-inline-start: <span class="output-value" id="padding-is-val">15px</span></label>
+                    <input type="range" id="padding-is" min="0" max="50" value="15">
+                    <label for="padding-ie">padding-inline-end: <span class="output-value" id="padding-ie-val">15px</span></label>
+                    <input type="range" id="padding-ie" min="0" max="50" value="15">
+                </div>
+                
+                <div class="control-group">
+                    <h3>ボーダー幅 (Border Width)</h3>
+                    <label for="border-bs-width">border-block-start-width: <span class="output-value" id="border-bs-width-val">2px</span></label>
+                    <input type="range" id="border-bs-width" min="0" max="15" value="2">
+                    <label for="border-be-width">border-block-end-width: <span class="output-value" id="border-be-width-val">2px</span></label>
+                    <input type="range" id="border-be-width" min="0" max="15" value="2">
+                    <label for="border-is-width">border-inline-start-width: <span class="output-value" id="border-is-width-val">2px</span></label>
+                    <input type="range" id="border-is-width" min="0" max="15" value="2">
+                    <label for="border-ie-width">border-inline-end-width: <span class="output-value" id="border-ie-width-val">2px</span></label>
+                    <input type="range" id="border-ie-width" min="0" max="15" value="2">
+                </div>
+
+                <div class="control-group">
+                    <h3>サイズ (Sizing)</h3>
+                    <label for="inline-size">inline-size: <span class="output-value" id="inline-size-val">250px</span></label>
+                    <input type="range" id="inline-size" min="50" max="500" value="250">
+                    <label for="block-size">block-size: <span class="output-value" id="block-size-val">200px</span></label>
+                    <input type="range" id="block-size" min="50" max="400" value="200">
+                </div>
+                
+                <div class="control-group">
+                    <h3>テキスト揃え (Text Align)</h3>
+                    <label for="text-align">text-align:</label>
+                    <select id="text-align">
+                        <option value="start">start</option>
+                        <option value="end">end</option>
+                        <option value="left">left</option>
+                        <option value="right">right</option>
+                        <option value="center">center</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <h3>CJKスペーシング (CJK Spacing)</h3>
+                    <label for="text-spacing-trim">text-spacing-trim:</label>
+                    <select id="text-spacing-trim" class="mb-2">
+                        <option value="normal">normal</option>
+                        <option value="trim-start">trim-start</option>
+                        <option value="space-first">space-first</option>
+                        <option value="space-all">space-all</option>
+                        <option value="trim-auto">trim-auto</option> 
+                    </select>
+                    <label for="text-autospace">text-autospace:</label>
+                    <select id="text-autospace">
+                        <option value="normal">normal</option>
+                        <option value="no-autospace">no-autospace</option>
+                        <option value="ideograph-alpha">ideograph-alpha</option>
+                        <option value="ideograph-numeric">ideograph-numeric</option>
+                        <option value="ideograph-parenthesis">ideograph-parenthesis</option>
+                        <option value="ideograph-space">ideograph-space</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <h3>配置 (Positioning - Inset for Child)</h3>
+                    <p class="text-xs text-gray-600 mb-1">内側のオレンジ色のボックス (<code>#positioned-child</code>) の位置を調整します。</p>
+                    <label for="inset-bs">inset-block-start: <span class="output-value" id="inset-bs-val">10px</span></label>
+                    <div class="flex items-center space-x-2">
+                        <input type="range" id="inset-bs" min="0" max="100" value="10" data-unit="px" data-allow-auto="true" class="flex-grow">
+                        <button data-target="inset-bs" class="toggle-auto-btn text-xs bg-gray-200 hover:bg-gray-300 px-1.5 py-0.5 rounded">auto</button>
+                    </div>
+
+                    <label for="inset-be" class="mt-1">inset-block-end: <span class="output-value" id="inset-be-val">auto</span></label>
+                     <div class="flex items-center space-x-2">
+                        <input type="range" id="inset-be" min="0" max="100" value="0" data-unit="px" data-allow-auto="true" disabled class="flex-grow">
+                        <button data-target="inset-be" class="toggle-auto-btn text-xs bg-gray-200 hover:bg-gray-300 px-1.5 py-0.5 rounded">auto</button>
+                    </div>
+
+                    <label for="inset-is" class="mt-1">inset-inline-start: <span class="output-value" id="inset-is-val">10px</span></label>
+                    <div class="flex items-center space-x-2">
+                        <input type="range" id="inset-is" min="0" max="100" value="10" data-unit="px" data-allow-auto="true" class="flex-grow">
+                        <button data-target="inset-is" class="toggle-auto-btn text-xs bg-gray-200 hover:bg-gray-300 px-1.5 py-0.5 rounded">auto</button>
+                    </div>
+                    
+                    <label for="inset-ie" class="mt-1">inset-inline-end: <span class="output-value" id="inset-ie-val">auto</span></label>
+                    <div class="flex items-center space-x-2">
+                        <input type="range" id="inset-ie" min="0" max="100" value="0" data-unit="px" data-allow-auto="true" disabled class="flex-grow">
+                        <button data-target="inset-ie" class="toggle-auto-btn text-xs bg-gray-200 hover:bg-gray-300 px-1.5 py-0.5 rounded">auto</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="demo-container-wrapper" class="lg:col-span-2">
+                <div id="demo-container">
+                    <div id="logical-box">
+                        <p id="cjk-text-sample">「日本語」とEnglish、123。句読点、！？（括弧）「かぎ括弧」</p>
+                        <div id="positioned-child">配置子要素</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM要素の取得
+        const logicalBox = document.getElementById('logical-box');
+        const positionedChild = document.getElementById('positioned-child');
+        const demoContainer = document.getElementById('demo-container');
+        const cjkTextSample = document.getElementById('cjk-text-sample'); // CJKテキスト要素
+
+        // コントロール要素の情報を配列で管理
+        const controls = [
+            // Margins
+            { id: 'margin-bs', prop: '--margin-bs', unit: 'px', target: logicalBox },
+            { id: 'margin-be', prop: '--margin-be', unit: 'px', target: logicalBox },
+            { id: 'margin-is', prop: '--margin-is', unit: 'px', target: logicalBox },
+            { id: 'margin-ie', prop: '--margin-ie', unit: 'px', target: logicalBox },
+            // Paddings
+            { id: 'padding-bs', prop: '--padding-bs', unit: 'px', target: logicalBox },
+            { id: 'padding-be', prop: '--padding-be', unit: 'px', target: logicalBox },
+            { id: 'padding-is', prop: '--padding-is', unit: 'px', target: logicalBox },
+            { id: 'padding-ie', prop: '--padding-ie', unit: 'px', target: logicalBox },
+            // Border Widths
+            { id: 'border-bs-width', prop: '--border-bs-width', unit: 'px', target: logicalBox },
+            { id: 'border-be-width', prop: '--border-be-width', unit: 'px', target: logicalBox },
+            { id: 'border-is-width', prop: '--border-is-width', unit: 'px', target: logicalBox },
+            { id: 'border-ie-width', prop: '--border-ie-width', unit: 'px', target: logicalBox },
+            // Sizing
+            { id: 'inline-size', prop: '--inline-size', unit: 'px', target: logicalBox, initialValue: '250px' }, // 初期値を更新
+            { id: 'block-size', prop: '--block-size', unit: 'px', target: logicalBox, initialValue: '200px' }, // 初期値を更新
+            // Text Align
+            { id: 'text-align', prop: '--text-align', unit: '', type: 'select', target: logicalBox },
+            // Inset properties for positioned child
+            { id: 'inset-bs', prop: '--inset-bs', unit: 'px', target: positionedChild, initialValue: '10px', allowAuto: true },
+            { id: 'inset-be', prop: '--inset-be', unit: 'px', target: positionedChild, initialValue: 'auto', allowAuto: true },
+            { id: 'inset-is', prop: '--inset-is', unit: 'px', target: positionedChild, initialValue: '10px', allowAuto: true },
+            { id: 'inset-ie', prop: '--inset-ie', unit: 'px', target: positionedChild, initialValue: 'auto', allowAuto: true },
+            // Writing Mode & Direction
+            { id: 'writing-mode', styleProp: 'writingMode', type: 'select', target: demoContainer },
+            { id: 'direction', styleProp: 'direction', type: 'select', target: demoContainer },
+            // CJK Spacing properties - CSSカスタムプロパティ経由で適用
+            { id: 'text-spacing-trim', prop: '--text-spacing-trim', type: 'select', target: cjkTextSample, initialValue: 'normal' },
+            { id: 'text-autospace', prop: '--text-autospace', type: 'select', target: cjkTextSample, initialValue: 'normal' }
+        ];
+
+        // スタイルを更新する関数
+        function updateStyles() {
+            controls.forEach(controlInfo => {
+                const el = document.getElementById(controlInfo.id);
+                if (!el) return;
+
+                let value = el.value;
+                
+                if (controlInfo.allowAuto && el.disabled) {
+                    value = 'auto';
+                } else if (controlInfo.unit && el.type !== 'select') { // selectの場合はunitをつけない
+                    value += controlInfo.unit;
+                }
+
+
+                if (controlInfo.target) {
+                    if (controlInfo.prop) { // CSSカスタムプロパティ
+                        controlInfo.target.style.setProperty(controlInfo.prop, value);
+                    } else if (controlInfo.styleProp) { // 直接のスタイルプロパティ
+                         // writingMode と textAutospace, textSpacingTrim は style オブジェクトのプロパティとして設定
+                        if (controlInfo.styleProp === 'textSpacingTrim' || controlInfo.styleProp === 'textAutospace') {
+                            // Note: Direct style manipulation for these might be less reliable across all browsers
+                            // than CSS custom properties. For this demo, we're using custom props for CJK spacing.
+                            // This block is more for properties like writingMode.
+                             controlInfo.target.style[controlInfo.styleProp] = value;
+                        } else {
+                             controlInfo.target.style[controlInfo.styleProp] = value;
+                        }
+                    }
+                }
+                
+                // 値の表示を更新 (スライダーのみ)
+                if (el.type === 'range' || controlInfo.allowAuto) {
+                    const valDisplay = document.getElementById(controlInfo.id + '-val');
+                    if (valDisplay) {
+                        valDisplay.textContent = value;
+                    }
+                }
+            });
+            const writingModeValue = document.getElementById('writing-mode').value;
+            const directionValue = document.getElementById('direction').value;
+            demoContainer.style.writingMode = writingModeValue;
+            demoContainer.style.direction = directionValue;
+        }
+
+        // イベントリスナーを設定
+        controls.forEach(controlInfo => {
+            const el = document.getElementById(controlInfo.id);
+            if (el) {
+                el.addEventListener(controlInfo.type === 'select' ? 'change' : 'input', updateStyles);
+                
+                // 初期値の設定と表示
+                if (controlInfo.initialValue !== undefined) {
+                    if (controlInfo.allowAuto && controlInfo.initialValue === 'auto') {
+                        el.disabled = true; 
+                    } else if (el.type === 'range') {
+                        el.value = parseFloat(controlInfo.initialValue);
+                    } else { // select やその他の input
+                        el.value = controlInfo.initialValue;
+                    }
+                }
+
+                // スライダーとauto対応コントロールの初期値表示
+                if (el.type === 'range' || controlInfo.allowAuto) {
+                    const valDisplay = document.getElementById(controlInfo.id + '-val');
+                    if (valDisplay) {
+                         if (controlInfo.allowAuto && el.disabled) {
+                            valDisplay.textContent = 'auto';
+                        } else {
+                            valDisplay.textContent = el.value + (controlInfo.unit && el.type !== 'select' ? controlInfo.unit : '');
+                        }
+                    }
+                }
+            }
+        });
+        
+        document.querySelectorAll('.toggle-auto-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.dataset.target;
+                const targetInput = document.getElementById(targetId);
+                const targetValDisplay = document.getElementById(targetId + '-val');
+                const control = controls.find(c => c.id === targetId);
+
+                if (targetInput.disabled) { 
+                    targetInput.disabled = false;
+                    targetInput.value = targetInput.dataset.lastValue || parseFloat(control.initialValue) || '10';
+                    targetValDisplay.textContent = targetInput.value + (control.unit || '');
+                } else { 
+                    targetInput.dataset.lastValue = targetInput.value; 
+                    targetInput.disabled = true;
+                    targetValDisplay.textContent = 'auto';
+                }
+                updateStyles();
+            });
+        });
+
+        // 初期スタイル適用
+        updateStyles();
+    </script>
+</body>
+</html>

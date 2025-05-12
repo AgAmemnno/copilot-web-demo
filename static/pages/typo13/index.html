@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS quotesとカウンターによるネストリスト（修正試行版）</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1:wght@100..900&family=Noto+Sans+JP:wght@100..900&family=Noto+Serif+JP:wght@200..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,100..900,0..100,0..1&display=swap" rel="stylesheet">
+    <style>
+        
+        .fraunces {
+        font-family: "Fraunces", serif;
+        font-optical-sizing: auto;
+        font-weight: <weight>;
+        font-style: normal;
+        font-variation-settings:
+            "SOFT" <softness>,
+            "WONK" <wonky>;
+        };
+        .noto-sans-jp{
+            font-family: "Noto Sans JP", sans-serif;
+            font-optical-sizing: auto;
+            font-weight: 100;
+            font-style: normal;
+        }
+
+        .noto-serif-jp {
+            font-family: "Noto Serif JP", serif;
+            font-optical-sizing: auto;
+            font-weight: 100;
+            font-style: normal;
+        }
+
+        .m-plus-1 {
+            font-family: "M PLUS 1", sans-serif;
+            font-optical-sizing: auto;
+            font-weight: 100;
+            font-style: normal;
+        }
+
+        .ibm-plex-sans-jp-thin {
+        font-family: "IBM Plex Sans JP", sans-serif;
+        font-weight: 100;
+        font-style: normal;
+        }
+
+        .ibm-plex-sans-jp-extralight {
+        font-family: "IBM Plex Sans JP", sans-serif;
+        font-weight: 200;
+        font-style: normal;
+        }
+
+        .ibm-plex-sans-jp-light {
+        font-family: "IBM Plex Sans JP", sans-serif;
+        font-weight: 300;
+        font-style: normal;
+        }
+
+        .ibm-plex-sans-jp-regular {
+        font-family: "IBM Plex Sans JP", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+        }
+
+        .ibm-plex-sans-jp-medium {
+        font-family: "IBM Plex Sans JP", sans-serif;
+        font-weight: 500;
+        font-style: normal;
+        }
+
+        .ibm-plex-sans-jp-semibold {
+        font-family: "IBM Plex Sans JP", sans-serif;
+        font-weight: 600;
+        font-style: normal;
+        }
+
+        .ibm-plex-sans-jp-bold {
+        font-family: "IBM Plex Sans JP", sans-serif;
+        font-weight: 700;
+        font-style: normal;
+        }
+
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            line-height: 1.7;
+            background-color: #f8f9fa;
+            color: #343a40;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .list-container {
+            background-color: #ffffff;
+            padding: 25px 35px;
+            border-radius: 10px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+            max-width: 700px;
+            width: 90%;
+            quotes: "章：" ""
+                    "節：" ""
+                    "項：" ""
+                    "詳細：" ""
+                    "補足：" "";
+        }
+
+        .list-container h1 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 30px;
+            font-size: 1.9em;
+        }
+
+        /* カスタムネストリストの基本スタイル */
+        .custom-nested-list {
+            list-style-type: none;
+            padding-left: 0;
+
+            counter-reset: level1; /* レベル1のカウンターを初期化 */
+        }
+
+        .custom-nested-list li {
+            margin-bottom: 0.6em;
+            position: relative;
+        }
+
+        .custom-nested-list li::before {
+            display: inline-block;
+            font-weight: bold;
+            margin-right: 0.7em;
+        }
+
+        /* レベル1のリストアイテム */
+        .custom-nested-list > li {
+            counter-increment: level1;
+            /* counter-reset: level2;  ul要素でリセットするように変更 */
+            padding-left: 1.5em;
+        }
+        .custom-nested-list > li::before {
+            content: counter(level1) " ";
+            color: #007bff;
+        }
+
+        /* レベル2のリスト (ul) とアイテム (li) */
+        .custom-nested-list > li > ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 0.5em;
+            counter-reset: level2; /* レベル2のカウンターをulでリセット */
+        }
+        .custom-nested-list > li > ul > li {
+            counter-increment: level2;
+            /* counter-reset: level3; ul要素でリセットするように変更 */
+            padding-left: 2em;
+        }
+        .custom-nested-list > li > ul > li::before {
+            content: counter(level1) "." counter(level2) " ";
+            color: #28a745;
+        }
+
+        /* レベル3のリスト (ul) とアイテム (li) */
+        .custom-nested-list > li > ul > li > ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 0.5em;
+            counter-reset: level3; /* レベル3のカウンターをulでリセット */
+        }
+        .custom-nested-list > li > ul > li > ul > li {
+            counter-increment: level3;
+            /* counter-reset: level4; ul要素でリセットするように変更 */
+            padding-left: 2.5em;
+        }
+        .custom-nested-list > li > ul > li > ul > li::before {
+            content: counter(level1) "." counter(level2) "." counter(level3) " ";
+            color: #fd7e14;
+        }
+
+        /* レベル4のリスト (ul) とアイテム (li) */
+        .custom-nested-list > li > ul > li > ul > li > ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 0.5em;
+            counter-reset: level4; /* レベル4のカウンターをulでリセット */
+        }
+        .custom-nested-list > li > ul > li > ul > li > ul > li {
+            counter-increment: level4;
+            /* counter-reset: level5; ul要素でリセットするように変更 */
+            padding-left: 3em;
+        }
+        .custom-nested-list > li > ul > li > ul > li > ul > li::before {
+            content: counter(level1) "." counter(level2) "." counter(level3) "." counter(level4) " ";
+            color: #6f42c1;
+        }
+
+        /* レベル5のリスト (ul) とアイテム (li) */
+        .custom-nested-list > li > ul > li > ul > li > ul > li > ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 0.5em;
+            counter-reset: level5; /* レベル5のカウンターをulでリセット */
+        }
+        .custom-nested-list > li > ul > li > ul > li > ul > li > ul > li {
+            counter-increment: level5;
+            padding-left: 3.5em;
+        }
+        .custom-nested-list > li > ul > li > ul > li > ul > li > ul > li::before {
+            content: counter(level1) "." counter(level2) "." counter(level3) "." counter(level4) "." counter(level5) " ";
+            color: #d63384;
+        }
+
+        .custom-nested-list ul {
+            margin-left: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="list-container">
+        <h1>文書構成案 (5階層対応)</h1>
+
+        <ul class="custom-nested-list">
+            <li><q>はじめに
+                <ul>
+                    <li><q>本研究の背景</q></li>
+                    <li><q>目的と範囲
+                        <ul>
+                            <li><q>主要な目的</q></li>
+                            <li><q>副次的な目的</q></li>
+                            <li><q>対象範囲外
+                                <ul>
+                                    <li><q>具体的な除外事項A</q></li>
+                                    <li><q>具体的な除外事項B
+                                        <ul>
+                                            <li><q>除外事項Bに関する補足</q></li>
+                                        </ul>
+                                    </q></li>
+                                </ul>
+                            </q></li>
+                        </ul>
+                    </q></li>
+                    <li><q>期待される成果</q></li>
+                </ul>
+            </q></li>
+            <li>理論的考察
+                <ul>
+                    <li>関連研究レビュー
+                        <ul>
+                            <li>国内の研究動向</li>
+                            <li>海外の研究動向</li>
+                        </ul>
+                    </li>
+                    <li>基礎となる理論</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>

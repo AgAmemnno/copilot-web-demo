@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>https://codepen.io/ghaste/pen/jOgwqde</title>
+      <style>
+@import url("https://fonts.googleapis.com/css2?family=Bungee+Tint&display=swap");
+body {
+  font-family: system-ui, sans-serif;
+  font-size: 10rem;
+  min-height: 100vh;
+  margin: 0 1rem;
+  background-color: #1f2020;
+  background-image:
+    linear-gradient(
+      #fcfcef 30%,
+      #1f2020 0
+    ),
+    linear-gradient(
+      #fcfcef 40%,
+      #1f2020 0
+    ),
+    linear-gradient(
+      #fcfcef 50%,
+      #1f2020 0
+    ),
+    linear-gradient(
+      #fcfcef 60%,
+      #1f2020 0
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size:
+    25vw 400vh;
+  background-position-x: 
+    0,
+    25vw,
+    50vw,
+    75vw;
+  background-position-y:
+    -250vh;
+  color: lightseagreen;
+  transition: 1s linear;
+  &:has(.text:hover) {
+    color: #1f2020;
+    background-color: #fcfcef;
+    background-position-y: 0;
+  }
+}
+.text {
+  text-wrap: balanced;
+  font-family: "Bungee Tint", serif;
+  font-palette: palette-mix(in lch longer hue, --blue, --other);
+  font-size: 10rem;
+  transition: 1s linear;
+  &:hover {
+    font-palette: --black
+  }
+}
+
+@font-palette-values --black {
+  font-family: "Bungee Tint";
+  override-colors: 
+    0 #1f202010,
+    1 #f60;
+}
+@font-palette-values --light {
+  font-family: "Bungee Tint";
+  base-palette: 1;
+}
+@font-palette-values --blue {
+  font-family: "Bungee Tint";
+  base-palette: 4;
+}
+@font-palette-values --other {
+  font-family: "Bungee Tint";
+  base-palette: 5;
+}
+      </style>
+</head>
+
+<body>
+
+  <div class="text">And so we Hover </div>
+  <div class="simple">around...</div>
+
+</body>
+</html>

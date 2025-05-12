@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSSレイヤーとインポートのデモ</title>
+    <style>
+        /* === main.css の内容 === */
+       
+        @layer reset, project-specific,framework, utilities;
+      
+        @import url("/static/imported-styles.css") layer(framework);
+        @import url("/static/imported-styles3.css") layer(project-specific);
+        /*
+        .component-a { 
+            border: 2px solid #dab207;
+            background-color: #f2ff55;
+            color: #556202;
+        }
+        */
+  
+        @layer reset {
+          body, h1, p, button, a, div, ul, li { /* div, ul, li を追加 */
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            box-sizing: border-box;
+          }
+          body {
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+          }
+          h1 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+          }
+           h2 { /* h2 のスタイルを追加 */
+            margin-top: 30px;
+            margin-bottom: 10px;
+            color: #34495e;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 5px;
+          }
+          div, button, a { /* p を除外 */
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+          }
+          p { /* p 専用のボトムマージン */
+            margin-bottom: 10px;
+            padding: 5px 0; /* p のパディング調整 */
+          }
+          ul { /* ul のスタイル */
+            list-style-position: inside;
+            padding-left: 0;
+            margin-bottom: 15px;
+          }
+          li { /* li のスタイル */
+            margin-bottom: 5px;
+            padding-left: 10px;
+          }
+          .component-a { /* main.css の framework レイヤー内のスタイル */
+            border: 2px solid #f36d00;
+            background-color: #c504a1;
+            color: #da1616;
+          }
+        }
+      
+
+        @layer project-specific {
+          .project-text {
+            font-style: italic;
+            color: #16a085;
+            background-color: #e8f6f3;
+            border: 1px dashed #16a085;
+            padding: 10px; /* パディング追加 */
+          }
+    
+          /* framework レイヤーの .action-button スタイルを上書き */
+          .action-button {
+            background-color: #c0392b !important; /* !important で優先度をさらに上げる */
+            color: white !important;
+            font-weight: bold;
+            border: 1px solid #a93226;
+          }
+        }
+    
+        @layer utilities {
+          .text-center {
+            text-align: center;
+          }
+          .hidden {
+            display: none;
+          }
+        }
+    
+        /* レイヤーに属さないスタイル (最も優先度が低いか、暗黙のレイヤーの一部) */
+        div.unlayered-main-style {
+          border: 3px dotted #7f8c8d;
+          background-color: #ecf0f1;
+        }
+    </style>
+    <style>
+        /* === main.css の内容 === */
+        @layer  reset,framework, project-specific, utilities;
+        
+        @import url("/static/imported-styles2.css") layer(framework);
+
+    </style>
+</head>
+<body>
+    <h1>CSSレイヤー、インポート、カスケードのデモ</h1>
+
+    <div class="component-a">
+        コンポーネント A (main.css の 'framework' レイヤーで定義)
+    </div>
+
+    <div class="component-b">
+        コンポーネント B (imported-styles.css の 'base' および 'theme' レイヤーで定義)
+    </div>
+
+    <button class="action-button">
+        アクションボタン (複数レイヤーでスタイル定義)
+    </button>
+
+    <a href="#">これはリンクです (imported-styles.css でスタイル定義)</a>
+
+    <p class="project-text">
+        プロジェクト固有テキスト (main.css の 'project-specific' レイヤーで定義)
+    </p>
+
+    <p class="imported-unlayered-text">
+        インポートファイル内のレイヤー化されていないテキスト (imported-styles.css 内)
+    </p>
+
+    <div class="unlayered-main-style">
+        メインCSS内のレイヤー化されていないスタイルを持つDiv
+    </div>
+
+    <h2>説明:</h2>
+    <ul>
+        <li><strong>全体のレイヤー順序 (main.css):</strong> <code>reset</code>, <code>framework</code>, <code>project-specific</code>, <code>utilities</code>。</li>
+        <li><strong><code>framework</code> レイヤー:</strong>
+            <ul>
+                <li><code>imported-styles.css</code> をインポートします。</li>
+                <li><code>imported-styles.css</code> 内のレイヤー <code>base</code> と <code>theme</code> は、この <code>framework</code> レイヤーの一部として、宣言順 (<code>base</code> → <code>theme</code>) に組み込まれます。</li>
+                <li><code>imported-styles.css</code> 内のレイヤー化されていないスタイル (<code>p.imported-unlayered-text</code>) は、<code>framework</code> レイヤー内で、<code>base</code> と <code>theme</code> の後に続きます。</li>
+                <li><code>main.css</code> の <code>framework</code> レイヤーで直接定義されたスタイル (<code>.component-a</code>) も、このレイヤーに属します。</li>
+            </ul>
+        </li>
+        <li><strong><code>.action-button</code> のスタイルカスケード:</strong>
+            <ol>
+                <li><code>framework.base</code> (imported): <code>background-color: #ecf0f1;</code></li>
+                <li><code>framework.theme</code> (imported): <code>background-color: #f1c40f;</code> (baseを上書き)</li>
+                <li><code>project-specific</code> (main): <code>background-color: #c0392b !important;</code> (themeを上書き、!importantも影響)</li>
+            </ol>
+        </li>
+        <li><strong><code>.component-b</code> のスタイルカスケード:</strong>
+            <ol>
+                <li><code>framework.base</code> (imported): <code>background-color: #fef5e7;</code></li>
+                <li><code>framework.theme</code> (imported): <code>background-color: #fff9c4;</code> (baseを上書き)</li>
+            </ol>
+        </li>
+    </ul>
+
+</body>
+</html>

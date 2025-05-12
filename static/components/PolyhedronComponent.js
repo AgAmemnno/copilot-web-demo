@@ -169,13 +169,7 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
     #sceneElement = null; // Reference to the scene element
     #rboxContainer = null; // Reference to the container (still needed for content)
 
-    // --- Bound Event Listeners ---
-    // Use bound functions to ensure 'this' context and allow easy removal
-    #boundHandleDragStart = this.#handleDragStart.bind(this);
-    #boundHandleDragMove = this.#handleDragMove.bind(this);
-    #boundHandleDragEnd = this.#handleDragEnd.bind(this);
 
-    
     #faceTree = null;
     #center  = null;
     #currentNode = null;
@@ -188,6 +182,12 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
     set data_num(num) {
         this.#data_num = num;
     }
+    static requiredStyleVariables = [
+        '--c-card-padding',
+        '--c-card-bg-color',
+        '--c-card-border-radius',
+        '--c-card-text-color'
+    ];
     // Configuration data can be set via property
     set config(newConfig) {
         if (!this.#isValidConfig(newConfig)) {
@@ -300,8 +300,8 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
               const data = await response.json();
               const jsonData = {
                   "settings": {
-                          width: '300px',
-                          height: '300px',
+                          width: '1000px',
+                          height: '1000px',
                           perspective: '80000px', // Perspectiveを調整
                           transitionDuration: '0.1s',
                           margin:"0%"
@@ -337,13 +337,7 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
             */
     }
     
-    disconnectedCallback() {
-        // Clean up global event listeners when component is removed
-        document.removeEventListener('mousemove', this.#boundHandleDragMove);
-        document.removeEventListener('mouseup', this.#boundHandleDragEnd);
-        document.removeEventListener('touchmove', this.#boundHandleDragMove);
-        document.removeEventListener('touchend', this.#boundHandleDragEnd);
-     }
+    disconnectedCallback() {}
     
     #render() {
         if (!this.#config) return;
@@ -363,16 +357,7 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
         
         const scene = document.createElement('div');
         scene.className = 'scene';
-        // Set initial position (e.g., center)
-        // Get initial computed position if possible, otherwise use default
-        // Note: Getting computed style before appending might not work reliably
-        this.#currentSceneTop = 25; // Default to 50%
-        this.#currentSceneLeft = 50; // Default to 50%
-        scene.style.top = `${this.#currentSceneTop}%`;
-        scene.style.left = `${this.#currentSceneLeft}%`;
-        scene.style.transform = 'translate(0%, 0%)'; // Keep centering transform
 
-        // Build the element tree recursively
 
         const rootContainer = document.createElement('div');
         rootContainer.className = 'rbox-container'; // Container for positioning
@@ -392,7 +377,8 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
         const style = document.createElement('style');
         style.textContent = `
             :host { /* Style the component host itself */
-                display: inline-block; /* Allow component to size itself */
+                display: contents; /* Allow component to size itself */
+                background-color: #00ffff00;
                 --w: ${width};
                 --h: ${height};
                 --m:${margin};
@@ -400,23 +386,18 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
                 --grid-color: rgba(0, 255, 255, 0.7); /* Cyan grid color */
                 --grid-size: 5%; /* Size of the grid cells */
                 --line-thickness: 1px; /* Thickness of grid lines */
-                background-color: #00ffff00;
-                position:fixed;
-                z-index:1;
             }
             .scene {
                 position:fixed;
-                top:25%;
-                left:25%;
-                width: calc(var(--w) * 3); /* Adjust scene size based on element size */
-                height: calc(var(--h) * 3);
+                inset: 0;
+                display: grid;
+                place-items: center; /* 垂直・水平中央揃えのショートハンド */
                 transform: scale(1.0);
                 perspective: ${perspective || '800px'};
                 /* Add cursor style to indicate draggability */
                 cursor: grab;
-                /* Add transition for smooth movement end */
                 transition: top 0.1s ease-out, left 0.1s ease-out;
-                z-index:1000;
+                z-index:-1;
             }
             .scene.dragging { /* Style when dragging */
                 cursor: grabbing;
@@ -424,23 +405,22 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
             }
             
             .rbox-container { /* Container for the root element */
-                 position: relative; /* Needed for absolute children */
-                 transform-style: preserve-3d;
-                 transition: transform 0.1s ease-out; /* Short transition for settling */
-                 //pointer-events: none;
-                 width: var(--w);
-                 height: var(--h);
-                 background-color:#faebd700;
+                position: relative; /* Needed for absolute children */
+                transform-style: preserve-3d;
+                transition: transform 0.1s ease-out; /* Short transition for settling */
+                //pointer-events: none;
+                width: var(--w);
+                height: var(--h);
+                background-color:#faebd700;
             }
             
             .rbox-container.no-transition {
-                 transition: none !important; /* Disable transition during drag */
+                transition: none !important; /* Disable transition during drag */
             }
 
             
             .rbox-element {
                 position: absolute;
-
                 width: var(--w);
                 height: var(--h);
                 transform-style: preserve-3d;
@@ -561,7 +541,7 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
             
             const boxContent = document.createElement('div');
             boxContent.className = 'box-content';
-            boxContent.textContent = `${i}` ;//elementConfig.content || '';
+            boxContent.textContent = `${i}asdfojasdjfpsjdofpfjoj ojspojfdfopjwoedfjwojfvopj vdojkvosjdfpojssdojvopj pojpofjedopfjposajfdpojweopf` ;//elementConfig.content || '';
             elementWrapper.appendChild(boxContent);
            
             const pathData = this.#getCentroidRelativePercentages(verts, centroid,maxDist);
@@ -612,11 +592,9 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
                 const midper = this.#convertToCentroidPercentage(mid, centroid, maxDist);
                 elementWrapper.style.transformOrigin = `${midper[0]}% ${midper[1]}%`;
                 elementWrapper.transformRotate       = `rotate3d(${v1[0] - mid[0]}, ${v1[1] - mid[1]},0, ${180- (hinge[4] * 180 / Math.PI)}deg)`;
-                elementWrapper.transformRotate2       = `rotate3d(${v1[0] - mid[0]}, ${v1[1] - mid[1]},0, -${180- (hinge[4] * 180 / Math.PI)}deg)`;
+                elementWrapper.transformRotate2      = `rotate3d(${v1[0] - mid[0]}, ${v1[1] - mid[1]},0, -${180- (hinge[4] * 180 / Math.PI)}deg)`;
             }
         }
-
-
         const elementWrapper = this.#elements.get(data_id);
       
         this.#config.hinges.slice(1).forEach((hinge, hingeIndex) => {
@@ -641,8 +619,6 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
         const currentState = this.#rotatedState.get(elementId);
         this.#rotatedState.set(elementId, !currentState);
         this.#updateTransform(elementId);
-
-
     }
 
     #updateTransform(elementId) {
@@ -702,92 +678,6 @@ class PolyhedronComponent extends BaseHTMLComponentWithEvent {
         }
        
     }
-    // --- Drag Handlers ---
-    #handleDragStart(event) {
-        // Prevent default only for touch to avoid issues like text selection on desktop
-        if (event.type === 'touchstart') {
-            event.preventDefault();
-        }
-
-        // Ignore if clicking on a face (box-content)
-        if (event.target.classList.contains('box-content')) {
-            return;
-        }
-
-        this.#isDragging = true;
-        // Use pageX/pageY for mouse, clientX/clientY for touch
-        const touch = event.touches ? event.touches[0] : null;
-        this.#startX = touch ? touch.clientX : event.pageX;
-        this.#startY = touch ? touch.clientY : event.pageY;
-        // Store initial rotation when drag starts
-        // Store initial scene position (parse from style, fallback needed if not set)
-        const style = window.getComputedStyle(this.#sceneElement);
-        // Get position relative to viewport, considering potential transform: translate(-50%, -50%)
-        const rect = this.#sceneElement.getBoundingClientRect();
-        this.#initialSceneLeft = rect.left ; // Center X
-        this.#initialSceneTop = rect.top ; // Center Y
-
-        // Add dragging class to scene
-        if (this.#sceneElement) {
-            this.#sceneElement.classList.add('dragging');
-        }
-
-        // Add move/end listeners to the document
-        document.addEventListener('mousemove', this.#boundHandleDragMove);
-        document.addEventListener('mouseup', this.#boundHandleDragEnd);
-        document.addEventListener('touchmove', this.#boundHandleDragMove, { passive: false });
-        document.addEventListener('touchend', this.#boundHandleDragEnd);
-
-        console.log("Scene Drag Start - Initial Top:", this.#initialSceneTop, "Initial Left:", this.#initialSceneLeft);
-    }
-
-    #handleDragMove(event) {
-        if (!this.#isDragging || !this.#rboxContainer) return;
-
-        // Prevent scrolling during touch drag
-        if (event.type === 'touchmove') {
-           // event.preventDefault(); // Only prevent if needed
-        }
-
-        const touch = event.touches ? event.touches[0] : null;
-        const currentX = touch ? touch.clientX : event.pageX;
-        const currentY = touch ? touch.clientY : event.pageY;
-
-        const deltaX = currentX - this.#startX;
-        const deltaY = currentY - this.#startY;
-
-        // Calculate new scene position (center point)
-        this.#currentSceneLeft = this.#initialSceneLeft + deltaX;
-        this.#currentSceneTop = this.#initialSceneTop + deltaY;
-
-        // Apply the position transformation (using top/left in pixels)
-        // The translate(-50%, -50%) remains to keep it centered on the coordinates
-        this.#sceneElement.style.left = `${this.#currentSceneLeft}px`;
-        this.#sceneElement.style.top = `${this.#currentSceneTop}px`;
-
-        // console.log(`Dragging Scene: dX=${deltaX}, dY=${deltaY}, Top=${this.#currentSceneTop}px, Left=${this.#currentSceneLeft}px`);
-    }
-
-    #handleDragEnd(event) {
-        if (!this.#isDragging) return;
-
-        this.#isDragging = false;
-
-        // Remove dragging class from scene
-         if (this.#sceneElement) {
-            this.#sceneElement.classList.remove('dragging');
-        }
-
-        // Remove global listeners
-        document.removeEventListener('mousemove', this.#boundHandleDragMove);
-        document.removeEventListener('mouseup', this.#boundHandleDragEnd);
-        document.removeEventListener('touchmove', this.#boundHandleDragMove);
-        document.removeEventListener('touchend', this.#boundHandleDragEnd);
-
-        console.log("Scene Drag End");
-    }
-    // --- End Drag Handlers ---
-
 
         /** ポリゴンの重心を計算 */
     #calculateCentroid(vertices) {

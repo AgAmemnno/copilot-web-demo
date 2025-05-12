@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSSCounterStyleRule デモ (マーカー左揃え調整)</title>
+    <style>
+        /* 基本的なスタイリング */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 1rem;
+        }
+
+        header {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 2rem 0;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 1rem;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+        }
+
+        /* カスタムカウンタースタイルの定義 */
+        @counter-style circled-alpha {
+            system: cyclic;
+            /* symbols内の可変スペースを削除し、シンボルの長さを統一 */
+            symbols: 'Ⓐ\3000' 'Ⓑ\3000\3000' 'Ⓒ\3000\3000\3000' 'Ⓓ\3000\3000\3000\3000' 'Ⓔ\3000\3000\3000\3000\3000';
+            /* suffixでマーカー後の区切り文字とスペースを一貫して指定 */
+            suffix: ". ";
+        }
+
+        @counter-style japanese-formal {
+            system: additive;
+            additive-symbols: 10 '拾', 9 '九', 8 '捌', 7 '漆', 6 '陸', 5 '伍', 4 '肆', 3 '参', 2 '弐', 1 '壱';
+            suffix: " 之巻";
+            fallback: cjk-decimal;
+            range: 1 99;
+        }
+       @counter-style abc {
+           system: additive;
+           additive-symbols: 1 "  "; /* カウンターの値の数だけ●を繰り返す */
+           suffix: " ";
+       }
+
+        @counter-style emoji-steps {
+            system: fixed;
+            symbols: '👣' '👟' '👠' '🥾' '👢';
+            /* suffixがない場合、マーカーの直後にテキストが続きます */
+            /* 必要であれば suffix: " "; などを追加 */
+        }
+
+        @counter-style empty-example {
+            /* 何も記述子を指定しない */
+        }
+
+        /* プロパティ表示用テーブルのスタイル */
+        .property-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+        .property-table th, .property-table td {
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.9rem;
+            word-break: break-all; /* 長い文字列がテーブルセルを壊さないように */
+        }
+        .property-table th {
+            background-color: #f9f9f9;
+            font-weight: 600;
+        }
+
+        /* 出力セクションのスタイル */
+        #output {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .rule-card {
+            background-color: #fdfdfd;
+            padding: 1.5rem;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+        }
+        .rule-card h2 {
+            font-size: 1.25rem;
+            color: #007bff;
+            margin-bottom: 1rem;
+        }
+
+        /* リストのスタイル */
+        ol, ul {
+            margin-left: 0; /* デフォルトのマージンをリセット */
+            padding-left: 0px; /* 3em;マーカーとテキストのための十分なパディングを確保 (em単位でフォントサイズに連動) */
+                               /* list-style-position: outside; (デフォルト) の場合、このパディングの内側にテキストが、外側にマーカーが配置されるイメージ */
+            list-style-position: inside; /*outside;  マーカーをテキストブロックの外側に配置 */
+            margin-bottom: 1rem;
+            display: inline-grid;
+        }
+        li {
+            margin-bottom: 0.3rem;
+            white-space: pre;
+            /* text-indent: -1.5em;  もしマーカーがpaddingの内側に来る場合(inside)の調整例。今回はoutsideなので不要 */
+        }
+
+
+        /* グリッドレイアウト */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .list-example-item {
+            background-color: #f9f9f9;
+            padding: 1rem;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* コントローラーのスタイル */
+        .offset-control {
+            margin-bottom: 0.75rem;
+        }
+        .offset-control label {
+            margin-right: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .offset-control input[type="number"] {
+            padding: 0.3rem 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 60px;
+        }
+        .set-counter-value {
+          /* ol要素が使用するデフォルトのカウンター 'list-item' の値を6に設定します。 */
+          /* これにより、このリスト項目のマーカーは、適用されているlist-style-type (この場合は circled-alpha) の6番目の表現になります。 */
+          /* counter-increment は通常通り行われるため、この項目自体もカウントアップの対象ですが、counter-set がその値を上書きします。 */
+          counter-set: list-item var(--counter-value);
+        }
+        :root{
+            --counter-pushed :0;
+        }
+        .push-counter-value {
+            display:contents;
+              /* ol要素が使用するデフォルトのカウンター 'list-item' の値を6に設定します。 */
+              /* これにより、このリスト項目のマーカーは、適用されているlist-style-type (この場合は circled-alpha) の6番目の表現になります。 */
+              /* counter-increment は通常通り行われるため、この項目自体もカウントアップの対象ですが、counter-set がその値を上書きします。 */
+              --counter-pushed: calc( var(--counter-push) + 1 );
+        }
+        .pop-counter-value {
+          /* ol要素が使用するデフォルトのカウンター 'list-item' の値を6に設定します。 */
+          /* これにより、このリスト項目のマーカーは、適用されているlist-style-type (この場合は circled-alpha) の6番目の表現になります。 */
+          /* counter-increment は通常通り行われるため、この項目自体もカウントアップの対象ですが、counter-set がその値を上書きします。 */
+        
+          counter-set: list-item  var(--counter-pushed);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>&#x274C; CSS&#x3000 CounterStyleRule プロパティデモ</h1>
+            <p>
+                <code>@counter-style</code> ルールで定義された様々な記述子が、JavaScriptの <code>CSSCounterStyleRule</code> オブジェクトでどのように表現されるかを示します。
+                基本的なCSSでスタイリングし、リストの開始番号変更機能、マーカーの左揃え調整を行いました。
+            </p>
+        </header>
+
+        <div id="output"> </div>
+
+        <hr>
+
+        <h2>カスタムカウンターの使用例:</h2>
+        <div class="grid-container">
+            <div class="list-example-item">
+                <h3><code>circled-alpha</code> スタイル</h3>
+                <div class="offset-control">
+                    <label for="offset-circled-alpha">開始番号:</label>
+                    <input type="number" id="offset-circled-alpha" value="1" min="1">
+                </div>
+                <ol id="list-circled-alpha" style="list-style-type: circled-alpha;list-style-position: inside;">
+                    <li>最初の項目</li>
+                    <li>二番目の項目</li>
+                    <li>三番目の項目</li>
+                    <li>四番目の項目</li>
+                    <li>五番目の項目</li>
+                </ol>
+            </div>
+            <div class="list-example-item">
+                <h3><code>japanese-formal</code> スタイル</h3>
+                <div class="offset-control">
+                    <label for="offset-japanese-formal">開始番号:</label>
+                    <input type="number" id="offset-japanese-formal" value="1" min="1" max="99">
+                </div>
+                <ol id="list-japanese-formal" style="list-style-type: japanese-formal;">
+                    <li>最初の巻
+                         <ol style="list-style-type: japanese-formal;" start="5"> <li>副項目</li>
+                            <li>副項目</li>
+                        </ol>
+                    </li>
+                    <li>二番目の巻</li>
+                    <li>十番目の巻</li>
+                </ol>
+            </div>
+             <div class="list-example-item">
+                <h3><code>custom-padded-negative</code> スタイル (リストでの使用例)</h3>
+                 <div class="offset-control">
+                    <label for="offset-custom-padded">開始番号:</label>
+                    <input type="number" id="offset-custom-padded" value="1" min="0">
+                </div>
+                <ol id="list-custom-padded" style="list-style-type: abc;">
+                    <li>項目1</li>
+                    <li>項目Push</li>
+                    <li class="set-counter-value"  style="--counter-value: 6;">項目Set6</li>
+                    <li>項目Next</li>
+                    <li>項目Next</li>
+                    <li class="set-counter-value"  style="--counter-value: 3;">項目Pop</li>
+                    <li>項目Next</li>
+                    <li>項目Next</li>
+                </ol>
+            </div>
+            <div class="list-example-item">
+                <h3><code>emoji-steps</code> スタイル</h3>
+                <div class="offset-control">
+                    <label for="offset-emoji-steps">開始番号:</label>
+                    <input type="number" id="offset-emoji-steps" value="1" min="1">
+                </div>
+                <ol id="list-emoji-steps" style="list-style-type: emoji-steps;">
+                    <li>ステップ1</li>
+                    <li>ステップ2</li>
+                    <li>ステップ3</li>
+                    <li>ステップ4</li>
+                    <li>ステップ5</li>
+                    <li>ステップ6 (フォールバックまたは繰り返し)</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOMが完全に読み込まれた後にスクリプトを実行
+        document.addEventListener('DOMContentLoaded', function () {
+            const outputDiv = document.getElementById('output');
+            if (!outputDiv) {
+                console.error('Output div not found!');
+                return;
+            }
+
+            // スタイルシートを走査して @counter-style ルールを見つける
+            for (const sheet of document.styleSheets) {
+                try {
+                    for (const rule of sheet.cssRules) {
+                        if (rule instanceof CSSCounterStyleRule) {
+                            displayCounterStyleRuleProperties(rule, outputDiv);
+                        }
+                    }
+                } catch (e) {
+                    // console.warn('Cannot access stylesheet: ', sheet.href, e);
+                }
+            }
+
+            // リストオフセットコントローラーの設定
+            setupOffsetControl('offset-circled-alpha', 'list-circled-alpha');
+            setupOffsetControl('offset-japanese-formal', 'list-japanese-formal');
+            setupOffsetControl('offset-custom-padded', 'list-custom-padded');
+            setupOffsetControl('offset-emoji-steps', 'list-emoji-steps');
+        });
+
+        // CSSCounterStyleRule のプロパティを表示する関数
+        function displayCounterStyleRuleProperties(rule, container) {
+            const ruleCard = document.createElement('div');
+            ruleCard.className = 'rule-card';
+
+            const title = document.createElement('h2');
+            title.textContent = `ルール名: "${rule.name}"`;
+            ruleCard.appendChild(title);
+
+            const table = document.createElement('table');
+            table.className = 'property-table';
+            const tbody = document.createElement('tbody');
+
+            const properties = [
+                { name: 'name', desc: 'ルールの名前 (<custom-ident>)' },
+                { name: 'system', desc: 'system 記述子' },
+                { name: 'symbols', desc: 'symbols 記述子' },
+                { name: 'additiveSymbols', desc: 'additive-symbols 記述子' },
+                { name: 'negative', desc: 'negative 記述子' },
+                { name: 'prefix', desc: 'prefix 記述子' },
+                { name: 'suffix', desc: 'suffix 記述子' },
+                { name: 'range', desc: 'range 記述子' },
+                { name: 'pad', desc: 'pad 記述子' },
+                { name: 'speakAs', desc: 'speak-as 記述子' },
+                { name: 'fallback', desc: 'fallback 記述子' }
+            ];
+
+            properties.forEach(propInfo => {
+                const row = tbody.insertRow();
+                const cell1 = row.insertCell();
+                cell1.textContent = propInfo.name;
+
+                const cell2 = row.insertCell();
+                const value = rule[propInfo.name];
+                cell2.textContent = value === '' ? '(空文字列)' : value;
+            });
+
+            table.appendChild(tbody);
+            ruleCard.appendChild(table);
+            container.appendChild(ruleCard);
+        }
+
+        // リストの開始番号を変更するコントローラーを設定する関数
+        function setupOffsetControl(inputId, listId) {
+            const inputElement = document.getElementById(inputId);
+            const listElement = document.getElementById(listId);
+
+            if (inputElement && listElement) {
+                inputElement.addEventListener('input', function() {
+                    const newStartValue = parseInt(this.value, 10);
+                    if (!isNaN(newStartValue)) {
+                        listElement.setAttribute('start', newStartValue);
+                    }
+                });
+                const initialValue = parseInt(inputElement.value, 10);
+                 if (!isNaN(initialValue)) {
+                    listElement.setAttribute('start', initialValue);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

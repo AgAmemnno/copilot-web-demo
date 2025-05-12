@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>逆三角形スクロール連動スケール視覚化</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            background-color: #2c3e50; /* 暗めの背景 */
+            color: #ecf0f1;
+        }
+        
+        :root{
+            --p-font-size: 8em;
+            --p-line-height : 8rem;
+            --p-margin-bottom: 0em;
+            margin-top: 0rem;
+        }
+        
+        *::-webkit-scrollbar {
+            display: none;
+        }
+
+        h1, p {
+        }
+        
+        #scalable-text p {
+            /* CSSカスタムプロパティを参照 */
+            font-size: var(--p-font-size, 16px); /* デフォルト値として16px */
+            line-height: var(--p-line-height, 1.5); /* デフォルト値として1.5 */
+            margin-bottom: var(--p-margin-bottom, 0.5em); /* デフォルト値として0.5em */
+            transition: font-size 0.3s ease, line-height 0.3s ease, margin-bottom 0.3s ease; /* スムーズな変化のため（任意） */
+        }
+        
+        code {
+            background-color: #34495e;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+        }
+
+        .triangle-container {
+            position: fixed;
+            inset: 0;
+            transform-origin: center center;
+            transform: translate(0vw, -380vh) scale(33.5);
+            display: grid;
+            place-items: center;
+            margin: 0vh auto;
+            border: 2px dashed #3498db;
+            overflow-y: scroll;
+        }
+
+        .text-block {
+            position: absolute;
+            clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+            background-color: rgba(255, 255, 255, 0.05); /* 背景を少し明るく */
+            transform-origin: bottom center;
+            transform:scale(0.4);
+
+            /* top: 0; */ /* 配置基準を中央に */
+            left: 0;
+            width: 100%; /* コンテナ幅いっぱいに */
+            height: 100%;/* 高さは自動に */
+            padding: 0 1rem; /* 左右に少し余白 */
+            box-sizing: border-box;
+
+            /* 水平スケールをCSS変数で制御 */
+            --horizontal-scale: 1.0; /* 初期値は1 (底辺) */
+            /* 垂直位置もCSS変数で制御 */
+            --vertical-position-percent: 0%; /* 初期値は0% (上端) */
+
+            /* transformでスケールと位置を制御 */
+            //transform: translateY(var(--vertical-position-percent)) scaleX(var(--horizontal-scale));
+            //transform-origin: center center; /* 中央基点に変更 */
+
+            /* テキストスタイル */
+            font-size: 1.2rem; /* 少し大きく */
+            line-height: 1.4; /* 行間調整 */
+            color: #ffffff;
+            text-align: center;
+            overflow: visible; /* スケール時に見やすいように */
+            white-space: nowrap; /* 折り返さない */
+            /* word-break: break-all; */
+
+            /* デバッグ用 */
+            /* border: 1px solid red; */
+                        /* bodyにSDAを設定 (進行度取得用) */
+            //animation: body-scroll-progress linear forwards;
+            //animation-timeline: scroll(self block);
+        }
+        /* body用のアニメーションキーフレーム */
+        @keyframes body-scroll-progress {
+            from { --body-scroll-progress-value: 0; }
+            to { --body-scroll-progress-value: 1; }
+        }
+ 
+
+        /* 情報表示用 */
+        #info-display {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+
+    <div class="triangle-container">
+        <div class="text-block" id="scalable-text">
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+            <p>同じ文字数 ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+        </div>
+    </div>
+
+    <div id="info-display">
+        Scroll Progress (p): 0.000<br>
+        Horizontal Scale (s): 1.000<br>
+        Vertical Position (%): 0.0
+    </div>
+
+    <div style="height: 150vh;"></div> {/* スクロール用スペース */}
+
+    <script>
+        const scalableText = document.getElementById('scalable-text');
+        const infoDisplay = document.getElementById('info-display');
+        let bodyAnimation = null;
+
+        function getBodyAnimation() {
+            const animations = scalableText.getAnimations();
+            if (animations && animations.length > 0) {
+                bodyAnimation = animations.find(anim => anim.animationName === 'body-scroll-progress');
+                if (!bodyAnimation) {
+                    bodyAnimation = animations.find(anim => anim.timeline && (anim.timeline.source !== undefined || anim.timeline instanceof ScrollTimeline || anim.timeline instanceof ViewTimeline) );
+                }
+                if (!bodyAnimation) {
+                    requestAnimationFrame(getBodyAnimation);
+                }
+            } else {
+                requestAnimationFrame(getBodyAnimation);
+            }
+        }
+        getBodyAnimation();
+
+        // 進行度に応じてスケールと位置を更新
+        function updateScaleAndPosition() {
+            let progress = 0; // デフォルト値 (p)
+            if (bodyAnimation && bodyAnimation.effect) {
+                const currentProgress = bodyAnimation.effect.getComputedTiming().progress;
+                if (currentProgress !== null && typeof currentProgress !== 'undefined') {
+                    progress = Math.max(0, Math.min(1, Number(currentProgress)));
+                }
+            }
+
+            // 水平スケール s = C * (1 - p) を計算
+            const C = 1.0; // 開始点(底辺)でのスケールを1.0とする場合
+            const currentScale = C * (1 - progress);
+
+            // 垂直位置を計算 (進行度に合わせて下に移動)
+            // コンテナの高さに対する割合で指定
+            const currentVerticalPosition = progress * 100; // 0% から 100% へ
+
+            // CSS変数を更新
+            //scalableText.style.setProperty('--horizontal-scale', currentScale.toFixed(3));
+            //scalableText.style.setProperty('--vertical-position-percent', `${currentVerticalPosition.toFixed(1)}%`);
+
+            // 情報を表示
+            infoDisplay.innerHTML = `
+                Scroll Progress (p): ${progress.toFixed(3)}<br>
+                Horizontal Scale (s): ${currentScale.toFixed(3)}<br>
+                Vertical Position (%): ${currentVerticalPosition.toFixed(1)}
+            `;
+
+            requestAnimationFrame(updateScaleAndPosition);
+        }
+
+        // 更新ループを開始
+        //requestAnimationFrame(updateScaleAndPosition);
+        document.addEventListener('DOMContentLoaded', function() {
+          const scalableTextContainer = document.getElementById('scalable-text');
+          const paragraphs = scalableTextContainer.querySelectorAll('p');
+        
+          // --- ここから調整可能なパラメータ ---
+        
+          // フォントサイズ関連
+          const initialFontSize = 22; // 最初のP要素のフォントサイズ (px)
+          const fontSizeDecrement = 1.2; // 各P要素ごとに減少させるフォントサイズ (px)
+          const minFontSize = 8;     // 最小フォントサイズ (px)
+        
+          // 行の高さ (line-height) 関連
+          // line-height は単位なしの数値 (フォントサイズに対する倍率) か、px, em などでも指定可能
+          const initialLineHeight = 1.8; // 最初のP要素のline-height
+          const lineHeightDecrement = 0.05; // 各P要素ごとに減少させるline-heightの値
+          const minLineHeight = 1.0;   // 最小のline-height
+        
+          // パラグラフ間のマージン (margin-bottom) 関連
+          const initialMarginBottom = 1;   // 最初のP要素のmargin-bottom (em単位)
+          const marginBottomDecrement = 0.05; // 各P要素ごとに減少させるmargin-bottom (em単位)
+          const minMarginBottom = 0.2; // 最小のmargin-bottom (em単位)
+        
+          // --- パラメータ調整ここまで ---
+        
+          paragraphs.forEach((p, index) => {
+            // フォントサイズの計算と設定
+            const currentFontSize = Math.max(minFontSize, initialFontSize - (index * fontSizeDecrement));
+            p.style.setProperty('--p-font-size', `${currentFontSize}px`);
+        
+            // line-heightの計算と設定
+            const currentLineHeight = Math.max(minLineHeight, initialLineHeight - (index * lineHeightDecrement));
+            p.style.setProperty('--p-line-height', currentLineHeight.toString());
+        
+            // margin-bottomの計算と設定
+            const currentMarginBottom = Math.max(minMarginBottom, initialMarginBottom - (index * marginBottomDecrement));
+            p.style.setProperty('--p-margin-bottom', `${currentMarginBottom}em`);
+          });
+        });
+    </script>
+
+</body>
+</html>

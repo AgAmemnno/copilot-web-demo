@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript CSSルールインデックス活用版（改）</title>
+    <style>
+        /* 基本的なページスタイリング */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            margin: 0;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #1e3a8a;
+        }
+        label {
+            font-size: 1rem;
+            margin-right: 0.5rem;
+            color: #4a5568;
+        }
+        select {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: 1px solid #d1d5db;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            background-color: white;
+            color: #333;
+        }
+        .target-text { /* effectクラスが適用される要素の基本スタイル */
+            font-size: 2.5rem;
+            font-weight: bold;
+            padding: 2rem;
+            margin-top: 1rem;
+            border: 2px dashed; /* スタイルは .effect で上書き */
+            border-radius: 0.5rem;
+            transition: color 0.3s ease-in-out, text-shadow 0.3s ease-in-out, background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+    </style>
+    <style id="predefined-variants" disabled>
+        /* ここに各スタイルバリアントを .effect[data-style-variant="..."] として定義します。
+          このスタイルシートは disabled なので、直接ページには適用されません。
+          JavaScriptがここからルールを読み取ります。
+        */
+        .effect[data-style-variant="no-shadow"] {
+            color: #1f2937;
+            text-shadow: none;
+            background-color: transparent;
+            border-color: #cbd5e0;
+        }
+        .effect[data-style-variant="simple-drop-shadow"] {
+            color: #4a5568;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background-color: transparent;
+            border-color: #cbd5e0;
+        }
+        .effect[data-style-variant="retro-vintage-shadow"] {
+            color: #f6e05e;
+            text-shadow: 3px 3px 0px #dd6b20, -3px -3px 0px #38a169;
+            background-color: transparent;
+            border-color: #cbd5e0;
+        }
+        .effect[data-style-variant="neon-glow-effect"] {
+            color: #ffffff;
+            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #00a3ff, 0 0 35px #00a3ff, 0 0 40px #00a3ff, 0 0 50px #00a3ff, 0 0 75px #00a3ff;
+            background-color: #1a202c;
+            border-color: #374151;
+        }
+        .effect[data-style-variant="hard-edge-shadow"] {
+            color: #ffffff;
+            text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;
+            background-color: #6b7280;
+            border-color: #4b5563;
+        }
+    </style>
+    <style id="dynamic-effect-style">
+        /* JavaScriptによって .effect クラスのルールがここに動的に挿入・削除される */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>テキストスタイルチェンジャー (ルールインデックス活用版 改)</h1>
+
+        <div>
+            <label for="style-selector">スタイルを選択:</label>
+            <select id="style-selector">
+                <option value="no-shadow">影なし (デフォルト)</option>
+                <option value="simple-drop-shadow">ドロップシャドウ</option>
+                <option value="retro-vintage-shadow">レトロ調</option>
+                <option value="neon-glow-effect">ネオン光彩</option>
+                <option value="hard-edge-shadow">アウトライン</option>
+            </select>
+        </div>
+
+        <div id="textToStyle" class="target-text effect">
+            スタイルが変わるよ！
+        </div>
+        <div id="textToStyle2" class="target-text effect" style="font-size: 1.5rem; margin-top:0.5rem;">
+            こちらも変わる！
+        </div>
+    </div>
+
+    <script>
+        // スタイル管理オブジェクト
+        const StyleManager = {
+            activeSheet: null,             // 操作対象のCSSStyleSheetオブジェクト (dynamic-effect-style)
+            predefinedVariantsSheet: null, // disabledな定義済みバリアントシート
+            definedVariantRuleIndices: {},  // 各バリアント名とルールのインデックスのマップ
+
+            // 初期化メソッド
+            init: function() {
+                const activeStyleElement = document.getElementById('dynamic-effect-style');
+                const predefinedVariantsElement = document.getElementById('predefined-variants');
+
+                if (!activeStyleElement || !activeStyleElement.sheet) {
+                    console.error('Error: #dynamic-effect-style element or its sheet not found.');
+                    return;
+                }
+                this.activeSheet = activeStyleElement.sheet;
+
+                if (!predefinedVariantsElement || !predefinedVariantsElement.sheet) {
+                    console.error('Error: #predefined-variants element or its sheet not found.');
+                    return;
+                }
+                this.predefinedVariantsSheet = predefinedVariantsElement.sheet;
+
+                this._loadVariantDefinitions(); // 定義済みバリアントのインデックスを読み込む
+                this.applyStyle('no-shadow');   // 初期スタイルを「影なし」に設定
+            },
+
+            // predefined-variantsシートからルールを読み込み、バリアント名とルールインデックスをマッピング
+            _loadVariantDefinitions: function() {
+                if (!this.predefinedVariantsSheet) return;
+
+                const variantRegex = /\.effect\[data-style-variant="([^"]+)"\]/;
+                const rules = this.predefinedVariantsSheet.cssRules;
+
+                for (let i = 0; i < rules.length; i++) {
+                    const rule = rules[i];
+                    if (rule instanceof CSSStyleRule) {
+                        const match = rule.selectorText.match(variantRegex);
+                        if (match && match[1]) {
+                            const variantName = match[1];
+                            // バリアント名に対応するルールのインデックスを保存
+                            this.definedVariantRuleIndices[variantName] = i;
+                        }
+                    }
+                }
+                // console.log("Loaded predefined variant rule indices:", this.definedVariantRuleIndices);
+            },
+
+            // 指定されたバリアント名に基づいてスタイルシートのルールを更新
+            applyStyle: function(variantName) {
+                if (!this.activeSheet) {
+                    console.warn(`Active sheet not available.`);
+                    return;
+                }
+                // variantNameに対応するルールインデックスを取得
+                const ruleIndex = this.definedVariantRuleIndices[variantName];
+
+                if (typeof ruleIndex === 'undefined') { // インデックスが見つからない場合 (0も有効なインデックス)
+                    console.warn(`Rule index for variant "${variantName}" not found.`);
+                    return;
+                }
+
+                // predefinedVariantsSheetから元のルールオブジェクトを取得
+                const originalRule = this.predefinedVariantsSheet.cssRules[ruleIndex];
+
+                if (!originalRule || !(originalRule instanceof CSSStyleRule)) {
+                    console.warn(`Original rule for variant "${variantName}" (index: ${ruleIndex}) is not a valid CSSStyleRule.`);
+                    return;
+                }
+
+                // 1. 既存の .effect ルールを削除
+                for (let i = this.activeSheet.cssRules.length - 1; i >= 0; i--) {
+                    if (this.activeSheet.cssRules[i] instanceof CSSStyleRule && this.activeSheet.cssRules[i].selectorText === '.effect') {
+                        this.activeSheet.deleteRule(i);
+                    }
+                }
+
+                // 2. 新しい .effect ルールを挿入し、セレクタを変更
+                if (originalRule.cssText) { // originalRule.cssText が空でないことを確認
+                    try {
+                        // 元のルール全体 (セレクタ含む) をそのままアクティブシートの末尾に挿入
+                        const insertedRuleIndex = this.activeSheet.insertRule(originalRule.cssText, this.activeSheet.cssRules.length);
+
+                        // 挿入されたルールのセレクタを ".effect" に変更
+                        // insertRule は挿入したルールのインデックスを返す
+                        const newRule = this.activeSheet.cssRules[insertedRuleIndex];
+                        if (newRule instanceof CSSStyleRule) {
+                            newRule.selectorText = '.effect';
+                        } else {
+                            // 通常は起こらないはずだが、念のためログ出力
+                            console.warn("Inserted rule at index " + insertedRuleIndex + " is not a CSSStyleRule.");
+                        }
+                    } catch (e) {
+                        console.error("Error inserting or modifying CSS rule:", e, originalRule.cssText);
+                    }
+                }
+            }
+        };
+
+        // DOM要素を取得
+        const styleSelector = document.getElementById('style-selector');
+
+        // select要素の変更を監視するイベントリスナーを追加
+        styleSelector.addEventListener('change', function() {
+            const selectedValue = this.value;
+            StyleManager.applyStyle(selectedValue);
+        });
+
+        // ページ読み込み完了時にStyleManagerを初期化
+        window.addEventListener('DOMContentLoaded', () => {
+            StyleManager.init();
+        });
+    </script>
+</body>
+</html>

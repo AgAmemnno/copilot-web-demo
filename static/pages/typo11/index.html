@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面白いテキストシャドウの例</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Tailwindのデフォルトフォントに近いもの */
+            background-color: #f0f4f8; /* 明るい背景色 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
+            width: 100%;
+            max-width: 800px;
+        }
+        h1 {
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: bold;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #1e3a8a; /* Tailwindの blue-800 */
+        }
+        .shadow-example {
+            font-size: 3rem; /* text-5xl */
+            font-weight: bold;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            text-align: center;
+            transition: all 0.3s ease-in-out;
+        }
+        .shadow-example:hover {
+            transform: scale(1.05);
+        }
+
+        /* 1. シンプルなドロップシャドウ */
+        .simple-drop-shadow {
+            color: #4a5568; /* Tailwindの gray-700 */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 2. ソフトなぼかしシャドウ */
+        .soft-blur-shadow {
+            color: #2c5282; /* Tailwindの blue-800 */
+            text-shadow: 0 0 10px rgba(0, 119, 255, 0.7);
+        }
+
+        /* 3. ハードエッジシャドウ (アウトライン風) */
+        .hard-edge-shadow {
+            color: #ffffff; /* 白 */
+            text-shadow:
+                -1px -1px 0 #000000, /* 黒 */
+                 1px -1px 0 #000000,
+                -1px  1px 0 #000000,
+                 1px  1px 0 #000000;
+        }
+
+        /* 4. 複数の影 (3D風) */
+        .multi-layer-3d-shadow {
+            color: #e53e3e; /* Tailwindの red-600 */
+            text-shadow:
+                1px 1px 0px #c53030, /* Tailwindの red-700 */
+                2px 2px 0px #9b2c2c, /* Tailwindの red-800 */
+                3px 3px 0px #742a2a, /* Tailwindの red-900 */
+                4px 4px 0px #4a1d1d,
+                5px 5px 10px rgba(0,0,0,0.3);
+        }
+
+        /* 5. ネオン風グロー効果 */
+        .neon-glow-effect {
+            color: #ffffff;
+            background-color: #1a202c; /* Tailwindの gray-900 */
+            text-shadow:
+                0 0 5px #fff,
+                0 0 10px #fff,
+                0 0 15px #fff,
+                0 0 20px #00a3ff, /* 明るい青 */
+                0 0 35px #00a3ff,
+                0 0 40px #00a3ff,
+                0 0 50px #00a3ff,
+                0 0 75px #00a3ff;
+        }
+
+        /* 6. 彫り込み風 (エンボス/デボス) */
+        .engraved-effect {
+            background-color: #e2e8f0; /* Tailwindの gray-200 */
+            color: #a0aec0; /* Tailwindの gray-500 */
+            text-shadow: 1px 1px 1px #fff, -1px -1px 1px #718096; /* Tailwindの gray-600 */
+        }
+        .embossed-effect {
+            background-color: #e2e8f0; /* Tailwindの gray-200 */
+            color: #cbd5e0; /* Tailwindの gray-400 */
+            text-shadow: -1px -1px 1px #fff, 1px 1px 1px #718096; /* Tailwindの gray-600 */
+        }
+
+
+        /* 7. レトロ/ヴィンテージ風 */
+        .retro-vintage-shadow {
+            color: #f6e05e; /* Tailwindの yellow-400 */
+            text-shadow:
+                3px 3px 0px #dd6b20, /* Tailwindの orange-600 */
+                -3px -3px 0px #38a169; /* Tailwindの green-600 */
+        }
+
+        /* 8. ファイアエフェクト風 */
+        .fire-effect {
+            color: #fed7aa; /* Tailwindの orange-200 */
+            background-color: #2d3748; /* Tailwindの gray-800 */
+            text-shadow:
+                0 0 4px #fff,
+                0 -5px 4px #ff3,
+                2px -10px 6px #fd3,
+                -2px -15px 11px #f80,
+                2px -18px 18px #f20;
+        }
+
+        /* 9. ストライプシャドウ */
+        .stripe-shadow {
+            color: #63b3ed; /* Tailwindの blue-400 */
+            text-shadow:
+                0 1px 0 #ccc,
+                0 2px 0 #c9c9c9,
+                0 3px 0 #bbb,
+                0 4px 0 #b9b9b9,
+                0 5px 0 #aaa,
+                0 6px 1px rgba(0,0,0,.1),
+                0 0 5px rgba(0,0,0,.1),
+                0 1px 3px rgba(0,0,0,.3),
+                0 3px 5px rgba(0,0,0,.2),
+                0 5px 10px rgba(0,0,0,.25),
+                0 10px 10px rgba(0,0,0,.2),
+                0 20px 20px rgba(0,0,0,.15);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>面白いテキストシャドウの例</h1>
+
+        <div class="shadow-example simple-drop-shadow">
+            ドロップシャドウ
+        </div>
+
+        <div class="shadow-example soft-blur-shadow">
+            ソフトな影
+        </div>
+
+        <div class="shadow-example hard-edge-shadow">
+            アウトライン
+        </div>
+
+        <div class="shadow-example multi-layer-3d-shadow">
+            3D風テキスト
+        </div>
+
+        <div class="shadow-example neon-glow-effect">
+            ネオン光彩
+        </div>
+
+        <div class="shadow-example engraved-effect">
+            彫り込み風
+        </div>
+        <div class="shadow-example embossed-effect">
+            浮き出し風
+        </div>
+
+
+        <div class="shadow-example retro-vintage-shadow">
+            レトロ調
+        </div>
+
+        <div class="shadow-example fire-effect">
+            炎エフェクト
+        </div>
+        <div class="shadow-example stripe-shadow">
+            ストライプ影
+        </div>
+
+    </div>
+</body>
+</html>

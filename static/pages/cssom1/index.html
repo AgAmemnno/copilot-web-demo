@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSSレイヤーとカスタムプロパティによるテーマ切り替え</title>
+    <style>
+        /* 基本的なページスタイリング */
+        body {
+            font-family: 'Inter', sans-serif, system-ui, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            margin: 0;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.875rem; /* text-3xl相当 */
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #1e3a8a; /* blue-800相当 */
+        }
+        label {
+            font-size: 1rem; /* text-base相当 */
+            margin-right: 0.5rem;
+            color: #4a5568; /* gray-700相当 */
+        }
+        select {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem; /* rounded-md相当 */
+            border: 1px solid #d1d5db; /* gray-300相当 */
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            background-color: white;
+            color: #333;
+        }
+
+        /* --- CSSレイヤーとカスタムプロパティによるスタイリング --- */
+
+        /* 1. レイヤーの順序を宣言 
+        @layer base, theme-no-shadow, theme-simple-drop-shadow, theme-retro-vintage, theme-neon-glow, theme-hard-edge;
+
+        @layer base {
+         */
+            .layered-component {
+                /* カスタムプロパティを参照してスタイルを適用 */
+                color: var(--component-text-color, #333);
+                text-shadow: var(--component-text-shadow, none);
+                background-color: var(--component-bg-color, transparent);
+                border: 2px dashed var(--component-border-color, #cbd5e0);
+
+                /* 既存の .target-text のスタイルを統合 */
+                font-size: 2.5rem;
+                font-weight: bold;
+                padding: 2rem;
+                margin-top: 1rem;
+                border-radius: 0.5rem;
+                transition: color 0.3s ease-in-out, text-shadow 0.3s ease-in-out, background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
+                min-height: 100px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-sizing: border-box;
+            }
+       
+
+        /*  }3. 各テーマレイヤー: カスタムプロパティの具体的な値を定義 */
+        /* data-active-theme 属性に基づいて、そのテーマのカスタムプロパティが適用される */
+
+        /* @layer theme-no-shadow { */
+            .layered-component[data-active-theme="no-shadow"] {
+                --component-text-color: #1f2937;
+                --component-text-shadow: none;
+                --component-bg-color: transparent;
+                --component-border-color: #cbd5e0;
+            }
+        /* } */
+
+        /* @layer theme-simple-drop-shadow { */
+            .layered-component[data-active-theme="simple-drop-shadow"] {
+                --component-text-color: #4a5568;
+                --component-text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+                --component-bg-color: transparent;
+                --component-border-color: #cbd5e0;
+            }
+        /* } */
+
+        //@layer theme-retro-vintage {
+            .layered-component[data-active-theme="retro-vintage-shadow"] {
+                --component-text-color: #f6e05e;
+                --component-text-shadow: 3px 3px 0px #dd6b20, -3px -3px 0px #38a169;
+                --component-bg-color: transparent;
+                --component-border-color: #cbd5e0;
+            }
+       // }
+
+       // @layer theme-neon-glow {
+            .layered-component[data-active-theme="neon-glow-effect"] {
+                --component-text-color: #ffffff;
+                --component-text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #00a3ff, 0 0 35px #00a3ff, 0 0 40px #00a3ff, 0 0 50px #00a3ff, 0 0 75px #00a3ff;
+                --component-bg-color: #1a202c;
+                --component-border-color: #374151;
+            }
+        //}
+
+       // @layer theme-hard-edge {
+            .layered-component[data-active-theme="hard-edge-shadow"] {
+                --component-text-color: #ffffff;
+                --component-text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;
+                --component-bg-color: #6b7280;
+                --component-border-color: #4b5563;
+            }
+       // }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CSSレイヤーとカスタムプロパティによるテーマ切り替え</h1>
+
+        <div>
+            <label for="theme-selector">スタイルを選択:</label>
+            <select id="theme-selector">
+                <option value="no-shadow">影なし (デフォルト)</option>
+                <option value="simple-drop-shadow">ドロップシャドウ</option>
+                <option value="retro-vintage-shadow">レトロ調</option>
+                <option value="neon-glow-effect">ネオン光彩</option>
+                <option value="hard-edge-shadow">アウトライン</option>
+            </select>
+        </div>
+
+        <div id="themedComponent1" class="layered-component" data-active-theme="no-shadow">
+            スタイルが変わるよ！
+        </div>
+        <div id="themedComponent2" class="layered-component" data-active-theme="no-shadow" style="font-size: 1.5rem; margin-top:0.5rem;">
+            こちらも変わる！
+        </div>
+    </div>
+
+    <script>
+        // テーマ管理オブジェクト (シンプル版)
+        const ThemeSwitcher = {
+            components: [], // テーマを適用するコンポーネントのリスト
+            selectorElement: null, // テーマ選択用のselect要素
+
+            init: function() {
+                this.selectorElement = document.getElementById('theme-selector');
+                // data-active-theme属性を持つ全ての .layered-component を対象とする
+                this.components = document.querySelectorAll('.layered-component[data-active-theme]');
+
+                if (!this.selectorElement) {
+                    console.error('Error: #theme-selector element not found.');
+                    return;
+                }
+                if (this.components.length === 0) {
+                    console.warn('Warning: No components with .layered-component and data-active-theme found.');
+                }
+
+                // 初期テーマを設定 (select要素の現在の値に基づいて)
+                const initialTheme = this.selectorElement.value;
+                this.setActiveTheme(initialTheme);
+
+                // select要素の変更を監視
+                this.selectorElement.addEventListener('change', (event) => {
+                    this.setActiveTheme(event.target.value);
+                });
+            },
+
+            // 指定されたテーマ名に基づいて、対象コンポーネントのdata-active-theme属性を更新
+            setActiveTheme: function(themeName) {
+                if (!themeName) {
+                    console.warn('No theme name provided to setActiveTheme.');
+                    return;
+                }
+                this.components.forEach(component => {
+                    component.dataset.activeTheme = themeName;
+                });
+                // console.log(`Active theme set to: ${themeName}`);
+            }
+        };
+
+        // ページ読み込み完了時にThemeSwitcherを初期化
+        window.addEventListener('DOMContentLoaded', () => {
+            ThemeSwitcher.init();
+        });
+    </script>
+</body>
+</html>

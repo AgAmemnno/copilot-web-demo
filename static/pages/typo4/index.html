@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>https://codepen.io/petercon/pen/abGwxQZ</title>
+      <style>
+input[type="number"] {
+  width:60px;
+}
+input[type="range"] {
+  width:240px;
+}
+#cvs {
+  border:1px solid red;
+  padding: 0px;
+}
+.hide {
+  display:none;
+}
+      </style>
+</head>
+
+<body onload="initialize()">
+
+    <div id="intro">
+      Circle 0: center at (<span id="circ0DefaultX">?</span>, <span id="circ0DefaultY">?</span>) &mdash; <em>Click on the canvas to move circle 0!</em>
+      <br>
+      Circle 1: center at (<span id="circ1DefaultX">?</span>, <span id="circ1DefaultY">?</span>)
+      <br><br>
+    </div>
+    
+    <div id="controls">
+      <b>R0:</b> <label>default = <input id="r0Dflt" type="number" min="0" value="40" ></label>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <label>delta: <input type="range" min="-500" max="500" step="1" id="r0Delta"></label><span id="circ0Rad_deltaVal"></span>
+      <br>R0<sub>instance</sub> = <span id="circ0Rad">40</span>
+      <br><br>
+      
+      <b>R1:</b> <label>default = <input id="r1Dflt" type="number" min="0" value="60"></label>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <label>delta: <input type="range" min="-500" max="500" step="1" id="r1Delta"></label><span id="circ1Rad_deltaVal"></span>
+      <br>R1<sub>instance</sub> = <span id="circ1Rad">60</span>
+      <br><br>
+      
+      <label>ColorLine first stop offset: <input id="firstStopOffset" type="number" value="0.0" step="0.02"></label><br>
+      <label>ColorLine last stop offset: <input id="lastStopOffset" type="number" value="1.0" step="0.02"></label>
+      <br><br>
+      
+      Extend mode:<br>
+      <input type="radio" id="extendPad" name="extendMode" value="pad" checked><label for="extendPad">Pad</label><br>
+      <input type="radio" id="extendRepeat" name="extendMode" value="repeat" disabled><label for="extendRepeat" >Repeat</label><br>
+      <input type="radio" id="extendMirror" name="extendMode" value="mirror" disabled><label for="extendMirror" >Mirror</label>
+      <br><br>
+      
+      
+      Gradient geometry type: <span id="geometryType">?</span><br>
+      Tip is toward Circle 1: <span id="tipTowardCirc1"></span><br>
+      Tip location: <span id="tipLocation">?</span><br>
+      <div class="hide">Direction between circle centers: <span id="dirCircles">0</span><br></div>
+      <div class="hide">Direction of tip: <span id="dirTip"></span><br></div>
+      <div class="hide">Circle 0 tangent directions: <span id="circ0TgtDir1">?</span>, <span id="circ0TgtDir2">?</span><br></div>
+      Inside or outside of cone? <span id="inOrOut">?</span><br>
+      <div class="hide">Centerline bbox points: <span id="centerlineBBoxPoints">?</span><br></div>
+      <br>
+      Mouse position: <span id="mousePos">?</span><br>
+      <br>
+      <label for="applyClip">Apply clip to gradient:</label><input type="checkbox" id="applyClip"><br>
+      <label for="drawOverlays">Draw overlays:</label><input type="checkbox" id="drawOverlays"><br>
+      <label for "altCalc">Use alternate calculation:</label><input type="checkbox" id="altCalc"><br>
+      <br>
+      <input type="button" id="reset" value="Reset">
+    </div>
+    
+    <canvas id="cvs" width="1820" height="820"></canvas>
+    <script>
+      
+/*
+ * GLOBALS - gradient parameters and defaults
+*/
+const GLOBALS = {};
+GLOBALS.circ0X = 650;
+GLOBALS.circ0Y = 410;
+GLOBALS.circ0Rad = 40;
+GLOBALS.circ1X = 950;
+GLOBALS.circ1Y = 310;
+GLOBALS.circ1Rad = 60;
+GLOBALS.beginStopColor = "#6080FF";
+GLOBALS.beginStopOffset = 0;
+GLOBALS.endStopColor = "red";
+GLOBALS.endStopOffset = 1;
+GLOBALS.bbox = {};
+GLOBALS.bbox.x = 10;
+GLOBALS.bbox.y = 10;
+GLOBALS.bbox.width = 1800;
+GLOBALS.bbox.height = 800;
+
+const GRADIENT_GEOMETRY = {
+  CYLINDER: "cylinder",
+  CONE: "cone",
+  CONCENTRIC: "concentric"
+};
+
+var gCirc0 = {x: GLOBALS.circ0X, y: GLOBALS.circ0Y, rad: GLOBALS.circ0Rad, path:null};
+
+
+/*
+ * EVENT HANDLERS
+ */
+
+function initialize() {
+  document.getElementById("r0Dflt").addEventListener("input", update);
+  document.getElementById("r0Delta").addEventListener("input", update);
+  document.getElementById("r1Dflt").addEventListener("input", update);
+  document.getElementById("r1Delta").addEventListener("input", update);
+  document.getElementById("firstStopOffset").addEventListener("input", update);
+  document.getElementById("lastStopOffset").addEventListener("input", update);
+  document.getElementById("extendPad").addEventListener("input", update);
+  document.getElementById("extendRepeat").addEventListener("input", update);
+  document.getElementById("extendMirror").addEventListener("input", update);
+  document.getElementById("applyClip").addEventListener("input", update);
+  document.getElementById("drawOverlays").addEventListener("input", update);
+  document.getElementById("altCalc").addEventListener("input", update);
+  
+  document.getElementById("reset").addEventListener("click", reset);
+  document.getElementById("cvs").addEventListener("mousemove", handleMouseMove);
+  document.getElementById("cvs").addEventListener("click", handleClick);
+  
+  gCirc0.path = new Path2D();
+  gCirc0.path.arc(gCirc0.x, gCirc0.y, gCirc0.rad, 0, 2 * Math.PI);
+  
+  update();
+}
+
+function handleMouseMove(e) {
+  var canvasRect = document.getElementById("cvs").getBoundingClientRect();
+  var x = e.offsetX;
+  var y = e.offsetY;
+  document.getElementById("mousePos").textContent = "(x: " + x + ", y: " + y + ")";
+}
+function handleClick(e) {
+  gCirc0.x = e.offsetX;
+  gCirc0.y = e.offsetY;
+  update();
+}
+
+
+function reset() {
+  gCirc0.x = GLOBALS.circ0X;
+  gCirc0.y = GLOBALS.circ0Y;
+  document.getElementById("r0Dflt").value = GLOBALS.circ0Rad;
+  document.getElementById("r0Delta").value = 0;
+  document.getElementById("r1Dflt").value = GLOBALS.circ1Rad;
+  document.getElementById("r1Delta").value = 0;
+  document.getElementById("firstStopOffset").value = GLOBALS.beginStopOffset;
+  document.getElementById("lastStopOffset").value = GLOBALS.endStopOffset;
+  update();
+  initialize();
+}
+
+
+function update() {
+  // get settings -- clamp radii to >= 0
+  const circ0Rad_dfltVal = parseInt(document.getElementById("r0Dflt").value);
+  const circ0Rad_deltaVal = parseInt(document.getElementById("r0Delta").value);
+  var circ0Rad = circ0Rad_dfltVal + circ0Rad_deltaVal;
+  if (circ0Rad < 0) { circ0Rad = 0; }
+
+  const circ1Rad_dfltVal = parseInt(document.getElementById("r1Dflt").value);
+  const circ1Rad_deltaVal = parseInt(document.getElementById("r1Delta").value);
+  var circ1Rad = circ1Rad_dfltVal + circ1Rad_deltaVal;
+  if (circ1Rad < 0) { circ1Rad = 0; }
+  
+  var firstStopOffset = parseFloat(document.getElementById("firstStopOffset").value);
+  var lastStopOffset = parseFloat(document.getElementById("lastStopOffset").value);
+
+  const extendMode = document.querySelectorAll("input[name=extendMode]:checked")[0].value;
+  
+  // reflect radius settings in UI
+  document.getElementById("circ0Rad_deltaVal").textContent = circ0Rad_deltaVal;
+  document.getElementById("circ0Rad").textContent = circ0Rad;
+  document.getElementById("circ1Rad_deltaVal").textContent = circ1Rad_deltaVal;
+  document.getElementById("circ1Rad").textContent = circ1Rad;
+
+
+  // set gradient geometry elements
+
+  // radii must be non-negative
+  if (circ0Rad < 0 || circ1Rad < 0) { throw "invalid argument"; }
+  // const circ0 = { x: GLOBALS.circ0X, y: GLOBALS.circ0Y, rad: circ0Rad };
+  const circ0 = { x: gCirc0.x, y: gCirc0.y, rad: circ0Rad };
+  const circ1 = { x: GLOBALS.circ1X, y: GLOBALS.circ1Y, rad: circ1Rad };
+
+  // report some analysis of geometry
+  reportGeometryDetails(circ0, circ1);
+  
+
+  // DRAW GRADIENT
+
+  var canvas = document.getElementById("cvs");
+  var ctx = canvas.getContext("2d");
+  ctx.reset();
+  
+  // put first/last stops in order
+  var beginStopOffset, endStopOffset, beginStopColor, endStopColor;
+  if (firstStopOffset > lastStopOffset) {
+    beginStopOffset = lastStopOffset;
+    endStopOffset = firstStopOffset;
+    beginStopColor = GLOBALS.endStopColor;
+    endStopColor = GLOBALS.beginStopColor;
+  }
+  else {
+    beginStopOffset = firstStopOffset;
+    endStopOffset = lastStopOffset;
+    beginStopColor = GLOBALS.beginStopColor;
+    endStopColor = GLOBALS.endStopColor;
+  }
+  
+  const gradientGeometry = getGradientGeometry(circ0, circ1);
+  // if not a cylinder, we'll need to refer to the tip
+  var tip, tipIsTowardCirc1;
+  if (gradientGeometry != GRADIENT_GEOMETRY.CYLINDER) {
+    tip = getConeTip(circ0, circ1);
+    tipIsTowardCirc1 = isTipTowardCirc1(circ0, circ1);
+  }
+  
+  switch (extendMode) {
+      case "pad":
+        // If begin/end stops are both in range [0, 1], can just pass those on.
+        // If either stop is outside that range but not beyond the tip of the cone,
+        // then calculate an alternate circle and normalize the stops to [0, 1].
+        // But if a stop is beyond the tip, then use the tip point as an alternate
+        // circle and interpolate a color. If BOTH stops are beyond the tip, use 
+        // the color from the opposite end for both stops.
+      
+        drawRadialGradientPadExtend(ctx, circ0, circ1, beginStopOffset, beginStopColor, endStopOffset, endStopColor);
+      
+  }
+
+//  const repetitions = getConeSectionRepetitions(circ0, circ1, GLOBALS.bbox, GLOBALS.beginStopOffset, GLOBALS.endStopOffset);
+  
+//  drawRadialGradient(ctx, circ0, circ1, document.getElementById("applyClip").checked, false);
+  
+  // DRAW OVERLAYS
+  if (document.getElementById("drawOverlays").checked) {
+    drawPrimaryConeSectionOverlays(ctx, circ0, circ1, GLOBALS.bbox, beginStopOffset, endStopOffset);
+  }
+
+} // end update()
+
+
+function drawRadialGradientPadExtend(context, circ0, circ1, beginStopOffset, beginStopColor, endStopOffset, endStopColor) {
+  // assumed: beginStopOffset <= endStopOffset
+  
+  var circ0Alt, circ1Alt, beginStopOffsetAlt, endStopOffsetAlt;
+  
+  if (getGradientGeometry(circ0, circ1) == GRADIENT_GEOMETRY.CYLINDER) {
+    // For a cylinder, we can just project circles to align with begin/end stop offsets
+    // and then normalize the color line to [0, 1]. The only problem case is when begin
+    // and end offsets are the same.
+    if (beginStopOffset == endStopOffset) {
+      // project circles that straddle the stops evenly
+      circ0Alt = getProjectedCircleAtColorLineOffset(circ0, circ1, beginStopOffset - 1);
+      circ1Alt = getProjectedCircleAtColorLineOffset(circ0, circ1, beginStopOffset + 1);
+      beginStopOffsetAlt = 0.5;
+      endStopOffsetAlt = 0.5;
+    }
+    else { // begin/end offsets are different
+      // project circles to begin/end
+      circ0Alt = getProjectedCircleAtColorLineOffset(circ0, circ1, beginStopOffset);
+      circ1Alt = getProjectedCircleAtColorLineOffset(circ0, circ1, endStopOffset);
+      beginStopOffsetAlt = 0;
+      endStopOffsetAlt = 1;
+    }
+  } // end: if cylinder
+  
+  else { // gradient geometry is cone / concentric
+    // The locations of the begin/end stop offsets in relation to the tip of the cone
+    // matter. If neither is beyond the tip, then we can normalize the color line to
+    // those and project circles that align. If both are beyond the tip, then we can
+    // normalize the color line to the original circles and set the colors the same.
+    // If only one is beyond the tip, we'll need to interpolate a color at the tip
+    // and create a normalized color line with that.
+    //
+    // If begin/end offsets are the same, those cases will require special treatment.
+    
+    const tip = getConeTip(circ0, circ1);
+    const tipIsTowardCirc1 = isTipTowardCirc1(circ0, circ1);
+    
+    if (beginStopOffset == endStopOffset) {
+      if ((tipIsTowardCirc1 && beginStopOffset >= tip.offset) || (!tipIsTowardCirc1 && endStopOffset <= tip.offset)) {
+        // begin/end both beyond tip: use same color for both stops
+        circ0Alt = circ0;
+        circ1Alt = circ1;
+        beginStopOffsetAlt = 0;
+        endStopOffsetAlt = 1;
+        if (tipIsTowardCirc1) {
+          endStopColor = beginStopColor;
+        }
+        else {
+          endStopColor = beginStopColor;
+        }
+      }
+      else { // stops are same but not beyond tip
+        // normalize using tip and a projected circle twice the distance from tip
+        var dist = tip.offset - endStopOffset;
+        if (tipIsTowardCirc1) {
+          circ0Alt = getProjectedCircleAtColorLineOffset(circ0, circ1, endStopOffset - dist);
+          circ1Alt = tip;
+        }
+        else {
+          circ0Alt = tip;
+          circ1Alt = getProjectedCircleAtColorLineOffset(circ0, circ1, beginStopOffset - dist);
+        }
+        beginStopOffsetAlt = 0.5;
+        endStopOffsetAlt = 0.5;
+      }
+    } // end: begin/end offsets are the same
+    
+    else { // beginStopOffset != endStopOffset
+      // Still need to check if one, both, or neither begin/end offsets are beyond tip.
+      if ((tipIsTowardCirc1 && beginStopOffset >= tip.offset) || (!tipIsTowardCirc1 && endStopOffset <= tip.offset)) {
+        // THIS BLOCK IS IDENTICAL TO ONE ABOVE FOR BEGIN/END STOPS ARE SAME
+        // begin/end both beyond tip: use begin color for both stops
+        circ0Alt = circ0;
+        circ1Alt = circ1;
+        beginStopOffsetAlt = 0;
+        endStopOffsetAlt = 1;
+        if (tipIsTowardCirc1) {
+          endStopColor = beginStopColor;
+        }
+        else {
+          beginStopColor = endStopColor;
+        }
+      }
+      else if ((tipIsTowardCirc1 && endStopOffset <= tip.offset) || (!tipIsTowardCirc1 && beginStopOffset >= tip.offset)) {
+        // neither begin or end is beyond tip: just normalize to begin/end offsets
+        circ0Alt = getProjectedCircleAtColorLineOffset(circ0, circ1, beginStopOffset);
+        circ1Alt = getProjectedCircleAtColorLineOffset(circ0, circ1, endStopOffset);
+        beginStopOffsetAlt = 0;
+        endStopOffsetAlt = 1;
+      }
+      else if (tipIsTowardCirc1) { // end offset after tip
+        endStopColor = interpolateColor(beginStopOffset, beginStopColor, endStopOffset, endStopColor, tip.offset);
+        
+        circ0Alt = getProjectedCircleAtColorLineOffset(circ0, circ1, beginStopOffset);
+        circ1Alt = tip;
+        beginStopOffsetAlt = 0;
+        endStopOffsetAlt = 1;
+      }
+      else { // begin offset before tip
+        beginStopColor = interpolateColor(beginStopOffset, beginStopColor, endStopOffset, endStopColor, tip.offset);
+        
+        circ0Alt = tip;
+        circ1Alt = getProjectedCircleAtColorLineOffset(circ0, circ1, endStopOffset);
+        beginStopOffsetAlt = 0;
+        endStopOffsetAlt = 1;
+      }
+      
+    } // end: if begin==end, else
+  } // end: if cylinder, else
+  
+  drawRadialGradient(context, circ0Alt, circ1Alt, 
+                     beginStopOffsetAlt, beginStopColor, 
+                     endStopOffsetAlt, endStopColor,
+                     document.getElementById("applyClip").checked);
+} //  end drawRadialGradientPadExtend()
+
+
+/*
+ * FORM HELPERS
+ */
+
+function reportGeometryDetails(circ0, circ1) {
+  document.getElementById("circ0DefaultX").textContent = circ0.x;
+  document.getElementById("circ0DefaultY").textContent = circ0.y;
+  document.getElementById("circ1DefaultX").textContent = circ1.x;
+  document.getElementById("circ1DefaultY").textContent = circ1.y;
+  document.getElementById("geometryType").textContent = getGradientGeometry(circ0, circ1);
+  document.getElementById("tipTowardCirc1").textContent = isTipTowardCirc1(circ0, circ1);
+  document.getElementById("dirCircles").textContent = getDirectionBetweenPoints(circ0, circ1);
+  if (circ0.rad == circ1.rad) {
+    document.getElementById("dirTip").textContent = "N/A";
+  } else {
+    var tip = getConeTip(circ0, circ1);
+    var str = "(x: " + tip.x + ", y: " + tip.y + ", offset: " + tip.offset + ")";
+    document.getElementById("tipLocation").textContent = str;
+    document.getElementById("dirTip").textContent = getDirectionBetweenPoints(circ0, tip);
+  }
+  var tangentPointDirections = getDirectTangentPointAnglesOfCircles(circ0, circ1);
+  document.getElementById("circ0TgtDir1").textContent =
+    tangentPointDirections[0][0];
+  document.getElementById("circ0TgtDir2").textContent =
+    tangentPointDirections[0][1];
+  
+  if (isCircleInsideOtherCircle(circ0, circ1)) {
+    document.getElementById("inOrOut").textContent = "inside";
+  }
+  else {
+    document.getElementById("inOrOut").textContent = "outside";
+  }
+  var centerlineBBoxPoints = getCenterLineBBoxPoints(circ0, circ1, GLOBALS.bbox);
+  if (centerlineBBoxPoints) {
+    var str = '(x: ' + centerlineBBoxPoints[0].x + ', y: ' + centerlineBBoxPoints[0].y + ', offset: ' + centerlineBBoxPoints[0].offset + ')';
+    str += ', (x: ' + centerlineBBoxPoints[1].x + ', y: ' + centerlineBBoxPoints[1].y + ', offset: ' + centerlineBBoxPoints[1].offset + ')';
+    document.getElementById("centerlineBBoxPoints").textContent = str;
+  }
+  else {
+    document.getElementById("centerlineBBoxPoints").textContent = "n/a";
+  }
+} // end reportGeometryDetails()
+
+
+/*
+ * DRAWING HELPERS
+ */
+
+function interpolateColor(offset1, color1, offset2, color2, interpolationOffset) {
+  // Using Color.js (https://colorjs.io/).
+  // color1, color2 are RGB(A), hex or CSS color term strings
+  let color = new Color(color1);
+  let colorRange = color.range(color2, {space:"srgb-linear", outputSpace:"srgb"});
+  let offset = Math.abs((interpolationOffset - offset1) / (offset2 - offset1));
+  let interpolatedColor = colorRange(offset);
+  return interpolatedColor.toString({format:"hex"});
+}
+
+
+
+function drawRadialGradient(context, circ0, circ1, beginStopOffset, beginColor, endStopOffset, endColor, clip) {
+  // Uses createRadialGradient to paint a gradient. That API requires stops set
+  // within the range [0, 1].
+  
+  // set clip
+  context.save();
+  if (clip) {
+    var coneSection = getConeSection(circ0, circ1);
+    context.clip(coneSection);
+  }
+
+  var grd = context.createRadialGradient(circ0.x, circ0.y, circ0.rad, circ1.x, circ1.y, circ1.rad);
+  grd.addColorStop(beginStopOffset, beginColor);
+  grd.addColorStop(endStopOffset, endColor);
+  context.fillStyle = grd;
+  context.fillRect(GLOBALS.bbox.x, GLOBALS.bbox.y, GLOBALS.bbox.width, GLOBALS.bbox.height);
+  
+  // clear the clip
+  context.restore();
+}
+
+
+function getConeSection(circ0, circ1) {
+  const coneSection = new Path2D();
+  
+  if (getGradientGeometry(circ0, circ1) == GRADIENT_GEOMETRY.CONCENTRIC) {
+    if (circ0.rad > 0) {
+      coneSection.arc(circ0.x, circ0.y, circ0.rad, 0, 2 * Math.PI);
+    }
+    moveTo(circ1.x + circ1.rad, circ1.y);
+    if (circ1.rad > 0) {
+      coneSection.arc(circ1.x, circ1.y, circ1.rad, 0, 2 * Math.PI, true);
+    }
+  }
+  else {
+    var tangentPointDirections = getDirectTangentPointAnglesOfCircles(circ0, circ1);
+    var tangentPoints = getDirectTangentPointsOfCircles(circ0, circ1);
+
+    if (circ0.rad > 0) {
+      coneSection.arc(
+        circ0.x, circ0.y, circ0.rad,
+        tangentPointDirections[0][1], // start angle
+        tangentPointDirections[0][0], // end angle
+      );
+    }
+    else {
+      coneSection.moveTo(circ0.x, circ0.y);
+    }
+    if (circ1.rad > 0) {
+      coneSection.lineTo(tangentPoints[1][0].x, tangentPoints[1][0].y);
+      coneSection.arc(
+        circ1.x, circ1.y, circ1.rad,
+        tangentPointDirections[1][0],
+        tangentPointDirections[1][1],
+        true // counterclockwise
+      );
+    }
+    else {
+      coneSection.lineTo(circ1.x, circ1.y);
+    }
+    coneSection.closePath();
+  }  // end if(getGradientGeometry...) else
+  return coneSection;
+}
+
+
+function drawConeSectionOutline(context, circ0, circ1, strokeWidth, strokeColor) {
+  const coneSection = getConeSection(circ0, circ1);
+  drawPathOutline(context, coneSection, strokeWidth, strokeColor, [5, 10]);
+}
+
+function drawPathOutline(context, path, strokeWidth, strokeColor, lineDash) {
+  context.save();
+  context.lineWidth = strokeWidth;
+  context.setLineDash(lineDash);
+  context.strokeStyle = strokeColor;
+  context.stroke(path);
+  context.restore();
+}
+
+function drawPrimaryConeSectionOverlays(context, circ0, circ1, bbox, beginStopOffset, endStopOffset) {
+  context.save();
+  
+  // draw circles
+  context.beginPath();
+  context.arc(circ0.x, circ0.y, circ0.rad, 0, 2 * Math.PI);
+  context.stroke();
+
+  context.beginPath();
+  context.arc(circ1.x, circ1.y, circ1.rad, 0, 2 * Math.PI);
+  context.stroke();
+
+  var gradientGeometry = getGradientGeometry(circ0, circ1);
+  
+  // draw the center line
+  var centerlineBBoxPoints = getCenterLineBBoxPoints(circ0, circ1, bbox);
+  if (centerlineBBoxPoints) {
+    const clPath = new Path2D();
+    clPath.moveTo(centerlineBBoxPoints[0].x, centerlineBBoxPoints[0].y);
+    clPath.lineTo(centerlineBBoxPoints[1].x, centerlineBBoxPoints[1].y);
+    drawPathOutline(context, clPath, 1, "black", [4, 20]);
+    drawSquareAtPoint(context, centerlineBBoxPoints[0], 4, "red");
+    drawSquareAtPoint(context, centerlineBBoxPoints[1], 4, "cyan");
+  }
+  
+  // draw small square at the tip of the cone
+  if (gradientGeometry != GRADIENT_GEOMETRY.CYLINDER) {
+    var tip = getConeTip(circ0, circ1);
+    drawBlackSquareAtPoint(context, tip, 4);
+  }
+
+  // draw small squares at the tangent points of circ0, circ1
+  if (gradientGeometry != GRADIENT_GEOMETRY.CYLINDER) {
+    var tangentPoints = getDirectTangentPointsOfCircles(circ0, circ1);
+    drawSquareAtPoint(context, tangentPoints[0][0], 4, "red");
+    drawSquareAtPoint(context, tangentPoints[0][1], 4, "cyan");
+    drawSquareAtPoint(context, tangentPoints[1][0], 4, "red");
+    drawSquareAtPoint(context, tangentPoints[1][1], 4, "cyan");
+  }
+  
+  // draw projected circles and center line for begin and end color stops
+  var beginStopProjectedCircle = getProjectedCircleAtColorLineOffset(circ0, circ1, beginStopOffset);
+  if (beginStopProjectedCircle.rad >= 0) {
+    const circlePath = new Path2D();
+    circlePath.arc(beginStopProjectedCircle.x, beginStopProjectedCircle.y, beginStopProjectedCircle.rad, 0, 2 * Math.PI);
+    drawPathOutline(context, circlePath, 2, "black", [2, 6]);
+  }
+  var endStopProjectedCircle = getProjectedCircleAtColorLineOffset(circ0, circ1, endStopOffset);
+  if (endStopProjectedCircle.rad >= 0) {
+    const circlePath = new Path2D();
+    circlePath.arc(endStopProjectedCircle.x, endStopProjectedCircle.y, endStopProjectedCircle.rad, 0, 2 * Math.PI);
+    drawPathOutline(context, circlePath, 2, "black", [2, 6]);
+  }
+  const colorLinePath = new Path2D();
+  colorLinePath.arc(beginStopProjectedCircle.x, beginStopProjectedCircle.y, 2, 0, 2 * Math.PI);
+  colorLinePath.arc(endStopProjectedCircle.x, endStopProjectedCircle.y, 2, 0, 2 * Math.PI);
+  drawPathOutline(context, colorLinePath, 2, "black", [2, 6]);
+
+  // draw a yellow line around the cone section for the two circles
+  drawConeSectionOutline(context, circ0, circ1, 3, "#FFFF00");
+  
+  context.restore();
+}
+
+function drawRedSquareAtPoint(context, point, size) {
+  drawSquareAtPoint(context, point, size, "red");
+}
+
+function drawBlackSquareAtPoint(context, point, size) {
+  drawSquareAtPoint(context, point, size, "black");
+}
+
+function drawSquareAtPoint(context, point, size, color) {
+  context.fillStyle = color;
+  context.fillRect(point.x - size / 2, point.y - size / 2, size, size);
+}
+
+
+/*
+ * GEOMETRY HELPERS
+ */
+
+// in Canvas, angular directions are clockwise from the x-axis, in radians
+
+function getGradientGeometry(circ0, circ1) {
+  if (circ0.rad == circ1.rad) {
+    return GRADIENT_GEOMETRY.CYLINDER; 
+  }
+  else if (isCircleInsideOtherCircle(circ0, circ1) || isCircleInsideOtherCircle(circ1, circ0)) {
+    return GRADIENT_GEOMETRY.CONCENTRIC;
+  }
+  else {
+    return GRADIENT_GEOMETRY.CONE;
+  }
+}
+
+function getDistance(x0, y0, x1, y1) {
+  return Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+}
+
+function isCircleInsideOtherCircle(circle, otherCircle) {
+  var distance = getDistance(circle.x, circle.y, otherCircle.x, otherCircle.y);
+  return ((distance + circle.rad) < otherCircle.rad);
+}
+
+function isTipTowardCirc1(circ0, circ1) {
+  return (circ1.rad < circ0.rad);
+}
+
+function getConeTip(circ0, circ1) {
+  // takes two circles {x, y, rad} and returns a degenerate cirlce 
+  // with color line offset {x, y, rad=0, offset}
+  // assumes radii are non-negative and unequal
+
+  if (circ0.rad < 0 || circ1.rad < 0) {
+    throw "invalid arguments";
+  }
+  if (circ0.rad == circ1.rad) {
+    throw "Circular cylinder";
+  }
+
+  var tip = {};
+  
+  if (document.getElementById("altCalc").checked) {
+    var offset = circ0.rad / (circ0.rad - circ1.rad);
+    tip = getProjectedCircleAtColorLineOffset(circ0, circ1, offset);
+  }
+  else {
+    tip.x = circ0.x - (circ0.rad * (circ1.x - circ0.x)) / (circ1.rad - circ0.rad);
+    tip.y = circ0.y - (circ0.rad * (circ1.y - circ0.y)) / (circ1.rad - circ0.rad);
+    tip.rad = 0;
+    tip.offset = (tip.x - circ0.x) / (circ1.x - circ0.x);
+  }
+  return tip;
+}
+
+function getCenterLineBBoxPoints(circ0, circ1, bbox) {
+  // takes two circles {x, y, rad} and a bounding box rect 
+  // {x, y, width, height} and returns two points with color 
+  // line offset {x, y, offset} for the points where the line 
+  // passing through the circle centers intersects the bounding
+  // box. The points are in order: toward circ0, toward circ1.
+  //
+  // If the circle centers are the same, returns undefined.
+  
+  var point1 = {};
+  var point2 = {};
+  var slope;
+  
+  if (circ0.x == circ1.x && circ0.y == circ1.y) { return; }
+  
+  if (circ0.x == circ1.x) {
+    point1.x = circ0.x;
+    point1.y = bbox.y;
+    point1.offset = (bbox.y - circ0.y) / (circ1.y - circ0.y);
+    point2.x = circ0.x;
+    point2.y = bbox.y + bbox.height;
+    point2.offset = (bbox.y + bbox.height - circ0.y) / (circ1.y - circ0.y);
+    if (circ0.y < circ1.y) {
+      return [point1, point2];
+    }
+    else {
+      return [point2, point1];
+    }
+  } // end (circ0.x == circ1.x)
+  
+  if (circ0.y == circ1.y) {
+    point1.y = circ0.y;
+    point1.x = bbox.x;
+    point1.offset = (bbox.x - circ0.x) / (circ1.x - circ0.x);
+    point2.y = circ0.y;
+    point2.x = bbox.x + bbox.width;
+    point2.offset = (bbox.x + bbox.width - circ0.x) / (circ1.x - circ0.x);
+    if (circ0.x < circ1.x) {
+      return [point1, point2];
+    }
+    else {
+      return [point2, point1];
+    }
+  } // end (circ0.x == circ1.x)
+  
+  else {
+    slope = (circ1.y - circ0.y) / (circ1.x - circ0.x);
+    
+    // get x for y = bbox.y; adjust x and y to get inside bbox
+    point1.y = bbox.y;
+    point1.x = circ0.x + (point1.y - circ0.y) / slope;
+    if (point1.x < bbox.x) {
+      point1.x = bbox.x;
+      point1.y = circ0.y + slope * (point1.x - circ0.x);
+    }
+    else if (point1.x > (bbox.x + bbox.width)) {
+      point1.x = bbox.x + bbox.width;
+      point1.y = circ0.y + slope * (point1.x - circ0.x);
+    }
+    point1.offset = (point1.x - circ0.x) / (circ1.x - circ0.x);
+    
+    // get x for y = bbox.y + bbox.height; adjust x and y to get inside bbox
+    point2.y = bbox.y + bbox.height;
+    point2.x = circ0.x +  (point2.y - circ0.y) / slope;
+    if (point2.x < bbox.x) {
+      point2.x = bbox.x;
+      point2.y = circ0.y + slope * (point2.x - circ0.x);
+    }
+    else if (point2.x > (bbox.x + bbox.width)) {
+      point2.x = bbox.x + bbox.width;
+      point2.y = circ0.y + slope * (point2.x - circ0.x);
+    }
+    point2.offset = (point2.x - circ0.x) / (circ1.x - circ0.x);
+    
+    if ((circ0.x < circ1.x && point1.x < point2.x) || (circ0.x > circ1.x && point1.x > point2.x)) {
+      return [point1, point2];
+    }
+    else {
+      return [point2, point1];
+    }
+  } // end else
+}
+
+function getProjectedCircleAtColorLineOffset(circ0, circ1, offset) {
+  // takes two circles {x, y, rad} and an offset, and returns the
+  // projected circle for the geometry defined by the first two
+  // circles at the specified color line offset, assuming the
+  // offsets of the first two circles are 0 and 1.
+  //
+  // NOTE: If the projected circle is beyond the tip of the cone,
+  // the radius will be < 0, which will create an error if used
+  // in a canvas drawing operation.
+  
+  var projectedCircle = {};
+  projectedCircle.x = circ0.x + offset * (circ1.x - circ0.x);
+  projectedCircle.y = circ0.y + offset * (circ1.y - circ0.y);
+  projectedCircle.rad = circ0.rad + offset * (circ1.rad - circ0.rad);
+  projectedCircle.offset = offset;
+  return projectedCircle;
+}
+
+function getDirectionBetweenPoints(point1, point2) {
+  // takes two points {x, y} and returns a direction angle in radians
+  return Math.atan2(point2.y - point1.y, point2.x - point1.x);
+}
+
+function getCircleArcAnglesForTangentsFromPoint(circle, refPoint, invert) {
+  // Takes a circle {x, y, rad} and a point {x, y}, and
+  // returns an array of two angles, in radians, for the
+  // directions of the direct tangent points.
+  //
+  // Invert is a boolean: if true, the lower angle is first.
+
+  if (circle.rad < 0 || circle.rad < 0) {
+    throw "invalid argument";
+  }
+
+  var h = getDistance(circle.x, circle.y, refPoint.x, refPoint.y);
+  var subtendedAngle = Math.acos(circle.rad / h);
+
+  // get direction from circle center to refPoint
+  var dirPoint = getDirectionBetweenPoints(circle, refPoint);
+
+  // the directions of the two tangent points are the same
+  // angular distance either side of the direction of the point
+  var inv = invert ? -1: 1;
+  return [dirPoint + subtendedAngle * inv, dirPoint - subtendedAngle * inv];
+}
+
+function getCircleArcPoint(circle, arcAngle) {
+  // takes a circle {x, y, rad} and a direction angle and
+  // returns a point {x, y} for the point on the circle in
+  // that direction from the center
+
+  return {
+    x: circle.x + circle.rad * Math.cos(arcAngle),
+    y: circle.y + circle.rad * Math.sin(arcAngle)
+  };
+}
+
+function getCircleArcPoints(circle, refDirection, arcAngle, invert) {
+  // takes a circle {x, y, rad}, a reference direction from
+  // the center, and an arc angle, and returns two points on
+  // the circle with an angular distance from the reference
+  // direction +- arcAngle
+  //
+  // Invert is a boolean: if true, the lower angle is first.
+
+  var inv = invert ? -1: 1;
+  return [
+    getCircleArcPoint(circle, refDirection + arcAngle * inv),
+    getCircleArcPoint(circle, refDirection - arcAngle * inv)
+  ];
+}
+
+function getCircleTangentPointsFromPoint(circle, refPoint, invert) {
+  // takes a circle {x, y, rad} and a point {x, y}, and
+  // returns an array of two points
+  //
+  // Invert is a boolean, passed through to 
+  // getCircleArcAnglesForTangentsFromPoint()
+
+  if (circle.rad < 0 || circle.rad < 0) {
+    throw "invalid argument";
+  }
+
+  var tangentPointArcAngles = getCircleArcAnglesForTangentsFromPoint(circle, refPoint, invert);
+
+  var arcPoint1 = getCircleArcPoint(circle, tangentPointArcAngles[0]);
+  var arcPoint2 = getCircleArcPoint(circle, tangentPointArcAngles[1]);
+
+  return [arcPoint1, arcPoint2];
+}
+
+function getDirectTangentPointsOfCircles(circ0, circ1) {
+  // takes two circles {x, y, rad} and returns a 2D array
+  // of points {x, y} for two tangent points on the two
+  // circles
+  //
+  // assumes radii are non-negative and that neither circle
+  // is wholly contained inside the other
+
+  if (circ0.rad < 0 || circ1.rad < 0) {
+    throw "invalid argument";
+  }
+
+  var tangents0, tangents1;
+  if (circ0.rad == circ1.rad) {
+    // special case if circles have same radii
+    var dir = getDirectionBetweenPoints(circ0, circ1);
+    tangents0 = getCircleArcPoints(circ0, dir, Math.PI / 2, true);
+    tangents1 = getCircleArcPoints(circ1, dir, Math.PI / 2, true);
+  } else {
+    // get the cone tip point
+    var tip = getConeTip(circ0, circ1);
+
+    // get the tangent points for the two circles
+    var invert = isTipTowardCirc1(circ0, circ1);
+    tangents0 = getCircleTangentPointsFromPoint(circ0, tip, invert);
+    tangents1 = getCircleTangentPointsFromPoint(circ1, tip, invert);
+  }
+  return [tangents0, tangents1];
+}
+
+function getDirectTangentPointAnglesOfCircles(circ0, circ1) {
+  // takes two circles {x, y, rad} and returns a 2D array of
+  // angles for the directions of the tangent points of each
+  // circle for the direct tangents between the two circles
+  //
+  // assumes radii are non-negative and that neither circle
+  // is wholly contained inside the other
+
+  if (circ0.rad < 0 || circ1.rad < 0) {
+    throw "invalid argument";
+  }
+
+  var tangents0, tangents1;
+  if (circ0.rad == circ1.rad) {
+    // special case if circles have same radii
+    var dir = getDirectionBetweenPoints(circ0, circ1);
+    tangents0 = [dir - Math.PI / 2, dir + Math.PI / 2];
+    tangents1 = [dir - Math.PI / 2, dir + Math.PI / 2];
+  } else {
+    // get the cone tip point
+    var tip = getConeTip(circ0, circ1);
+
+    // get the tangent point angles for the two circles
+    var invert = isTipTowardCirc1(circ0, circ1);
+    tangents0 = getCircleArcAnglesForTangentsFromPoint(circ0, tip, invert);
+    tangents1 = getCircleArcAnglesForTangentsFromPoint(circ1, tip, invert);
+  }
+  return [tangents0, tangents1];
+}
+
+
+
+    </script>
+</body>
+</html>

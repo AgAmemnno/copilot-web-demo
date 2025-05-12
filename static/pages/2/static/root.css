@@ -1,0 +1,63 @@
+/*
+1. 基本方針
+
+最大スケール = 1.0: transform: scale() を使う場合でも、最大値を1.0とし、要素を本来のサイズ以上に拡大しない「縮小中心」設計を基本とする。
+
+Focus State 基準: 一面が正面に来てスケールが1.0になった状態（Focus State）を基準（本来のサイズ）として、CSS変数を定義する。
+
+CSS変数による集中管理: サイズ、スペーシング、フォントサイズなどの主要な値をCSS変数で管理し、一貫性と保守性を高める。
+
+命名規則: 変数の目的やスコープが明確になるように、接頭辞などを用いた命名規則を採用する。
+
+
+2. 命名規則案
+
+--focus- 接頭辞: Focus State（スケール1.0）における基準値を示す変数。
+
+--layout- 接頭辞: 面（コンテナ）自体のレイアウトに関する変数。
+
+--content- 接頭辞: 面内部のコンテンツ要素に関する変数。
+
+--theme- 接頭辞: 色やフォントファミリーなど、全体的なテーマに関わる変数（既存の定義があればそれを活用）。
+
+--scale-factor (仮): 現在のスケール値（0.4〜1.0など）を保持する変数（これは後のスクロールシステムでJSから更新される想定）。
+
+*/
+
+:root { 
+
+    /* --- 面コンテナ自体のレイアウト (Focus State = Scale 1.0) --- */
+    --layout-face-width: 80vw;       /* 例: ビューポート幅の80% */
+    --layout-face-max-width: 1200px; /* 例: 最大幅 */
+    --layout-face-height: 70vh;      /* 例: ビューポート高さの70% */
+    --layout-face-padding: 2rem;     /* 例: 内部のパディング */
+    --layout-face-bg-color: var(--theme-background-secondary, #ffffff); /* 背景色 (テーマ変数参照) */
+    --layout-face-border-radius: 10px;
+  
+    /* --- 内部コンテンツの基準値 (Focus State = Scale 1.0) --- */
+  
+    /* タイポグラフィ基準 */
+    --content-font-size-base: 1rem;      /* 基本フォントサイズ (例: 16px) */
+    --content-line-height-base: 1.6;     /* 基本行間 */
+    --content-font-size-h1: calc(var(--content-font-size-base) * 2.5); /* 見出し1 */
+    --content-font-size-h2: calc(var(--content-font-size-base) * 1.8); /* 見出し2 */
+    --content-font-family-base: var(--theme-font-family-body, sans-serif); /* フォント (テーマ変数参照) */
+    --content-text-color: var(--theme-text-primary, #333333); /* テキスト色 */
+  
+    /* スペーシング基準 */
+    --content-space-unit: 1rem;          /* 基本スペーシング単位 (例: 16px) */
+    --content-margin-paragraph: var(--content-space-unit); /* 段落下のマージン */
+    --content-padding-button: calc(var(--content-space-unit) * 0.5) calc(var(--content-space-unit) * 1.5); /* ボタンパディング */
+    --content-gap-grid: calc(var(--content-space-unit) * 1.5); /* グリッドギャップ */
+  
+    /* コンポーネント固有の基準 (例) */
+    --content-card-padding: var(--content-space-unit);
+    --content-card-bg-color: var(--theme-background-tertiary, #f8f9fa);
+    --content-card-border-radius: 5px;
+  
+    /* --- スケール係数 (後のJS更新用) --- */
+    /* 初期値は縮小状態を表す値か、あるいはFocus Stateの1.0でも良い */
+    /* この変数は transform: scale() で使うことを想定 */
+    --scale-factor: 1.0;
+  
+  }
