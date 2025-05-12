@@ -3,107 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>フラクタルフォントスケール テスター V2 (論理プロパティ対応)</title>
+    <title>マージンコントロール付きテキストボックス・コンポーネントテスター</title>
     <style>
         /* Google Fonts の読み込み */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght@8..144,-10..0,25..151,100..1000&display=swap');
 
         :root {
-            --root-font-size: 16px;
-            --fractal-scale-base: 1; 
-            --fractal-scale-ratio: 1.25;
-            /* Default writing mode and direction */
-            --writing-mode: horizontal-tb;
-            --direction: ltr;
-        }
-
-        html {
-            font-family: 'Inter', sans-serif;
-            font-size: var(--root-font-size);
-            writing-mode: var(--writing-mode);
-            direction: var(--direction);
+            --root-font-size: 16px; /* ルートフォントサイズの初期値 */
+            --fractal-scale-base: 1; /* rem単位でのフラクタルスケールの基準 (1rem = ルートフォントサイズ) */
+            --fractal-scale-ratio: 1.25; /* フラクタルスケールの比率 (例: Major Third) */
         }
 
         body {
-            background-color: #f0f4f8;
-            color: #2d3748;
+            font-family: 'Inter', sans-serif;
+            font-size: var(--root-font-size); /* ルートフォントサイズを適用 */
+            background-color: #f0f4f8; /* Light grayish blue */
+            color: #2d3748; /* Dark gray */
             margin: 0;
-            padding: 20px; /* Use physical for body padding as it's viewport relative */
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
         }
 
-        .app-container {
-            margin-block-start: 20px; /* Logical margin */
-            margin-block-end: 20px;
-            margin-inline-start: auto;
-            margin-inline-end: auto;
-            max-inline-size: 64rem; /* Logical max width */
-            background-color: #ffffff;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            border-radius: 0.5rem;
-            padding-block: 1.5rem; /* Logical padding */
-            padding-inline: 1.5rem;
-            box-sizing: border-box;
-        }
-        @media (min-inline-size: 768px) { /* Assuming horizontal writing mode for media query condition */
-            .app-container {
-                padding-block: 2rem;
-                padding-inline: 2rem;
-            }
-        }
-
-        header {
-            margin-block-end: 1rem; 
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: 1.875rem; 
-            line-height: 1.2; /* Adjusted for better visual with various writing modes */
-            font-weight: 700; 
-            color: #2563eb; 
-        }
-
-        header p {
-            color: #4b5563; 
-            margin-block-start: 0.5rem; 
-        }
-        
         .control-panel {
             background-color: #ffffff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-block-end: 30px;
-            inline-size: 100%;
-            max-inline-size: 600px;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 600px;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            border: 1px solid #e2e8f0;
         }
 
         .control-panel h2 {
-            grid-column: 1 / -1; 
+            grid-column: 1 / -1; /* Span all columns */
             font-size: 1.5em;
             font-weight: 700;
-            color: #2c5282; 
-            margin-block-start: 0;
-            margin-block-end: 10px;
-            border-block-end: 2px solid #e2e8f0; 
-            padding-block-end: 10px;
+            color: #2c5282; /* Darker blue */
+            margin-top: 0;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0; /* Light gray border */
+            padding-bottom: 10px;
         }
         
         .control-group {
-            background-color: #f7fafc; 
+            background-color: #f7fafc; /* Very light gray */
             padding: 15px;
             border-radius: 6px;
             border: 1px solid #e2e8f0;
@@ -112,78 +61,41 @@
         .control-group label {
             display: block;
             font-weight: 600;
-            margin-block-end: 8px;
-            color: #4a5568; 
+            margin-bottom: 8px;
+            color: #4a5568; /* Medium gray */
             font-size: 0.9em;
         }
 
         .control-group input[type="number"],
         .control-group select,
         .control-group textarea {
-            inline-size: 100%;
-            padding-block: 10px;
-            padding-inline: 10px;
-            border: 1px solid #cbd5e0; 
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0; /* Light gray border */
             border-radius: 4px;
             box-sizing: border-box;
             font-size: 1em;
-            margin-block-start: 4px;
+            margin-top: 4px;
         }
          .control-group input[type="range"] {
-            inline-size: 100%;
+            width: 100%;
         }
 
 
         .component-display-area {
-            inline-size: 100%;
-            max-inline-size: 800px; 
+            width: 100%;
+            max-width: 800px; /* Display area can be wider */
             padding: 20px;
-            background-color: #e2e8f0; 
+            background-color: #e2e8f0; /* Slightly darker background for contrast */
             border-radius: 8px;
             border: 1px solid #cbd5e0;
-            display: flex; 
+            display: flex; /* To center the component if it's smaller */
             justify-content: center;
-            align-items: flex-start; 
-            min-block-size: 300px; /* Logical min height */
-        }
-        #outputArea {
-            margin-block-start: 1rem;
-        }
-        #outputArea h2 {
-            font-size: 1.5rem; 
-            font-weight: 600; 
-            margin-block-end: 1rem; 
-            color: #1f2937; 
-            border-block-end: 1px solid #e5e7eb;
-            padding-block-end: 0.5rem;
-        }
-        .root-units-display, .scale-display-container {
-            margin-block-end: 1.5rem; 
-            padding: 1rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-        }
-        .unit-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Wider min for better display */
-            gap: 0.75rem;
-        }
-        .unit-info {
-            font-size: 0.875rem; 
-            color: #4b5563; 
-        }
-        .unit-info strong {
-            color: #111827; 
-            min-inline-size: 70px; /* Logical min width */
-            display: inline-block;
-        }
-        .font-mono {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        }
-        #scaleContainer > font-scale-item + font-scale-item { 
-            margin-block-start: 1rem;
+            align-items: flex-start; /* Align to top if multiple components */
+            min-height: 300px; /* Ensure some space for the component */
         }
 
+        /* Web ComponentのスタイルはShadow DOM内で定義 */
     </style>
 </head>
 <body>
@@ -191,40 +103,8 @@
     <div class="control-panel">
         <h2>グローバル設定 &amp; コンポーネント制御</h2>
         <div class="control-group">
-            <label for="writingModeSelect">書字方向 (Writing Mode):</label>
-            <select id="writingModeSelect">
-                <option value="horizontal-tb" selected>horizontal-tb (横書き、上から下へ)</option>
-                <option value="vertical-rl">vertical-rl (縦書き、右から左へ)</option>
-                <option value="vertical-lr">vertical-lr (縦書き、左から右へ)</option>
-            </select>
-        </div>
-        <div class="control-group">
-            <label for="directionSelect">テキスト方向 (Direction):</label>
-            <select id="directionSelect">
-                <option value="ltr" selected>ltr (左から右へ)</option>
-                <option value="rtl">rtl (右から左へ)</option>
-            </select>
-        </div>
-        <div class="control-group">
             <label for="rootFontSize">ルートフォントサイズ (px):</label>
             <input type="number" id="rootFontSize" value="16" min="8">
-        </div>
-        <div class="control-group">
-            <label for="fontFamilySelect">フォントファミリー:</label>
-            <select id="fontFamilySelect">
-                <option value="'Inter', sans-serif">Inter</option>
-                <option value="'Roboto Flex', sans-serif">Roboto Flex</option>
-                <option value="'Roboto Slab', serif">Roboto Slab</option>
-                <option value="'Source Code Pro', monospace">Source Code Pro</option>
-                <option value="'Merriweather', serif">Merriweather</option>
-                <option value="'Noto Sans JP', sans-serif">Noto Sans JP</option>
-                <option value="serif">Serif (Generic)</option>
-                <option value="sans-serif">Sans-serif (Generic)</option>
-            </select>
-        </div>
-        <div class="control-group">
-            <label for="baseSize">スケール基準フォントサイズ (px):</label>
-            <input type="number" id="baseSize" value="16" min="1">
         </div>
         <div class="control-group">
             <label for="scaleRatio">フラクタルスケール比率:</label>
@@ -244,93 +124,77 @@
         </div>
          <div class="control-group">
             <label for="componentText">コンポーネント内テキスト:</label>
-            <textarea id="componentText" rows="3">これはマージンとフォントサイズを調整できるテキストボックスです。複数行にも対応しています。書字方向を変えてみましょう。</textarea>
+            <textarea id="componentText" rows="3">これはマージンとフォントサイズを調整できるテキストボックスです。複数行にも対応しています。</textarea>
         </div>
 
-        <h3 style="grid-column: 1 / -1; margin-block-start: 20px; font-size: 1.2em; color: #2c5282;">外枠マージン (rem単位)</h3>
+        <h3 style="grid-column: 1 / -1; margin-top: 20px; font-size: 1.2em; color: #2c5282;">外枠マージン (rem単位)</h3>
         <div class="control-group">
-            <label for="marginBlockStart">Margin Block Start (rem):</label>
-            <input type="number" id="marginBlockStart" value="1" step="0.1">
-        </div>
-        <div class="control-group">
-            <label for="marginBlockEnd">Margin Block End (rem):</label>
-            <input type="number" id="marginBlockEnd" value="1" step="0.1">
+            <label for="marginTop">Margin Top (rem):</label>
+            <input type="number" id="marginTop" value="1" step="0.1">
         </div>
         <div class="control-group">
-            <label for="marginInlineStart">Margin Inline Start (rem):</label>
-            <input type="number" id="marginInlineStart" value="1" step="0.1">
+            <label for="marginRight">Margin Right (rem):</label>
+            <input type="number" id="marginRight" value="1" step="0.1">
         </div>
         <div class="control-group">
-            <label for="marginInlineEnd">Margin Inline End (rem):</label>
-            <input type="number" id="marginInlineEnd" value="1" step="0.1">
+            <label for="marginBottom">Margin Bottom (rem):</label>
+            <input type="number" id="marginBottom" value="1" step="0.1">
         </div>
-    </div>
-    
-    <div class="app-container">
-        <header>
-            <h1>フラクタルフォントスケール テスター V2</h1>
-            <p>ルートフォントサイズ、基準フォントサイズ、比率を入力して、フォントスケールと各種単位の挙動を確認します。</p>
-        </header>
-        <div id="outputArea">
-            <section class="root-units-display">
-                <h2>ルート要素の単位情報</h2>
-                <div class="unit-info-grid">
-                    <p class="unit-info">フォントファミリー: <strong id="currentFontFamilyDisplay"></strong></p>
-                    <p class="unit-info">ルート font-size: <strong id="rootFontSizeDisplay"></strong></p>
-                    <p class="unit-info">1rem: <strong id="remValueDisplay"></strong></p>
-                    <p class="unit-info">1em (ルート基準): <strong id="emAtRootDisplay"></strong></p>
-                    <p class="unit-info">1rlh: <strong id="rlhValueDisplay"></strong></p>
-                    <p class="unit-info">1rex: <strong id="rexValueDisplay"></strong></p>
-                    <p class="unit-info">1rcap: <strong id="rcapValueDisplay"></strong></p>
-                    <p class="unit-info">1rch: <strong id="rchValueDisplay"></strong></p>
-                </div>
-            </section>
-            
-            <section class="scale-display-container">
-                <h2>フォントスケール表示 (<span id="scaleBaseInfo"></span>)</h2>
-                <div id="scaleContainer">
-                    </div>
-            </section>
-        </div>
-        <div class="component-display-area">
-            <margin-text-box id="myTextBox">
-                これは初期テキストです。
-            </margin-text-box>
+        <div class="control-group">
+            <label for="marginLeft">Margin Left (rem):</label>
+            <input type="number" id="marginLeft" value="1" step="0.1">
         </div>
     </div>
 
+    <div class="component-display-area">
+        <margin-text-box id="myTextBox">
+            これは初期テキストです。
+        </margin-text-box>
+    </div>
 
     <script>
         class MarginTextBox extends HTMLElement {
             constructor() {
                 super();
                 this.attachShadow({ mode: 'open' });
-                this._fontSizeRem = 1; 
-                this._marginBlockStartRem = 0;
-                this._marginBlockEndRem = 0;
-                this._marginInlineStartRem = 0;
-                this._marginInlineEndRem = 0;
+                this._fontSizeRem = 1; // Default font size in rem, relative to :host
+                this._marginTopRem = 0;
+                this._marginRightRem = 0;
+                this._marginBottomRem = 0;
+                this._marginLeftRem = 0;
                 this._textContent = this.textContent || "サンプルテキスト";
             }
 
             static get observedAttributes() {
-                return ['font-size-rem', 'margin-block-start-rem', 'margin-block-end-rem', 'margin-inline-start-rem', 'margin-inline-end-rem', 'text-content'];
+                return ['font-size-rem', 'margin-top-rem', 'margin-right-rem', 'margin-bottom-rem', 'margin-left-rem', 'text-content'];
             }
 
             attributeChangedCallback(name, oldValue, newValue) {
-                const parsedValue = parseFloat(newValue);
                 switch (name) {
-                    case 'font-size-rem': this._fontSizeRem = parsedValue || 1; break;
-                    case 'margin-block-start-rem': this._marginBlockStartRem = parsedValue || 0; break;
-                    case 'margin-block-end-rem': this._marginBlockEndRem = parsedValue || 0; break;
-                    case 'margin-inline-start-rem': this._marginInlineStartRem = parsedValue || 0; break;
-                    case 'margin-inline-end-rem': this._marginInlineEndRem = parsedValue || 0; break;
-                    case 'text-content': this._textContent = newValue || ""; break;
+                    case 'font-size-rem':
+                        this._fontSizeRem = parseFloat(newValue) || 1;
+                        break;
+                    case 'margin-top-rem':
+                        this._marginTopRem = parseFloat(newValue) || 0;
+                        break;
+                    case 'margin-right-rem':
+                        this._marginRightRem = parseFloat(newValue) || 0;
+                        break;
+                    case 'margin-bottom-rem':
+                        this._marginBottomRem = parseFloat(newValue) || 0;
+                        break;
+                    case 'margin-left-rem':
+                        this._marginLeftRem = parseFloat(newValue) || 0;
+                        break;
+                    case 'text-content':
+                        this._textContent = newValue || "";
+                        break;
                 }
                 this._render();
             }
 
             connectedCallback() {
+                // Initial text content from light DOM if no attribute is set
                 if (!this.hasAttribute('text-content') && this.textContent.trim().length > 0) {
                     this._textContent = this.textContent.trim();
                 }
@@ -341,23 +205,25 @@
                 this.shadowRoot.innerHTML = `
                     <style>
                         :host {
-                            display: block; 
-                            font-size: ${this._fontSizeRem}rem; 
-                            margin-block-start: ${this._marginBlockStartRem}rem;
-                            margin-block-end: ${this._marginBlockEndRem}rem;
-                            margin-inline-start: ${this._marginInlineStartRem}rem;
-                            margin-inline-end: ${this._marginInlineEndRem}rem;
-                            border: 2px solid #4299e1; 
-                            padding: 0.8em; 
-                            background-color: #ebf8ff; 
-                            /* inline-size and block-size can be used for explicit sizing */
-                            /* For now, let content determine size up to container limits */
-                            max-inline-size: 100%; 
+                            display: block; /* Component itself is a block */
+                            font-size: ${this._fontSizeRem}rem; /* Font size relative to root font size */
+                            margin-top: ${this._marginTopRem}rem;
+                            margin-right: ${this._marginRightRem}rem;
+                            margin-bottom: ${this._marginBottomRem}rem;
+                            margin-left: ${this._marginLeftRem}rem;
+                            border: 2px solid #4299e1; /* Blue border for visibility */
+                            padding: 0.8em; /* Padding relative to this component's font-size */
+                            background-color: #ebf8ff; /* Light blue background */
+                            width: fit-content; /* Adjust to content width by default */
+                            max-width: 100%; /* Ensure it doesn't overflow its container */
                             box-sizing: border-box;
                         }
                         .content {
-                            line-height: 1.5; 
+                            /* line-height, etc. can be styled here based on this component's font-size */
+                            line-height: 1.5; /* Example line height using relative unit */
                         }
+                        /* Example of using slot if needed for more complex content later */
+                        /* slot {} */ 
                     </style>
                     <div class="content">
                         ${this._textContent.replace(/\n/g, '<br>')}
@@ -369,173 +235,56 @@
 
         // --- Control Panel Logic ---
         const rootFontSizeInputElement = document.getElementById('rootFontSize');
-        const fontFamilySelectElement = document.getElementById('fontFamilySelect');
         const scaleRatioElement = document.getElementById('scaleRatio');
         const componentFontSizeStepElement = document.getElementById('componentFontSizeStep');
         const componentFontSizeRemDisplayElement = document.getElementById('componentFontSizeRemDisplay');
         const componentTextElement = document.getElementById('componentText');
-        
-        const marginBlockStartElement = document.getElementById('marginBlockStart');
-        const marginBlockEndElement = document.getElementById('marginBlockEnd');
-        const marginInlineStartElement = document.getElementById('marginInlineStart');
-        const marginInlineEndElement = document.getElementById('marginInlineEnd');
-        
+        const marginTopElement = document.getElementById('marginTop');
+        const marginRightElement = document.getElementById('marginRight');
+        const marginBottomElement = document.getElementById('marginBottom');
+        const marginLeftElement = document.getElementById('marginLeft');
         const myTextBoxElement = document.getElementById('myTextBox');
 
-        const writingModeSelectElement = document.getElementById('writingModeSelect');
-        const directionSelectElement = document.getElementById('directionSelect');
+        function updateComponent() {
+            if (!myTextBoxElement) return;
 
-        // References for fractal scale display
-        const baseSizeInputElement = document.getElementById('baseSize');
-        const scaleStepsInputElement = document.getElementById('scaleSteps');
-        const scaleContainerElement = document.getElementById('scaleContainer');
-        const scaleBaseInfoElement = document.getElementById('scaleBaseInfo');
-
-        // References for root unit display
-        const currentFontFamilyDisplayElement = document.getElementById('currentFontFamilyDisplay');
-        const rootFontSizeDisplayElement = document.getElementById('rootFontSizeDisplay');
-        const remValueDisplayElement = document.getElementById('remValueDisplay');
-        const emAtRootDisplayElement = document.getElementById('emAtRootDisplay');
-        const rlhValueDisplayElement = document.getElementById('rlhValueDisplay');
-        const rexValueDisplayElement = document.getElementById('rexValueDisplay');
-        const rcapValueDisplayElement = document.getElementById('rcapValueDisplay');
-        const rchValueDisplayElement = document.getElementById('rchValueDisplay');
-
-
-        function measureDimension(unitToMeasure, options = {}) {
-            const tempEl = document.createElement('div'); 
-            const referenceElement = options.referenceElement || document.documentElement;
-            const refStyle = window.getComputedStyle(referenceElement);
-
-            tempEl.style.fontFamily = refStyle.fontFamily;
-            tempEl.style.fontSize = options.fontSizeToApply || refStyle.fontSize; 
-            tempEl.style.writingMode = options.writingMode || refStyle.writingMode; // Apply writing mode
-            tempEl.style.direction = options.direction || refStyle.direction;     // Apply direction
-
-            tempEl.style.position = 'absolute';
-            tempEl.style.visibility = 'hidden';
-            tempEl.style.padding = '0';
-            tempEl.style.border = '0';
-            tempEl.style.lineHeight = 'normal'; 
-
-            let dimension = 0;
-
-            if (unitToMeasure.endsWith('ex') || unitToMeasure.endsWith('cap') || unitToMeasure.endsWith('lh') || unitToMeasure.endsWith('rem') || unitToMeasure.endsWith('em')) {
-                tempEl.style.blockSize = unitToMeasure; // Use logical property
-                tempEl.style.inlineSize = '1px'; 
-            } else if (unitToMeasure.endsWith('ch')) {
-                tempEl.style.inlineSize = unitToMeasure; // Use logical property
-                tempEl.style.blockSize = '1px'; 
-            } else {
-                console.warn("Unsupported unit for measurement:", unitToMeasure);
-                return 0;
-            }
-            
-            document.body.appendChild(tempEl);
-            const rect = tempEl.getBoundingClientRect();
-            
-            if (unitToMeasure.endsWith('ex') || unitToMeasure.endsWith('cap') || unitToMeasure.endsWith('lh') || unitToMeasure.endsWith('rem') || unitToMeasure.endsWith('em')) {
-                dimension = rect.height;
-            } else if (unitToMeasure.endsWith('ch')) {
-                dimension = rect.width;
-            }
-            
-            document.body.removeChild(tempEl);
-            return dimension;
-        }
-
-        function updateAll() {
-            // 1. Update Root Styles
+            // Update root font size
             const newRootFontSize = parseFloat(rootFontSizeInputElement.value);
             if (!isNaN(newRootFontSize) && newRootFontSize > 0) {
                 document.documentElement.style.setProperty('--base-font-size', `${newRootFontSize}px`);
-                document.documentElement.style.fontSize = `var(--base-font-size)`;
+                document.documentElement.style.fontSize = `var(--base-font-size)`; // Apply to html
             }
-            document.documentElement.style.fontFamily = fontFamilySelectElement.value;
-            document.documentElement.style.writingMode = writingModeSelectElement.value;
-            document.documentElement.style.direction = directionSelectElement.value;
             
-            // Allow a brief moment for the font/writing mode change to apply before measuring
-            requestAnimationFrame(() => {
-                const rootStyle = window.getComputedStyle(document.documentElement);
-                const actualRootFontSizePx = parseFloat(rootStyle.fontSize);
+            // Calculate component font size based on fractal scale
+            const baseForScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--base-font-size')); // Use the CSS variable as base
+            const ratio = parseFloat(scaleRatioElement.value);
+            const step = parseInt(componentFontSizeStepElement.value, 10);
+            const componentFontSizeRem = Math.pow(ratio, step) * (parseFloat(getComputedStyle(document.documentElement).fontSize) / baseForScale); // Calculate rem based on current root
+            // The above calculation for componentFontSizeRem needs to be simpler:
+            // It should be base_scale_rem * ratio^step.
+            // Let's assume the fractal scale base is 1rem (i.e., root font size).
+            const fractalBaseRem = 1; // The base of our scale is 1rem (the root font size)
+            const finalComponentFontSizeRem = fractalBaseRem * Math.pow(ratio, step);
 
-                // --- Update Root Unit Displays ---
-                currentFontFamilyDisplayElement.textContent = rootStyle.fontFamily.split(',')[0].trim().replace(/"/g, '');
-                rootFontSizeDisplayElement.textContent = `${actualRootFontSizePx.toFixed(2)}px`;
-                
-                const measureOptions = { 
-                    referenceElement: document.documentElement,
-                    writingMode: rootStyle.writingMode,
-                    direction: rootStyle.direction
-                };
 
-                remValueDisplayElement.textContent = `${measureDimension('1rem', measureOptions).toFixed(2)}px`;
-                emAtRootDisplayElement.textContent = `${measureDimension('1em', measureOptions).toFixed(2)}px`;
-                rlhValueDisplayElement.textContent = `${measureDimension('1rlh', measureOptions).toFixed(2)}px`;
-                rexValueDisplayElement.textContent = `${measureDimension('1rex', measureOptions).toFixed(2)}px`;
-                rcapValueDisplayElement.textContent = `${measureDimension('1rcap', measureOptions).toFixed(2)}px`;
-                rchValueDisplayElement.textContent = `${measureDimension('1rch', {...measureOptions, isWidth: true}).toFixed(2)}px`;
-
-                // --- Generate and Display Font Scale using Web Components ---
-                const baseSizeForScale = parseFloat(baseSizeInputElement.value);
-                const ratio = parseFloat(scaleRatioElement.value);
-                const steps = parseInt(scaleStepsInputElement.value, 10);
-
-                if (isNaN(baseSizeForScale) || isNaN(ratio) || isNaN(steps) || baseSizeForScale <= 0 || ratio <= 1 || steps < 1) {
-                    scaleContainerElement.innerHTML = '<p style="color: red;">スケール設定が無効です。</p>';
-                } else {
-                    scaleContainerElement.innerHTML = ''; 
-                    scaleBaseInfoElement.textContent = `基準: ${baseSizeForScale}px, 比率: ${ratio}`;
-
-                    for (let i = -steps; i <= steps; i++) {
-                        const calculatedSizePx = baseSizeForScale * Math.pow(ratio, i);
-                        const calculatedSizeRem = calculatedSizePx / actualRootFontSizePx;
-                        
-                        const tempEmMeasureEl = document.createElement('div');
-                        tempEmMeasureEl.style.fontSize = `${calculatedSizePx}px`; 
-                        document.body.appendChild(tempEmMeasureEl);
-                        const currentEmInPx = measureDimension('1em', {referenceElement: tempEmMeasureEl});
-                        document.body.removeChild(tempEmMeasureEl);
-
-                        const item = document.createElement('font-scale-item');
-                        item.setAttribute('scale-value-rem', calculatedSizeRem.toFixed(5)); 
-                        item.setAttribute('base-font-size-px', baseSizeForScale); 
-                        item.setAttribute('root-font-size-px', actualRootFontSizePx); 
-                        item.setAttribute('step-label', `${i === 0 ? '基準 (0)' : (i < 0 ? i : '+' + i)}`);
-                        item.setAttribute('current-em-px', currentEmInPx.toFixed(5));
-                        scaleContainerElement.appendChild(item);
-                    }
-                }
-
-                // --- Update MarginTextBox Component ---
-                if (myTextBoxElement) {
-                    const fractalBaseRem = 1; 
-                    const finalComponentFontSizeRem = fractalBaseRem * Math.pow(parseFloat(scaleRatioElement.value), parseInt(componentFontSizeStepElement.value, 10));
-                    
-                    myTextBoxElement.setAttribute('font-size-rem', finalComponentFontSizeRem.toFixed(3));
-                    componentFontSizeRemDisplayElement.textContent = finalComponentFontSizeRem.toFixed(3);
-                    
-                    myTextBoxElement.setAttribute('margin-block-start-rem', marginBlockStartElement.value);
-                    myTextBoxElement.setAttribute('margin-block-end-rem', marginBlockEndElement.value);
-                    myTextBoxElement.setAttribute('margin-inline-start-rem', marginInlineStartElement.value);
-                    myTextBoxElement.setAttribute('margin-inline-end-rem', marginInlineEndElement.value);
-                    myTextBoxElement.setAttribute('text-content', componentTextElement.value);
-                }
-            });
+            myTextBoxElement.setAttribute('font-size-rem', finalComponentFontSizeRem.toFixed(3));
+            componentFontSizeRemDisplayElement.textContent = finalComponentFontSizeRem.toFixed(3);
+            
+            myTextBoxElement.setAttribute('margin-top-rem', marginTopElement.value);
+            myTextBoxElement.setAttribute('margin-right-rem', marginRightElement.value);
+            myTextBoxElement.setAttribute('margin-bottom-rem', marginBottomElement.value);
+            myTextBoxElement.setAttribute('margin-left-rem', marginLeftElement.value);
+            myTextBoxElement.setAttribute('text-content', componentTextElement.value);
         }
 
-        // --- Event Listeners ---
-        [rootFontSizeInputElement, fontFamilySelectElement, baseSizeInputElement, scaleRatioElement, 
-         componentFontSizeStepElement, componentTextElement, 
-         marginBlockStartElement, marginBlockEndElement, marginInlineStartElement, marginInlineEndElement,
-         writingModeSelectElement, directionSelectElement 
-        ].forEach(el => {
-            if (el) el.addEventListener('input', updateAll);
+        [rootFontSizeInputElement, scaleRatioElement, componentFontSizeStepElement, componentTextElement, 
+         marginTopElement, marginRightElement, marginBottomElement, marginLeftElement].forEach(el => {
+            el.addEventListener('input', updateComponent);
         });
-        
-        // --- Initial Display ---
-        updateAll();
+
+        // Initial update
+        updateComponent();
+
     </script>
 </body>
 </html>
