@@ -3,28 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Video to Learning App</title>
+    <meta name="description" content="Github Communication" />
+    <meta name="keywords" content="Github, Communication, API" />
+
+    <title>GithubCommunication</title>
     <meta name="author" content="AgAmemnno" />
     <link rel="stylesheet" href="index.css"/>
     <script type="importmap">
       {
         "imports": {
           "@google/genai": "https://esm.sh/@google/genai",
-          "@octokit/auth-token" from "https://esm.sh/@octokit/auth-token";
+          "octokit/auth-token" from "https://esm.sh/@octokit/auth-token";
         }
       }
     </script>
     <script type="application/javascript">
       if (window.location.hostname === "localhost") {
-        let GEMINI_API_KEY = localStorage.getItem("GEMINI_API_KEY");
-        if (!GEMINI_API_KEY) {
-          GEMINI_API_KEY = prompt("Please enter your API key from AI Studio:");
-          if (GEMINI_API_KEY) {
-            localStorage.setItem("GEMINI_API_KEY", GEMINI_API_KEY);
+        let GITHUB_API_KEY = localStorage.getItem("GITHUB_API_KEY");
+        if (!GITHUB_API_KEY) {
+          GITHUB_API_KEY = prompt("Please enter your API key from AI Studio:");
+          if (GITHUB_API_KEY) {
+            localStorage.setItem("GITHUB_API_KEY", GITHUB_API_KEY);
           }
         }
-        globalThis.process = { env: { GEMINI_API_KEY: GEMINI_API_KEY } };
+        window.globalThis.process = { env: { GITHUB_PAT: GITHUB_API_KEY } };
       }
     </script>
   </head>
@@ -33,34 +35,3 @@
     <script type="module" src="index.js"></script>
   </body>
 </html>
-
-<script type="module">
-    import { createTokenAuth } from "https://esm.sh/@octokit/auth-token";
-    const auth = createTokenAuth("ghp_PersonalAccessToken01245678900000000");
-    const authentication = await auth();
-    console.log(authentication.token);
-    console.log(authentication.type);
-    console.log(authentication.clientId);
-    console.log(authentication.clientSecret);
-    console.log(authentication.scopes);
-    console.log(authentication.expiration);
-    console.log(authentication.tokenType);
-    console.log(authentication.tokenExpiration);
-
-    // 認証されたユーザーの情報を取得する簡単なリクエスト [10]
-async function getAuthenticatedUser() {
-  try {
-    const { data: { login } } = await octokit.rest.users.getAuthenticated(); [10]
-    console.log(`Hello, ${login}`); [10]
-  } catch (error) {
-    // エラー処理 [27-29]
-    if (error.response) {
-      console.error(`Error! Status: ${error.response.status}. Message: ${error.response.data.message}`); [27, 28]
-    } else {
-      console.error(error);
-    }
-  }
-}
-
-getAuthenticatedUser();
-</script>
