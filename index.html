@@ -8,30 +8,50 @@
 
     <title>GithubCommunication</title>
     <meta name="author" content="AgAmemnno" />
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="index.css"/>
     <script type="importmap">
       {
         "imports": {
-          "@google/genai": "https://esm.sh/@google/genai",
-          "octokit/auth-token" from "https://esm.sh/@octokit/auth-token";
+          "@google/genai": "https://esm.sh/@google/genai"
         }
-      }
-    </script>
-    <script type="application/javascript">
-      if (window.location.hostname === "localhost") {
-        let GITHUB_API_KEY = localStorage.getItem("GITHUB_API_KEY");
-        if (!GITHUB_API_KEY) {
-          GITHUB_API_KEY = prompt("Please enter your API key from AI Studio:");
-          if (GITHUB_API_KEY) {
-            localStorage.setItem("GITHUB_API_KEY", GITHUB_API_KEY);
-          }
-        }
-        window.globalThis.process = { env: { GITHUB_PAT: GITHUB_API_KEY } };
       }
     </script>
   </head>
 
-  <body>
+  <body class="bg-gray-50 text-gray-800">
+    <div id="inputPanel" class="input-panel">
+        <div class="mb-4">
+            <label for="modeSelector" class="block mb-2 text-sm font-medium text-gray-700">処理モードを選択:</label>
+            <select id="modeSelector" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5">
+                <option value="setPat" selected>Patを設定</option>
+                <option value="toUpperCase">大文字に変換して設定</option>
+                <option value="addToList">リストに追加</option>
+                <option value="setObjectProperty">オブジェクトにプロパティ設定</option>
+            </select>
+        </div>
+
+        <h3 id="inputPromptMessage" class="text-md font-semibold mb-3 text-gray-700">値を入力してください:</h3>
+        <input type="text" id="valueInput"
+               class="border border-gray-300 p-2 w-full rounded mb-4 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none" placeholder="ここに値を入力"/>
+        
+        <div id="objectPropertyInputContainer" class="mb-4 hidden"> <label for="objectPropertyKey" class="block mb-1 text-sm font-medium text-gray-700">プロパティ名:</label>
+             <input type="text" id="objectPropertyKey"
+                   class="border border-gray-300 p-2 w-full rounded mb-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none" placeholder="例: name"/>
+        </div>
+
+
+        <div class="flex justify-end space-x-2">
+            <button id="clearInputButton"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md text-sm">
+                クリア
+            </button>
+            <button id="processInputButton"
+                    class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md text-sm">
+                実行
+            </button>
+        </div>
+    </div>
     <script type="module" src="index.js"></script>
   </body>
 </html>
