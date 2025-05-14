@@ -1,0 +1,25 @@
+name: 🐛 バグ報告フォーム (from API)
+description: バグや問題を報告するための詳細フォームです。
+title: "[バグ][API] - "
+labels: ["bug", "api-generated"]
+assignees:
+  - AgAmemnno 
+body:
+  - type: markdown
+    attributes:
+      value: |
+        バグ報告ありがとうございます！(API経由でテンプレート設置)
+  - type: textarea
+    id: description
+    attributes:
+      label: バグの説明 (API)
+      placeholder: 例：ログインボタンをクリックしても反応がない。
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: バージョン (API)
+      placeholder: 1.0.0
+    validations:
+      required: true
