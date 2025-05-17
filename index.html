@@ -1,57 +1,1977 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Github Communication" />
-    <meta name="keywords" content="Github, Communication, API" />
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>UIロジック プロトタイプ (API接続)</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f6f8fa;
+                color: #24292e;
+                font-size: 14px;
+            }
 
-    <title>GithubCommunication</title>
-    <meta name="author" content="AgAmemnno" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="index.css"/>
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/genai": "https://esm.sh/@google/genai"
-        }
-      }
-    </script>
-  </head>
+            .container {
+                background-color: #fff;
+                padding: 25px;
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+                width: 100%;
+                max-width: 900px;
+                margin: auto;
+            }
 
-  <body class="bg-gray-50 text-gray-800">
-    <div id="inputPanel" class="input-panel">
-        <div class="mb-4">
-            <label for="modeSelector" class="block mb-2 text-sm font-medium text-gray-700">処理モードを選択:</label>
-            <select id="modeSelector" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5">
-                <option value="setPat" selected>Patを設定</option>
-                <option value="toUpperCase">大文字に変換して設定</option>
-                <option value="addToList">リストに追加</option>
-                <option value="setObjectProperty">オブジェクトにプロパティ設定</option>
-            </select>
+            h1, h2, h3 {
+                color: #2c3e50;
+                margin-top: 0;
+                margin-bottom: 16px;
+            }
+
+            h1 {
+                text-align: center;
+                font-size: 1.8em;
+            }
+
+            h2 {
+                font-size: 1.4em;
+                border-bottom: 1px solid #e1e4e8;
+                padding-bottom: 8px;
+                margin-top: 25px;
+            }
+
+            h3 {
+                font-size: 1.2em;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+
+            .input-group {
+                margin-bottom: 16px;
+            }
+
+            .input-group label {
+                display: block;
+                margin-bottom: 6px;
+                font-weight: 600;
+                color: #444;
+            }
+
+            .input-group input[type="text"], .input-group input[type="password"], .input-group textarea, .input-group select {
+                width: calc(100% - 22px);
+                padding: 10px;
+                border: 1px solid #d1d5da;
+                border-radius: 6px;
+                box-sizing: border-box;
+                font-size: 14px;
+                background-color: #fff;
+            }
+
+            .input-group input[type="text"]:focus, .input-group input[type="password"]:focus, .input-group textarea:focus, .input-group select:focus {
+                border-color: #0366d6;
+                box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.3);
+                outline: none;
+            }
+
+            textarea {
+                min-height: 80px;
+                resize: vertical;
+            }
+
+            #conceptualDocumentInputScenario, #milestonesJsonInput {
+                min-height: 120px;
+            }
+
+            .button-group {
+                margin-top: 20px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            button {
+                padding: 10px 18px;
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 1em;
+                font-weight: 500;
+                transition: background-color 0.2s ease-in-out;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            button:hover:not(:disabled) {
+                background-color: #218838;
+            }
+
+            button:disabled {
+                background-color: #94d3a2;
+                cursor: not-allowed;
+            }
+
+            .secondary-button {
+                background-color: #0366d6;
+            }
+
+            .secondary-button:hover:not(:disabled) {
+                background-color: #005cc5;
+            }
+
+            .test-button {
+                background-color: #ffc107;
+                color: #212529;
+            }
+
+            .test-button:hover:not(:disabled) {
+                background-color: #e0a800;
+            }
+
+            .danger-button {
+                background-color: #d73a49;
+            }
+
+            .danger-button:hover:not(:disabled) {
+                background-color: #cb2431;
+            }
+
+            .log-area, .test-output-area, .ai-output-area, .info-display-area {
+                margin-top: 20px;
+                padding: 15px;
+                background-color: #f1f3f5;
+                border: 1px solid #d1d5da;
+                border-radius: 6px;
+                min-height: 100px;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+                font-size: 12px;
+                max-height: 300px;
+                overflow-y: auto;
+                line-height: 1.6;
+            }
+
+            .test-output-area, .ai-output-area, .info-display-area {
+                min-height: 50px;
+                background-color: #e9ecef;
+            }
+
+            .info-display-area {
+                max-height: 150px;
+                margin-bottom: 15px;
+            }
+
+            .ai-output-area .scenario-card, .ai-output-area .task-card {
+                background-color: #fff;
+                border: 1px solid #d1d5da;
+                padding: 10px;
+                margin-bottom: 10px;
+                border-radius: 4px;
+            }
+
+            .ai-output-area .scenario-card h4, .ai-output-area .task-card h4 {
+                margin-top: 0;
+            }
+
+            .ai-studio-hints {
+                margin-top: 10px;
+                padding: 8px;
+                background-color: #fff9e6;
+                border: 1px solid #ffeeba;
+                border-radius: 4px;
+                font-size: 0.9em;
+            }
+
+            .ai-studio-hints strong {
+                color: #856404;
+            }
+
+            .spinner {
+                border: 4px solid rgba(0,0,0,0.1);
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                border-left-color: #0366d6;
+                animation: spin 1s ease infinite;
+                display: none;
+                margin: 15px auto;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .phase-navigation {
+                text-align: center;
+                margin-bottom: 20px;
+                padding: 10px;
+                background-color: #e9ecef;
+                border-radius: 5px;
+            }
+
+            .phase-navigation button {
+                margin: 0 5px;
+                background-color: #6c757d;
+            }
+
+            .phase-navigation button.active-nav {
+                background-color: #007bff;
+                font-weight: bold;
+            }
+
+            .phase {
+                display: none;
+                margin-bottom: 20px;
+                padding: 15px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }
+
+            .phase.active {
+                display: block;
+            }
+
+            .columns {
+                display: flex;
+                gap: 20px;
+            }
+
+            .column {
+                flex: 1;
+            }
+
+            .flex-row-small-gap {
+                display: flex;
+                gap: 10px;
+                align-items: flex-end;
+            }
+
+            .flex-row-small-gap .input-group {
+                flex: 1;
+            }
+
+            .log-entry {
+                margin-bottom: 6px;
+                padding-bottom: 6px;
+                border-bottom: 1px dotted #ced4da;
+            }
+
+            .log-entry:last-child {
+                border-bottom: none;
+            }
+
+            .log-error {
+                color: #d73a49;
+                font-weight: bold;
+            }
+
+            .log-success {
+                color: #28a745;
+                font-weight: bold;
+            }
+
+            .log-info {
+                color: #0366d6;
+            }
+
+            hr.section-divider {
+                margin: 30px 0;
+                border: 0;
+                border-top: 1px solid #e1e4e8;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>UIロジック プロトタイプ (API接続)</h1>
+            <div class="phase-navigation">
+                <button id="nav-config" class="active-nav">0. 基本設定</button>
+                <button id="nav-milestone">1. マイルストーン定義</button>
+                <button id="nav-scenario">2. シナリオ生成</button>
+                <button id="nav-issue">3. Issue発行</button>
+                <button id="nav-save">4．Save</button>
+                <button id="nav-load">5．Load</button>
+            </div>
+            <div id="config-phase" class="phase active">
+                <h2>0. 基本設定とAPI接続テスト</h2>
+                <div class="columns">
+                    <div class="column">
+                        <div class="input-group">
+                            <label for="githubPat">GitHub PAT:</label>
+                            <input type="password" id="githubPat" value="ghp_＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊">
+                        </div>
+                        <div class="input-group">
+                            <label for="geminiApiKey">Gemini API Key:</label>
+                            <input type="password" id="geminiApiKey" value="AI＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊">
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="input-group">
+                            <label for="owner">リポジトリ所有者 (Owner):</label>
+                            <input type="text" id="owner" value="AgAmemnno">
+                        </div>
+                        <div class="input-group">
+                            <label for="repo">リポジトリ名 (Repo):</label>
+                            <input type="text" id="repo" value="copilot-web-demo">
+                        </div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button id="loadRepoInfoBtn" class="secondary-button">リポジトリ情報読み込み</button>
+                    <button id="listGeminiModelsBtn" class="secondary-button">利用可能Geminiモデル取得</button>
+                    <button id="testGeminiApiBtn" class="test-button">Gemini API接続テスト</button>
+                </div>
+                <h3>読み込み結果 / テスト結果:</h3>
+                <div class="input-group">
+                    <label for="projectSelect">対象プロジェクト (Project V2):</label>
+                    <select id="projectSelect"></select>
+                </div>
+                <div class="input-group">
+                    <label>選択中プロジェクトNode ID:</label>
+                    <input type="text" id="selectedProjectNodeIdDisplay" readonly>
+                </div>
+                <div class="input-group">
+                    <label for="geminiModelSelect">使用するGeminiモデル:</label>
+                    <select id="geminiModelSelect"></select>
+                </div>
+                <div class="input-group">
+                    <label>Gemini APIテスト結果:</label>
+                    <div id="geminiTestOutput" class="test-output-area">ここにGemini APIのテスト結果が表示されます...</div>
+                </div>
+            </div>
+            <div id="milestone-phase" class="phase">
+                <h2>1. マイルストーン定義 (GitHub標準Milestone)</h2>
+                <h3>JSONから一括作成:</h3>
+                <div class="flex-row-small-gap">
+                    <div class="input-group">
+                        <label for="milestonePrefixJson">Prefix:</label>
+                        <input type="text" id="milestonePrefixJson" placeholder="例: ProjectX-">
+                    </div>
+                    <div class="input-group">
+                        <label for="milestoneSuffixJson">Suffix:</label>
+                        <input type="text" id="milestoneSuffixJson" placeholder="例: -v1">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="milestonesJsonInput">マイルストーン定義JSON配列:</label>
+                    <textarea id="milestonesJsonInput" placeholder='[{"name": "MS名1", "description": "詳細1", "estimated_duration": "2週間", "key_deliverables": ["成果物A"], "dependencies": ["先行MSのテキスト記述"]}, ...]'></textarea>
+                </div>
+                <div class="button-group">
+                    <button id="createMilestonesFromJsonBtn">JSONからMilestone群を作成 (REST)</button>
+                </div>
+                <hr class="section-divider">
+                <h3>個別作成:</h3>
+                <div class="flex-row-small-gap">
+                    <div class="input-group">
+                        <label for="milestonePrefixSingle">Prefix:</label>
+                        <input type="text" id="milestonePrefixSingle" placeholder="例: ProjectX-">
+                    </div>
+                    <div class="input-group">
+                        <label for="milestoneSuffixSingle">Suffix:</label>
+                        <input type="text" id="milestoneSuffixSingle" placeholder="例: -v1">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="milestoneTitle">Milestoneタイトル (Prefix/Suffix除く):</label>
+                    <input type="text" id="milestoneTitle" placeholder="例: Sprint 1 目標達成">
+                </div>
+                <div class="input-group">
+                    <label for="milestoneDescription">Milestone説明 (成果物、依存関係など):</label>
+                    <textarea id="milestoneDescription" placeholder="AI生成または手入力された詳細..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="milestoneDueDate">Milestone期日:</label>
+                    <input type="date" id="milestoneDueDate">
+                </div>
+                <div class="button-group">
+                    <button id="createGhMilestoneBtn">単一GitHub Milestone作成 (REST)</button>
+                </div>
+                <hr class="section-divider">
+                <h3>既存GitHub Milestones (REST):</h3>
+                <div class="input-group">
+                    <label for="deleteMilestonePrefixInput">削除対象Prefix:</label>
+                    <input type="text" id="deleteMilestonePrefixInput" placeholder="削除したいMilestoneのPrefixを入力">
+                </div>
+                <div class="button-group">
+                    <button id="deleteMilestonesByPrefixBtn" class="danger-button">指定PrefixのMilestoneを削除</button>
+                </div>
+                <div id="existingMilestonesArea" class="output-area"></div>
+            </div>
+            <div id="scenario-phase" class="phase">
+                <h2>2. シナリオ生成と比較</h2>
+                <h3>入力として使用される定義済みマイルストーン:</h3>
+                <div id="milestonesForScenarioInputDisplay" class="info-display-area">ここに現在定義されているマイルストーンが表示されます...
+            </div>
+                <hr class="section-divider">
+                <div class="input-group">
+                    <label for="conceptualDocumentInputScenario">概念文書 (シナリオ生成用):</label>
+                    <textarea id="conceptualDocumentInputScenario" placeholder="プロジェクトの背景、目的、主要機能などを記述..."></textarea>
+                </div>
+                <div class="button-group">
+                    <button id="generateScenariosBtn">AIによるシナリオ案生成</button>
+                </div>
+                <h3>AIによるシナリオ提案:</h3>
+                <div id="scenarioProposalsOutput" class="ai-output-area">ここにAIが生成したシナリオ案が表示されます...</div>
+            </div>
+            <div id="issue-phase" class="phase">
+                <h2>3. Issue発行</h2>
+                <h3>現在のコンテキスト:</h3>
+                <div id="issuePhaseContextDisplay" class="info-display-area">選択されたシナリオとターゲットマイルストーン情報が表示されます...
+            </div>
+                <hr class="section-divider">
+                <div class="input-group">
+                    <label for="targetMilestoneForCpSelect">ターゲットマイルストーン (クリティカルパス生成用):</label>
+                    <select id="targetMilestoneForCpSelect"></select>
+                </div>
+                <div class="button-group">
+                    <button id="generateCriticalPathBtn">AIによるクリティカルパス生成 (Issue骨子)</button>
+                </div>
+                <h3>AIによるクリティカルパス提案 (Issue骨子):</h3>
+                <div id="criticalPathOutput" class="ai-output-area">ここにAIが生成したIssue骨子が表示されます...</div>
+                <hr class="section-divider">
+                <h3>Issue詳細入力と発行:</h3>
+                <p>（上記のクリティカルパスからIssueを選択し、詳細を記述して発行します）</p>
+                <div class="input-group">
+                    <label for="issueTitleToCreate">Issueタイトル:</label>
+                    <input type="text" id="issueTitleToCreate" placeholder="ユーザーが持ち込んだIssueタイトル">
+                </div>
+                <div class="input-group">
+                    <label for="issueBodyToCreate">Issue本文 (Markdown):</label>
+                    <textarea id="issueBodyToCreate" placeholder="ユーザーが持ち込んだIssue本文..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="linkToMilestoneSelect">紐付けるMilestone:</label>
+                    <select id="linkToMilestoneSelect">
+                        <option value="">-- Milestoneなし --</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button id="publishGithubIssueBtn">GitHub Issue発行</button>
+                </div>
+            </div>
+            <div id="loadingSpinner" class="spinner"></div>
+            <h2>実行ログ</h2>
+            <div id="logArea" class="log-area">ここに実行ログが表示されます...</div>
         </div>
+        <script type="module">
+            // SDKのインポート文を修正
+            import {Octokit} from "https://esm.sh/octokit";
+            import {GoogleGenAI, HarmCategory, HarmBlockThreshold} from 'https://esm.sh/@google/genai';
 
-        <h3 id="inputPromptMessage" class="text-md font-semibold mb-3 text-gray-700">値を入力してください:</h3>
-        <input type="text" id="valueInput"
-               class="border border-gray-300 p-2 w-full rounded mb-4 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none" placeholder="ここに値を入力"/>
-        
-        <div id="objectPropertyInputContainer" class="mb-4 hidden"> <label for="objectPropertyKey" class="block mb-1 text-sm font-medium text-gray-700">プロパティ名:</label>
-             <input type="text" id="objectPropertyKey"
-                   class="border border-gray-300 p-2 w-full rounded mb-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none" placeholder="例: name"/>
-        </div>
+            // --- DOM Elements ---
+            const githubPatInput = document.getElementById('githubPat');
+            const geminiApiKeyInput = document.getElementById('geminiApiKey');
+            const ownerInput = document.getElementById('owner');
+            const repoInput = document.getElementById('repo');
+            const loadRepoInfoBtn = document.getElementById('loadRepoInfoBtn');
+            const listGeminiModelsBtn = document.getElementById('listGeminiModelsBtn');
+            const testGeminiApiBtn = document.getElementById('testGeminiApiBtn');
+            const projectSelect = document.getElementById('projectSelect');
+            const selectedProjectNodeIdDisplay = document.getElementById('selectedProjectNodeIdDisplay');
+            const geminiModelSelect = document.getElementById('geminiModelSelect');
+            const geminiTestOutput = document.getElementById('geminiTestOutput');
 
+            const milestonePrefixJsonInput = document.getElementById('milestonePrefixJson');
+            const milestoneSuffixJsonInput = document.getElementById('milestoneSuffixJson');
+            const milestonesJsonInput = document.getElementById('milestonesJsonInput');
+            const createMilestonesFromJsonBtn = document.getElementById('createMilestonesFromJsonBtn');
 
-        <div class="flex justify-end space-x-2">
-            <button id="clearInputButton"
-                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md text-sm">
-                クリア
-            </button>
-            <button id="processInputButton"
-                    class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md text-sm">
-                実行
-            </button>
-        </div>
-    </div>
-    <script type="module" src="index.js"></script>
-  </body>
+            const milestonePrefixSingleInput = document.getElementById('milestonePrefixSingle');
+            const milestoneSuffixSingleInput = document.getElementById('milestoneSuffixSingle');
+            const milestoneTitleInput = document.getElementById('milestoneTitle');
+            const milestoneDescriptionInput = document.getElementById('milestoneDescription');
+            const milestoneDueDateInput = document.getElementById('milestoneDueDate');
+            const createGhMilestoneBtn = document.getElementById('createGhMilestoneBtn');
+
+            const deleteMilestonePrefixInput = document.getElementById('deleteMilestonePrefixInput');
+            const deleteMilestonesByPrefixBtn = document.getElementById('deleteMilestonesByPrefixBtn');
+            const existingMilestonesArea = document.getElementById('existingMilestonesArea');
+
+            const milestonesForScenarioInputDisplay = document.getElementById('milestonesForScenarioInputDisplay');
+            const conceptualDocumentInputScenario = document.getElementById('conceptualDocumentInputScenario');
+            const generateScenariosBtn = document.getElementById('generateScenariosBtn');
+            const scenarioProposalsOutput = document.getElementById('scenarioProposalsOutput');
+
+            const issuePhaseContextDisplay = document.getElementById('issuePhaseContextDisplay');
+            const targetMilestoneForCpSelect = document.getElementById('targetMilestoneForCpSelect');
+            const generateCriticalPathBtn = document.getElementById('generateCriticalPathBtn');
+            const criticalPathOutput = document.getElementById('criticalPathOutput');
+            const issueTitleToCreateInput = document.getElementById('issueTitleToCreate');
+            const issueBodyToCreateInput = document.getElementById('issueBodyToCreate');
+            const linkToMilestoneSelect = document.getElementById('linkToMilestoneSelect');
+            const publishGithubIssueBtn = document.getElementById('publishGithubIssueBtn');
+
+            const logArea = document.getElementById('logArea');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+
+            const navConfigBtn = document.getElementById('nav-config');
+            const navMilestoneBtn = document.getElementById('nav-milestone');
+            const navScenarioBtn = document.getElementById('nav-scenario');
+            const navIssueBtn = document.getElementById('nav-issue');
+            // --- Utility Functions ---
+            function logMessage(message, type="info") {
+                const entry = document.createElement('div');
+                entry.classList.add('log-entry');
+                const timestamp = `[${new Date().toLocaleTimeString()}] `;
+                const messageSpan = document.createElement('span');
+                messageSpan.textContent = message;
+                if (type === "error")
+                    messageSpan.classList.add('log-error');
+                else if (type === "success")
+                    messageSpan.classList.add('log-success');
+                else
+                    messageSpan.classList.add('log-info');
+                entry.appendChild(document.createTextNode(timestamp));
+                entry.appendChild(messageSpan);
+                logArea.appendChild(entry);
+                logArea.scrollTop = logArea.scrollHeight;
+            }
+
+            class AppStateDB {
+                /* ... (前回のコードをここに貼り付け) ... */
+                constructor(dbName='AppProjectDB', dbVersion=1) {
+                    this.dbName = dbName;
+                    this.dbVersion = dbVersion;
+                    this.db = null;
+                    this.objectStoreName = 'appState';
+                    // 前回は 'appState'、innerHTML専用なら別のストア名でも良い
+                }
+
+                async openDB() {
+                    return new Promise( (resolve, reject) => {
+                        if (this.db) {
+                            resolve(this.db);
+                            return;
+                        }
+                        const request = indexedDB.open(this.dbName, this.dbVersion);
+                        request.onerror = (event) => {
+                            console.error('IndexedDB error:', event.target.error);
+                            reject('IndexedDB error: ' + event.target.error);
+                        }
+                        ;
+                        request.onsuccess = (event) => {
+                            this.db = event.target.result;
+                            console.log('IndexedDB opened.');
+                            resolve(this.db);
+                        }
+                        ;
+                        request.onupgradeneeded = (event) => {
+                            console.log('IndexedDB upgrade needed.');
+                            const db = event.target.result;
+                            // オブジェクトストア名が異なれば、新たに追加
+                            if (!db.objectStoreNames.contains(this.objectStoreName)) {
+                                // innerHTMLを保存するオブジェクトストア。キーは固定でも良いし、指定可能でも良い。
+                                db.createObjectStore(this.objectStoreName);
+                                //, { keyPath: 'key' });
+                                console.log(`Object store "${this.objectStoreName}" created.`);
+                            }
+                            /*
+                         // もしinnerHTML専用のストアを作るなら:
+                        const innerHTMLStoreName = 'innerHTMLStates';
+                        if (!db.objectStoreNames.contains(innerHTMLStoreName)) {
+                            db.createObjectStore(innerHTMLStoreName, { keyPath: 'containerId' }); // キーをコンテナIDとする
+                            console.log(`Object store "${innerHTMLStoreName}" created.`);
+                        }
+                        */
+                        }
+                        ;
+                    }
+                    );
+                }
+
+                async _getStore(storeName, mode) {
+                    if (!this.db)
+                        await this.openDB();
+                    return this.db.transaction(storeName, mode).objectStore(storeName);
+                }
+
+                // 汎用的な saveState (前回同様)
+                async saveState(key, value, storeName=this.objectStoreName) {
+                    //value['key'] = key; // オブジェクトストアのkeyPathに合わせる
+                    return new Promise(async (resolve, reject) => {
+                        try {
+                            const store = await this._getStore(storeName, 'readwrite');
+                            const request = store.put(value, key);
+                            // オブジェクトストアのkeyPathに合わせる
+                            request.onsuccess = () => resolve();
+                            request.onerror = (event) => reject(event.target.error);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    }
+                    );
+                }
+
+                // 汎用的な loadState (前回同様)
+                async loadState(key, storeName=this.objectStoreName) {
+                    return new Promise(async (resolve, reject) => {
+                        try {
+                            const store = await this._getStore(storeName, 'readonly');
+                            const request = store.get(key);
+                            request.onsuccess = () => {
+                                const data = request.result;
+                                resolve(data);
+                            }
+                            ;
+                            request.onerror = (event) => reject(event.target.error);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    }
+                    );
+                }
+
+                // innerHTML専用の保存 (オプション)
+                async saveInnerHTMLState(containerId, innerHTML) {
+                    const storeName = 'innerHTMLStates';
+                    return new Promise(async (resolve, reject) => {
+                        try {
+                            const store = await this._getStore(storeName, 'readwrite');
+                            const request = store.put({
+                                containerId: containerId,
+                                html: innerHTML
+                            });
+                            request.onsuccess = () => resolve();
+                            request.onerror = (event) => reject(event.target.error);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    }
+                    );
+                }
+
+                // innerHTML専用の読み込み (オプション)
+                async loadInnerHTMLState(containerId) {
+                    const storeName = 'innerHTMLStates';
+                    return new Promise(async (resolve, reject) => {
+                        try {
+                            const store = await this._getStore(storeName, 'readonly');
+                            const request = store.get(containerId);
+                            request.onsuccess = () => {
+                                const data = request.result ? request.result.html : null;
+                                resolve(data);
+                            }
+                            ;
+                            request.onerror = (event) => reject(event.target.error);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    }
+                    );
+                }
+
+                textareaSave(textAreaElement) {
+                    if (!textAreaElement) {
+                        console.error("Textarea with id 'myTextArea' not found.");
+                        return;
+                    }
+                    return {
+                        currentValue: textAreaElement.value,
+                        initialContentHTML: textAreaElement.innerHTML,
+                        initialContentDefault: textAreaElement.defaultValue,
+                    };
+                }
+
+                textareaLoad(textAreaElement, value) {
+                    if (!textAreaElement) {
+                        console.error("Textarea with id 'myTextArea' not found.");
+                        return;
+                    }
+
+                    textAreaElement.value = value.currentValue;
+                    textAreaElement.innerHTML = value.initialContentHTML;
+                    textAreaElement.defaultValue = value.initialContentDefault;
+                }
+            }
+            // --- ここまで AppStateDB クラス定義 ---
+            const dbInstance = new AppStateDB('AppProjectDB_InnerHTML',1);
+            const savedDom = [criticalPathOutput,geminiModelSelect, scenarioProposalsOutput, conceptualDocumentInputScenario];
+
+            let loadedthen = {};
+
+            async function initializeApp() {
+                await dbInstance.openDB();
+                logMessage('Application initialized. DB ready.');
+                loadedthen = {
+                    [geminiModelSelect.id]: () => {
+                        selectedGeminiModel = geminiModelSelect.value = "models/gemini-2.5-pro-preview-05-06";
+                    }
+                    ,
+                    [scenarioProposalsOutput.id]: async () => {
+                        document.querySelectorAll('.select-scenario-btn').forEach(button => {
+                            if (typeof button.onclick === 'function') {
+                                console.warn('legacyButton に onclick ハンドラは設定されていません。');
+                            }
+                            button.onclick = handleSelectScenario;
+                        }
+                        );
+                        generatedScenarios = await dbInstance.loadState("generatedScenarios");
+                    },
+                    [criticalPathOutput.id]: async () => {
+                        generatedCriticalPath = await dbInstance.loadState("generatedCriticalPath");
+                        renderGeneratedCriticalPath();
+                    },
+                },
+                savedthen = {
+                    [scenarioProposalsOutput.id]: async () => {
+                        try {
+                            await dbInstance.saveState("generatedScenarios", generatedScenarios);
+                        } catch (error) {
+                            logMessage(`Error saving container state: ${error}`);
+                        }
+                    },
+                    [criticalPathOutput.id]: async () => {
+                        try {
+                            await dbInstance.saveState("generatedCriticalPath",generatedCriticalPath);
+                        } catch (error) {
+                            logMessage(`Error saving container state: ${error}`);
+                        }
+                        renderGeneratedCriticalPath();
+                    },
+                     
+                }
+
+            }
+            initializeApp().catch(err => logMessage(`Initial App setup failed: ${err}`));
+            document.getElementById('nav-save').addEventListener('click', async () => {
+
+                savedDom.forEach(async (appContainer) => {
+                    const currentInnerHTML = appContainer.innerHTML;
+                    try {
+                        // 汎用saveStateを使う場合
+                        const dbKey = appContainer.id;
+                        const tagName = appContainer.tagName.toLowerCase();
+                        // 大文字で返されます (例: "DIV")
+                        let value = "";
+                        switch (tagName) {
+                        case 'textarea':
+                            await dbInstance.saveState(dbKey, dbInstance.textareaSave(appContainer));
+                            break;
+                        default:
+                            await dbInstance.saveState(dbKey, {
+                                "innerHTML": appContainer.innerHTML
+                            });
+                        }
+
+                        // innerHTML専用メソッドを使う場合
+                        // await dbInstance.saveInnerHTMLState('appContainer', currentInnerHTML); // 'appContainer' は固定ID
+                        logMessage(`Container state saved with key: ${dbKey} (innerHTML snapshot).`);
+                    } catch (error) {
+                        logMessage(`Error saving container state: ${error}`);
+                    }
+                }
+                );
+
+            }
+            );
+
+            document.getElementById('nav-load').addEventListener('click', async () => {
+                savedDom.forEach(async (appContainer) => {
+
+                    const dbKey = appContainer.id;
+                    if (!dbKey) {
+                        logMessage('Error: DB Key for container is required to load.');
+                        return;
+                    }
+                    try {
+                        // 汎用loadStateを使う場合
+                        let loadedHTML = await dbInstance.loadState(dbKey);
+                        // innerHTML専用メソッドを使う場合
+                        // const loadedHTML = await dbInstance.loadInnerHTMLState('appContainer');
+
+                        if (loadedHTML !== null) {
+                            const tagName = appContainer.tagName.toLowerCase();
+                            switch (tagName) {
+                            case 'textarea':
+                                dbInstance.textareaLoad(appContainer, loadedHTML);
+                                break;
+                            default:
+                                appContainer.innerHTML = loadedHTML.innerHTML;
+                            }
+
+                            logMessage(`Container state loaded from key: ${dbKey} and applied.`);
+
+                            // !!!!! 重要 !!!!!
+                            // innerHTMLを設定後、動的に追加された要素のイベントリスナーは失われています。
+                            // ここでイベントリスナーを再アタッチする必要があります。
+                            logMessage('Attempting to re-attach event listeners...');
+
+                        } else {
+                            logMessage(`No container state found for key "${dbKey}".`);
+                        }
+
+                        if (dbKey in loadedthen) {
+                            loadedthen[dbKey]();
+                        }
+                    } catch (error) {
+                        logMessage(`Error loading container state: ${error}`);
+                    }
+                }
+                );
+            }
+            );
+
+            let octokit;
+
+            class GithubApi {
+                /* ... (前回のコードをここに貼り付け) ... */
+                constructor(pat) {
+                    this.octkit = new Octokit({
+                        auth: pat
+                    });
+                    logMessage("Octokit初期化完了。", "info");
+                }
+
+                async repoInfo(currentOwner, currentRepo) {
+
+                    const repoProjectsQuery = `
+                    query GetRepositoryProjects($owner: String!, $name: String!) {
+                    repository(owner: $owner, name: $name) {
+                        id
+                        projectsV2(first: 20, orderBy: {field: TITLE, direction: ASC}) {
+                        nodes {
+                            id
+                            title
+                            number
+                            fields(first: 30) {
+                            nodes {
+                                ... on ProjectV2FieldCommon { id name dataType }
+                                ... on ProjectV2SingleSelectField { options { id name } }
+                            }
+                            }
+                        }
+                        }
+                    }
+                    }`;
+
+                    const response = await this.executeGraphQL(repoProjectsQuery, {
+                        owner: currentOwner,
+                        name: currentRepo
+                    }, "リポジトリ情報とProjectV2一覧取得");
+                    this.currentOwner = currentOwner;
+                    this.currentRepo = currentRepo;
+                    if (response && response.repository) {
+                        this.repositoryNodeId = response.repository.id;
+                        logMessage(`リポジトリNode ID: ${repositoryNodeId} を取得しました。`, "success");
+
+                        projectsV2Info = response.repository.projectsV2.nodes.map(p => ({
+                            id: p.id,
+                            title: p.title,
+                            number: p.number,
+                            fields: p.fields.nodes.filter(f => f)
+                        }));
+
+                        projectSelect.innerHTML = '<option value="">-- プロジェクトを選択 --</option>';
+                        projectsV2Info.forEach(p => {
+                            const option = document.createElement('option');
+                            option.value = p.id;
+                            option.textContent = `${p.title} (#${p.number})`;
+                            projectSelect.appendChild(option);
+                        }
+                        );
+                        if (projectsV2Info.length > 0) {
+                            projectSelect.selectedIndex = 1;
+                            projectSelect.dispatchEvent(new Event('change'));
+                        } else {
+                            logMessage("このリポジトリに紐づくProject V2は見つかりませんでした。", "warning");
+                        }
+
+                        await this.loadAndRenderRepoMilestonesREST();
+
+                    } else {
+                        logMessage("リポジトリ情報またはProjectV2の取得に失敗しました。", "error");
+                    }
+                }
+
+                async executeGraphQL(query, variables, operationName) {
+                    // (変更なし)d
+                    if (!this.octkit) {
+                        logMessage("エラー: Octokitが初期化されていません。PATを確認してください。", "error");
+                        return null;
+                    }
+                    logMessage(`${operationName} を実行中...`, "info");
+                    setButtonsDisabled(true, [testGeminiApiBtn.id, generateScenariosBtn.id, createMilestonesFromJsonBtn.id, createGhMilestoneBtn.id, deleteMilestonesByPrefixBtn.id, generateCriticalPathBtn.id, listGeminiModelsBtn.id]);
+                    try {
+                        const response = await this.octkit.graphql(query, variables);
+                        logMessage(`${operationName} 成功。詳細はコンソール確認。`, "success");
+                        console.log(`${operationName} Response:`, response);
+                        return response;
+                    } catch (error) {
+                        console.error(`${operationName} エラー詳細:`, error);
+                        let errorMessageText = `${operationName} エラー: ${error.message || '不明なエラー'}`;
+                        if (error.data && error.data.errors)
+                            errorMessageText += `\nGraphQL Errors: ${JSON.stringify(error.data.errors, null, 2)}`;
+                        logMessage(errorMessageText, "error");
+                        return null;
+                    } finally {
+                        setButtonsDisabled(false, [testGeminiApiBtn.id, generateScenariosBtn.id, createMilestonesFromJsonBtn.id, createGhMilestoneBtn.id, deleteMilestonesByPrefixBtn.id, generateCriticalPathBtn.id, listGeminiModelsBtn.id]);
+                    }
+                }
+
+                async executeRestApi(method, endpoint, bodyParams, operationName) {
+                    // (変更なし)
+                    if (!this.octkit) {
+                        logMessage("エラー: Octokitが初期化されていません。PATを確認してください。", "error");
+                        return null;
+                    }
+                    logMessage(`${operationName} を実行中 (REST)...`, "info");
+                    setButtonsDisabled(true, [testGeminiApiBtn.id, generateScenariosBtn.id, createMilestonesFromJsonBtn.id, createGhMilestoneBtn.id, deleteMilestonesByPrefixBtn.id, generateCriticalPathBtn.id, listGeminiModelsBtn.id]);
+                    try {
+                        const response = await this.octkit.request(`${method.toUpperCase()} ${endpoint}`, bodyParams);
+                        logMessage(`${operationName} 成功。詳細はコンソール確認。`, "success");
+                        console.log(`${operationName} Response:`, response.data);
+                        return response.data;
+                    } catch (error) {
+                        console.error(`${operationName} エラー詳細:`, error);
+                        let errorMessageText = `${operationName} エラー: ${error.message || '不明なエラー'}`;
+                        if (error.response && error.response.data) {
+                            errorMessageText += `\nAPI Response: ${JSON.stringify(error.response.data, null, 2)}`;
+                        }
+                        logMessage(errorMessageText, "error");
+                        return null;
+                    } finally {
+                        setButtonsDisabled(false, [testGeminiApiBtn.id, generateScenariosBtn.id, createMilestonesFromJsonBtn.id, createGhMilestoneBtn.id, deleteMilestonesByPrefixBtn.id, generateCriticalPathBtn.id, listGeminiModelsBtn.id]);
+                    }
+                }
+
+                async loadAndRenderRepoMilestonesREST() {
+                    // (変更なし)
+                    if (!this.currentOwner || !this.currentRepo || !this.octkit) {
+                        logMessage("リポジトリ情報が未ロードかOctokit未初期化です。Milestoneを読み込めません。", "warning");
+                        return;
+                    }
+                    const milestones = await this.executeRestApi('GET', `/repos/${this.currentOwner}/${this.currentRepo}/milestones`, {
+                        state: 'open',
+                        sort: 'due_on',
+                        direction: 'asc',
+                        per_page: 50
+                    }, "既存GitHub Milestones取得 (REST)");
+
+                    if (milestones) {
+                        this.existingRepoMilestones = milestones.map(ms => ({
+                            id: ms.node_id,
+                            number: ms.number,
+                            title: ms.title,
+                            description: ms.description,
+                            dueOn: ms.due_on,
+                            url: ms.html_url,
+                            key_deliverables: extractKeyDeliverables(ms.description)
+                        }));
+                        renderExistingMilestones();
+                    }
+
+                }
+                async createSingleGithubMilestone(baseTitle, description, dueDate, prefix="", suffix="") {
+                    // (変更なし)
+                    if (!this.currentOwner || !this.currentRepo || !this.octkit) {
+                        logMessage("リポジトリ情報が未ロードかOctokit未初期化です。Milestoneを読み込めません。", "warning");
+                        return;
+                    }
+
+                    if (!baseTitle) {
+                        logMessage("エラー: Milestoneタイトル(ベース)は必須です。", "error");
+                        return null;
+                    }
+
+                    const fullTitle = `${prefix}${baseTitle}${suffix}`;
+
+                    const requestBody = {
+                        title: fullTitle
+                    };
+                    if (description)
+                        requestBody.description = description;
+                    if (dueDate)
+                        requestBody.due_on = new Date(dueDate).toISOString();
+
+                    return await this.executeRestApi('POST', `/repos/${this.currentOwner}/${this.currentRepo}/milestones`, requestBody, `GitHub Milestone作成: ${fullTitle}`);
+                }
+
+                async deleteMilestonePrefix(prefixToDelete) {
+                    if (!this.existingRepoMilestones) {
+                        logMessage("リポジトリ情報が未ロードかOctokit未初期化です。Milestoneを読み込めません。", "warning");
+                        return;
+                    }
+                    const milestonesToDelete = this.existingRepoMilestones.filter(ms => ms.title.startsWith(prefixToDelete));
+
+                    if (milestonesToDelete.length === 0) {
+                        logMessage(`Prefix「${prefixToDelete}」で始まるオープンなMilestoneは見つかりませんでした。`, "info");
+                        return;
+                    }
+
+                    if (!confirm(`Prefix「${prefixToDelete}」で始まる以下の ${milestonesToDelete.length} 件のMilestoneを削除しますか？\n${milestonesToDelete.map(ms => `- ${ms.title} (#${ms.number})`).join('\n')}\nこの操作は元に戻せません。`)) {
+                        logMessage("Milestone削除処理をキャンセルしました。", "info");
+                        return;
+                    }
+
+                    logMessage(`${milestonesToDelete.length}件のMilestoneを削除します...`, "info");
+                    let successCount = 0;
+                    let errorCount = 0;
+
+                    for (const ms of milestonesToDelete) {
+                        const deleted = await this.executeRestApi('DELETE', `/repos/${this.currentOwner}/${this.currentRepo}/milestones/${ms.number}`, {}, `Milestone削除: ${ms.title}`);
+                        if (deleted !== null) {
+                            successCount++;
+                        } else {
+                            errorCount++;
+                        }
+                    }
+                    logMessage(`指定PrefixのMilestone削除完了。成功: ${successCount}件, 失敗: ${errorCount}件`, errorCount > 0 ? "warning" : "success");
+                    deleteMilestonePrefixInput.value = '';
+                }
+
+                async createIssue(title, body, labelsStr=null, projectNodeId=null, milestoneNodeId=null) {
+                    if (!this.currentOwner || !this.currentRepo || !this.octkit) {
+                        logMessage("リポジトリ情報が未ロードかOctokit未初期化です。Milestoneを読み込めません。", "warning");
+                        return;
+                    }
+                    const owner = this.currentOwner;
+                    const repo = this.currentRepo;
+                    const createIssueMutation = `
+                    mutation CreateIssueForProject(
+                        $repoId: ID!, $title: String!, $body: String, 
+                        $labelIds: [ID!], $assigneeIds: [ID!], $milestoneId: ID
+                    ) {
+                        createIssue(input: {
+                            repositoryId: $repoId, title: $title, body: $body, 
+                            labelIds: $labelIds, assigneeIds: $assigneeIds, milestoneId: $milestoneId
+                        }) {
+                            issue { id, number, title, url }
+                        }
+                    }`;
+
+                    const issueInput = {
+                        repoId: this.repositoryNodeId,
+                        title,
+                        body
+                    };
+                    if (milestoneNodeId)
+                        issueInput.milestoneId = milestoneNodeId;
+
+                    const createdIssueResponse = await this.executeGraphQL(createIssueMutation, issueInput, "GraphQLでIssue作成");
+                    if (!createdIssueResponse || !createdIssueResponse.createIssue || !createdIssueResponse.createIssue.issue) {
+                        logMessage("Issueの作成に失敗しました。", "error");
+                        return;
+                    }
+                    const issueNodeId = createdIssueResponse.createIssue.issue.id;
+                    const issueNumber = createdIssueResponse.createIssue.issue.number;
+                    this.currentIssueNumber = issueNumber;
+                    logMessage(`Issue #${issueNumber} (Node ID: ${issueNodeId}) を作成しました。`, "success");
+
+                    const addItemMutation = `
+                    mutation AddItemToProject($projectId: ID!, $contentId: ID!) {
+                        addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+                            item { id }
+                        }
+                    }`;
+                    const addItemResponse = await this.executeGraphQL(addItemMutation, {
+                        projectId: projectNodeId,
+                        contentId: issueNodeId
+                    }, "プロジェクトへIssue追加");
+                    if (!addItemResponse || !addItemResponse.addProjectV2ItemById || !addItemResponse.addProjectV2ItemById.item) {
+                        logMessage("プロジェクトへのアイテム追加に失敗しました。", "error");
+                        return;
+                    }
+                    const itemNodeId = addItemResponse.addProjectV2ItemById.item.id;
+                    logMessage(`アイテム (Node ID: ${itemNodeId}) をプロジェクトに追加しました。初期ステータスを確認してください (通常はNo Statusまたはデフォルト)。`, "success");
+
+                    if (labelsStr) {
+                        const labels = labelsStr.split(',').map(l => l.trim()).filter(l => l);
+                        if (labels.length > 0) {
+                            await executeRestApi('POST', `/repos/{owner}/{repo}/issues/{issue_number}/labels`, {
+                                owner,
+                                repo,
+                                issue_number: issueNumber,
+                                labels
+                            }, `ラベル追加 (${labels.join(',')})`);
+                        }
+                    }
+
+                    if (owner) {
+                        const assignees = owner;
+                        if (assignees.length > 0) {
+                            await this.executeRestApi('POST', `/repos/{owner}/{repo}/issues/{issue_number}/assignees`, {
+                                owner,
+                                repo,
+                                issue_number: issueNumber,
+                                assignees
+                            }, `担当者割り当て (${assignees})`);
+                        }
+                    }
+                }
+                ;
+            }
+            let github;
+
+            // --- App State ---
+
+            let repositoryNodeId;
+            let currentOwner;
+            let currentRepo;
+            let projectsV2Info = [];
+            let existingRepoMilestones = [];
+            let genAI;
+            // GoogleGenAIインスタンスを保持
+            let availableGeminiModels = [];
+            let selectedGeminiModel = "";
+            let generatedScenarios = [];
+            let selectedScenario = null;
+            let generatedCriticalPath = [];
+
+            // --- 初期値設定 (概念文書のみJSで設定) ---
+            conceptualDocumentInputScenario.value = `プロジェクト名: AI駆動型プロジェクト管理支援SPA
+
+背景:
+複雑化するソフトウェア開発プロジェクトにおいて、計画立案、タスク管理、進捗追跡は依然として大きな課題である。特に、初期の要求定義から具体的なタスクへの落とし込み、変化への柔軟な対応、そして開発者体験の向上は常に求められている。
+
+目的:
+本プロジェクトの目的は、AI (特に大規模言語モデル) の能力を活用し、プロジェクトの計画立案からIssue発行、進捗管理までを支援するSPA (Single Page Application) を開発することである。これにより、以下の価値を提供する。
+1.  計画策定の効率化: 概念的なアイデアから、具体的なマイルストーン、シナリオ、タスク(Issue)への展開をAIが支援する。
+2.  柔軟なリスケジューリング: 状況変化に応じて、AIが再計画案を提示し、迅速な意思決定をサポートする。
+3.  GitHub連携の強化: GitHub Projects V2, Issues, Milestonesとシームレスに連携し、開発ワークフローに自然に統合される。
+4.  開発者体験の向上: 面倒な手作業を自動化・半自動化し、開発者がより創造的な作業に集中できる環境を提供する。
+
+主要機能:
+1.  マイルストーン定義支援: ユーザーが入力した概念文書に基づき、AIが複数のマイルストーン案(期間、主要成果物を含む)を提案。ユーザーは編集・承認し、GitHub標準Milestoneとして登録。
+2.  シナリオ生成: 承認されたマイルストーン群と概念文書を基に、AIが複数の実行シナリオ(異なるアプローチや重点事項を反映)を提案。ユーザーが一つを選択。
+3.  クリティカルパス生成: 選択されたシナリオとターゲットマイルストーンに基づき、AIがそのマイルストーン達成のための具体的なIssue骨子群(タスクリスト)を提案。
+4.  Issue発行支援: ユーザーがAI提案のIssue骨子を基に、外部ツール(NotebookLM, AI Studio等)で詳細なIssue記述を作成し、本SPAに持ち込む。SPAはこれをGitHub Issueとして発行し、関連Milestoneに紐付け、Project V2にアイテムとして追加。
+5.  (将来機能) リスケジューリング支援: 進捗の遅れや仕様変更が発生した場合、AIが影響範囲を分析し、新たなシナリオやタスク調整案を提示。
+
+ターゲットユーザー:
+小〜中規模のソフトウェア開発チーム、個人開発者、プロジェクトマネージャー。
+
+技術スタック(想定):
+- フロントエンド: HTML, CSS, JavaScript (フレームワークは未定だが、最初はVanilla JSでUIロジック検証)
+- AI: Gemini API (Google Generative AI)
+- バージョン管理・プロジェクト管理: GitHub (Issues, Milestones, Projects V2)
+- API連携: Octokit.js
+
+期待される成果物:
+- 上記主要機能1〜4を実装したSPAのプロトタイプ。
+- GitHubリポジトリ (ソースコード、ドキュメント)
+- 簡単な利用ガイド
+
+その他前提条件:
+- ユーザーはGitHubアカウントと、Gemini APIキーを所有しているものとする。
+- SPAはクライアントサイドで動作し、原則としてサーバーサイドの処理は持たない。
+`;
+
+            function setButtonsDisabled(disabled, exceptIds=[]) {
+                document.querySelectorAll('button').forEach(button => {
+                    if (!exceptIds.includes(button.id))
+                        button.disabled = disabled;
+                }
+                );
+                loadingSpinner.style.display = disabled ? 'block' : 'none';
+            }
+
+            function showPhase(phaseId) {
+                // (変更なし)
+                document.querySelectorAll('.phase').forEach(phase => phase.classList.remove('active'));
+                document.getElementById(phaseId).classList.add('active');
+                document.querySelectorAll('.phase-navigation button').forEach(btn => btn.classList.remove('active-nav'));
+                if (phaseId === 'config-phase')
+                    navConfigBtn.classList.add('active-nav');
+                else if (phaseId === 'milestone-phase')
+                    navMilestoneBtn.classList.add('active-nav');
+                else if (phaseId === 'scenario-phase')
+                    navScenarioBtn.classList.add('active-nav');
+                else if (phaseId === 'issue-phase')
+                    navIssueBtn.classList.add('active-nav');
+            }
+
+            navConfigBtn.addEventListener('click', () => showPhase('config-phase'));
+            navMilestoneBtn.addEventListener('click', () => {
+                if (!currentOwner || !currentRepo) {
+                    alert("先に「0. 基本設定」でリポジトリ情報を読み込んでください。");
+                    showPhase('config-phase');
+                    return;
+                }
+                showPhase('milestone-phase');
+                github.loadAndRenderRepoMilestonesREST();
+            }
+            );
+            navScenarioBtn.addEventListener('click', () => {
+                if (github.existingRepoMilestones.length === 0) {
+                    alert("先にMilestoneを定義・作成してください。");
+                    showPhase('milestone-phase');
+                    return;
+                }
+                renderMilestonesForScenarioInput();
+                showPhase('scenario-phase');
+            }
+            );
+            navIssueBtn.addEventListener('click', () => {
+                if (!selectedScenario) {
+                    alert("先にシナリオを選択してください。");
+                    showPhase('scenario-phase');
+                    return;
+                }
+                populateTargetMilestoneForCpSelect();
+                updateIssuePhaseContextDisplay();
+                showPhase('issue-phase');
+            }
+            );
+
+            // --- GitHub API Related ---
+            loadRepoInfoBtn.addEventListener('click', async () => {
+                const pat = githubPatInput.value.trim();
+                currentOwner = ownerInput.value.trim();
+                currentRepo = repoInput.value.trim();
+
+                if (!pat || !currentOwner || !currentRepo) {
+                    logMessage("エラー: GitHub PAT、所有者、リポジトリ名をすべて入力してください。", "error");
+                    return;
+                }
+
+                github = new GithubApi(pat);
+                github.repoInfo(currentOwner, currentRepo);
+
+            }
+            );
+
+            projectSelect.addEventListener('change', () => {
+                // (statusFieldOptionsDebugのロジックは削除またはコメントアウト)
+                const selectedProjectId = projectSelect.value;
+                selectedProjectNodeIdDisplay.value = selectedProjectId;
+                const project = projectsV2Info.find(p => p.id === selectedProjectId);
+                if (project) {
+                    logMessage(`プロジェクト「${project.title}」が選択されました。`, "info");
+                }
+            }
+            );
+
+            function extractKeyDeliverables(descriptionText) {
+                // (変更なし)
+                if (!descriptionText)
+                    return [];
+                const deliverablesMatch = descriptionText.match(/\*\*主要成果物:\*\*\n((?:- .+\n?)+)/i);
+                if (deliverablesMatch && deliverablesMatch[1]) {
+                    return deliverablesMatch[1].split('\n').map(line => line.replace(/^- /, '').trim()).filter(line => line);
+                }
+                return [];
+            }
+
+            function renderExistingMilestones() {
+                // (変更なし)
+                existingMilestonesArea.innerHTML = '';
+                if (github.existingRepoMilestones.length === 0) {
+                    existingMilestonesArea.textContent = "オープンなMilestoneはありません。";
+                    return;
+                }
+                const ul = document.createElement('ul');
+                github.existingRepoMilestones.forEach(ms => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<strong>${ms.title} (#${ms.number})</strong> - 期日: ${ms.dueOn ? new Date(ms.dueOn).toLocaleDateString() : '未設定'} <a href="${ms.url}" target="_blank">表示</a><br><small>${ms.description ? ms.description.substring(0, 100) + '...' : '(説明なし)'}</small>`;
+                    ul.appendChild(li);
+                }
+                );
+                existingMilestonesArea.appendChild(ul);
+            }
+
+            createGhMilestoneBtn.addEventListener('click', async () => {
+                // (変更なし)
+                const prefix = milestonePrefixSingleInput.value.trim();
+                const suffix = milestoneSuffixSingleInput.value.trim();
+                const createdMilestone = await github.createSingleGithubMilestone(milestoneTitleInput.value.trim(), milestoneDescriptionInput.value.trim(), milestoneDueDateInput.value, prefix, suffix);
+
+                if (createdMilestone) {
+                    logMessage(`Milestone「${createdMilestone.title}」(#${createdMilestone.number}) を作成しました。`, "success");
+                    milestoneTitleInput.value = '';
+                    milestoneDescriptionInput.value = '';
+                    milestoneDueDateInput.value = '';
+                    milestonePrefixSingleInput.value = '';
+                    milestoneSuffixSingleInput.value = '';
+                    await github.loadAndRenderRepoMilestonesREST();
+                }
+            }
+            );
+
+            createMilestonesFromJsonBtn.addEventListener('click', async () => {
+                // (変更なし)
+                const jsonString = milestonesJsonInput.value.trim();
+                const prefix = milestonePrefixJsonInput.value.trim();
+                const suffix = milestoneSuffixJsonInput.value.trim();
+
+                if (!jsonString) {
+                    logMessage("エラー: JSON入力が空です。", "error");
+                    return;
+                }
+
+                let milestonesToCreate;
+                try {
+                    milestonesToCreate = JSON.parse(jsonString);
+                    if (!Array.isArray(milestonesToCreate)) {
+                        throw new Error("入力はJSON配列である必要があります。");
+                    }
+                } catch (e) {
+                    logMessage(`JSONパースエラー: ${e.message}`, "error");
+                    return;
+                }
+
+                if (milestonesToCreate.length === 0) {
+                    logMessage("作成するマイルストーンがありません。", "info");
+                    return;
+                }
+
+                logMessage(`${milestonesToCreate.length}件のマイルストーンを一括作成します...`, "info");
+                let successCount = 0;
+                let errorCount = 0;
+
+                for (const msData of milestonesToCreate) {
+                    const baseTitle = msData.name;
+                    let description = msData.description || "";
+
+                    if (msData.key_deliverables && Array.isArray(msData.key_deliverables)) {
+                        description += "\n\n**主要成果物:**\n" + msData.key_deliverables.map(d => `- ${d}`).join("\n");
+                    }
+                    if (msData.dependencies && Array.isArray(msData.dependencies)) {
+                        description += "\n\n**依存関係（テキスト）:**\n" + msData.dependencies.map(d => `- ${d}`).join("\n");
+                    }
+
+                    let dueDate = null;
+                    if (msData.estimated_duration) {
+                        const durationStr = msData.estimated_duration;
+                        const today = new Date();
+                        const durationMatch = durationStr.match(/(\d+)\s*(時間|日間|週間|ヶ月)/);
+                        if (durationMatch) {
+                            const num = parseInt(durationMatch[1]);
+                            const unit = durationMatch[2];
+                            let targetDate = new Date(today);
+                            if (unit === "日間")
+                                targetDate.setDate(today.getDate() + num);
+                            else if (unit === "週間")
+                                targetDate.setDate(today.getDate() + num * 7);
+                            else if (unit === "ヶ月")
+                                targetDate.setMonth(today.getMonth() + num);
+                            if (unit !== "時間") {
+                                dueDate = targetDate.toISOString().split('T')[0];
+                            }
+                        }
+                    }
+
+                    const created = await github.createSingleGithubMilestone(baseTitle, description.trim(), dueDate, prefix, suffix);
+                    if (created) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                        logMessage(`Milestone「${prefix}${baseTitle}${suffix}」の作成に失敗しました。`, "error");
+                    }
+                }
+
+                logMessage(`マイルストーン一括作成完了。成功: ${successCount}件, 失敗: ${errorCount}件`, errorCount > 0 ? "warning" : "success");
+                if (successCount > 0) {
+                    milestonesJsonInput.value = '';
+                    milestonePrefixJsonInput.value = '';
+                    milestoneSuffixJsonInput.value = '';
+                    await github.loadAndRenderRepoMilestonesREST();
+                }
+            }
+            );
+
+            deleteMilestonesByPrefixBtn.addEventListener('click', async () => {
+                // (変更なし)
+                const prefixToDelete = deleteMilestonePrefixInput.value.trim();
+                if (!prefixToDelete) {
+                    logMessage("エラー: 削除対象のPrefixを入力してください。", "error");
+                    return;
+                }
+                await github.loadAndRenderRepoMilestonesREST();
+                await github.deleteMilestonePrefix(prefixToDelete);
+                await github.loadAndRenderRepoMilestonesREST();
+            }
+            );
+
+            // --- Gemini API Related ---
+            async function initializeGenAI() {
+                if (genAI)
+                    return true;
+                const apiKey = geminiApiKeyInput.value.trim();
+                if (!apiKey) {
+                    logMessage("エラー: Gemini APIキーが入力されていません。", "error");
+                    return false;
+                }
+                try {
+                    // GoogleGenAIのインスタンス化を修正
+                    genAI = new GoogleGenAI({
+                        apiKey: apiKey
+                    });
+                    logMessage("Gemini SDK初期化完了。", "info");
+                    return true;
+                } catch (e) {
+                    logMessage(`Gemini SDKの初期化エラー: ${e.message}`, "error");
+                    return false;
+                }
+            }
+
+            listGeminiModelsBtn.addEventListener('click', async () => {
+                if (!await initializeGenAI())
+                    return;
+
+                logMessage("利用可能なGeminiモデルを取得中...", "info");
+                setButtonsDisabled(true, [loadRepoInfoBtn.id, testGeminiApiBtn.id]);
+                try {
+                    // モデルリスト取得方法を修正
+                    const modelsResult = await genAI.models.list();
+                    availableGeminiModels = [];
+                    geminiModelSelect.innerHTML = '<option value="">-- モデルを選択 --</option>';
+                    let count = 0;
+
+                    let modelsArray = [];
+                    // SDKの `list()` メソッドは通常、非同期イテラブルまたはモデルの配列を直接返す
+                    // ユーザー提供のログでは `pageInternal` に配列があったが、より一般的な処理を試みる
+                    if (modelsResult && typeof modelsResult[Symbol.asyncIterator] === 'function') {
+                        for await(const m of modelsResult) {
+                            modelsArray.push(m);
+                        }
+                    } else if (modelsResult && Array.isArray(modelsResult.pageInternal)) {
+                        // ユーザーログの形式
+                        modelsArray = modelsResult.pageInternal;
+                    } else if (Array.isArray(modelsResult)) {
+                        // SDKが直接配列を返す場合
+                        modelsArray = modelsResult;
+                    } else {
+                        logMessage("モデルリストの取得形式が予期したものではありません。", "warning");
+                    }
+
+                    for (const m of modelsArray) {
+                        // フィルタリング条件を削除し、nameとdisplayNameを持つものをリストアップ
+                        if (m && m.name && m.displayName) {
+                            availableGeminiModels.push({
+                                name: m.name,
+                                displayName: m.displayName
+                            });
+                            const option = document.createElement('option');
+                            option.value = m.name;
+                            option.textContent = `${m.displayName} (${m.name})`;
+                            geminiModelSelect.appendChild(option);
+                            count++;
+                        }
+                    }
+                    logMessage(`${count} 件の利用可能なGeminiモデルを取得しました。`, "success");
+                    if (availableGeminiModels.length > 0) {
+                        const defaultModelName = "models/gemini-1.5-flash-latest";
+                        const foundDefault = availableGeminiModels.find(m => m.name === defaultModelName);
+                        if (foundDefault) {
+                            geminiModelSelect.value = foundDefault.name;
+                        } else if (geminiModelSelect.options.length > 1) {
+                            geminiModelSelect.selectedIndex = 1;
+                        }
+                        selectedGeminiModel = geminiModelSelect.value;
+                        if (selectedGeminiModel) {
+                            logMessage(`デフォルトモデルとして「${selectedGeminiModel}」を選択しました。`, "info");
+                        } else {
+                            logMessage("適切なデフォルトモデルが見つかりませんでした。手動で選択してください。", "warning");
+                        }
+                    } else {
+                        logMessage("利用可能なモデルが見つかりませんでした。", "warning");
+                    }
+                } catch (error) {
+                    console.error("Geminiモデルリスト取得エラー:", error);
+                    logMessage(`Geminiモデルリスト取得エラー: ${error.message || JSON.stringify(error)}`, "error");
+                } finally {
+                    setButtonsDisabled(false, [loadRepoInfoBtn.id, testGeminiApiBtn.id]);
+                }
+            }
+            );
+
+            geminiModelSelect.addEventListener('change', (event) => {
+                selectedGeminiModel = event.target.value;
+                logMessage(`Geminiモデルを「${selectedGeminiModel}」に変更しました。`, "info");
+            }
+            );
+
+            testGeminiApiBtn.addEventListener('click', async () => {
+                if (!await initializeGenAI())
+                    return;
+
+                if (!selectedGeminiModel) {
+                    logMessage("エラー: 使用するGeminiモデルを選択してください。「利用可能Geminiモデル取得」を実行してください。", "error");
+                    geminiTestOutput.textContent = "エラー: 使用するGeminiモデルが選択されていません。";
+                    geminiTestOutput.style.color = "red";
+                    return;
+                }
+
+                logMessage(`Gemini API (${selectedGeminiModel}) にテストリクエスト送信中...`, "info");
+                geminiTestOutput.textContent = "テスト実行中...";
+                geminiTestOutput.style.color = "blue";
+                setButtonsDisabled(true, [loadRepoInfoBtn.id, listGeminiModelsBtn.id]);
+
+                try {
+                    // getGenerativeModelではなく、genAI.models.generateContentを使用
+                    const modelNameForRequest = selectedGeminiModel.startsWith("models/") ? selectedGeminiModel : `models/${selectedGeminiModel}`;
+
+                    const result = await genAI.models.generateContent({
+                        model: modelNameForRequest,
+                        // モデル名を直接指定
+                        contents: [{
+                            role: "user",
+                            parts: [{
+                                text: "Hello Gemini, this is a test. Respond with 'Test OK' if you are working."
+                            }]
+                        }]
+                    });
+
+                    const text = result.candidates[0].content.parts[0].text;
+
+                    logMessage(`Gemini APIテスト応答: ${text}`, "success");
+                    geminiTestOutput.textContent = `成功: ${text}`;
+                    geminiTestOutput.style.color = "green";
+
+                } catch (error) {
+                    console.error("Gemini APIテストエラー詳細:", error);
+                    logMessage(`Gemini APIテストエラー: ${error.message || JSON.stringify(error)}`, "error");
+                    geminiTestOutput.textContent = `エラー: ${error.message || '不明なエラー'}`;
+                    geminiTestOutput.style.color = "red";
+                } finally {
+                    setButtonsDisabled(false, [loadRepoInfoBtn.id, listGeminiModelsBtn.id]);
+                }
+            }
+            );
+
+            generateScenariosBtn.addEventListener('click', async () => {
+                if (!await initializeGenAI())
+                    return;
+                const conceptualDocument = conceptualDocumentInputScenario.value.trim();
+
+                if (!conceptualDocument) {
+                    logMessage("エラー: シナリオ生成には概念文書の入力が必要です。", "error");
+                    return;
+                }
+                if (github.existingRepoMilestones.length === 0) {
+                    logMessage("エラー: シナリオ生成には少なくとも1つの既存マイルストーンが必要です。", "error");
+                    return;
+                }
+                if (!selectedGeminiModel) {
+                    logMessage("エラー: 使用するGeminiモデルを選択してください。", "error");
+                    return;
+                }
+
+                logMessage("AIによるシナリオ生成を開始します...", "info");
+                scenarioProposalsOutput.textContent = "シナリオ生成中...";
+                setButtonsDisabled(true, [loadRepoInfoBtn.id, testGeminiApiBtn.id, listGeminiModelsBtn.id]);
+
+                const milestonesForPrompt = github.existingRepoMilestones.map(ms => ({
+                    id: ms.number,
+                    title: ms.title,
+                    description: ms.description,
+                    dueOn: ms.dueOn
+                }));
+
+                const scenarioGenerationPrompt = `
+あなたは経験豊富なプロジェクト戦略家です。提供された「概念文書」と「定義済みマイルストーン群」を分析し、プロジェクトを推進するための複数の論理的な実行シナリオを提案してください。
+各シナリオは、プロジェクト目標達成のための異なるアプローチや重点事項を反映するものとします。創造的なストーリーテリングではなく、与えられた情報から導き出される合理的な選択肢を提示してください。
+
+## 入力情報:
+1.  概念文書:
+    ${conceptualDocument}
+
+2.  定義済みマイルストーン群 (JSON形式):
+    ${JSON.stringify(milestonesForPrompt, null, 2)}
+
+## 指示:
+1.  上記の入力情報を基に、2〜4個程度の異なる実行シナリオを考案してください。
+2.  各シナリオには、以下の情報を含めてください。
+    * \`scenario_id\`: シナリオを一意に識別するID（例: "SCN-01", "SCN-02"）。
+    * \`scenario_name\`: シナリオの特性を簡潔に示す名称。
+    * \`scenario_description\`: そのシナリオの主要な戦略、アプローチ、想定されるメリット・デメリットを具体的に説明してください。
+    * \`focus_milestones\`: このシナリオにおいて特に注力すべき、あるいは進行順序やリソース配分に特徴が出るマイルストーンのID(number)リスト。
+    * \`approach_summary\`: プロジェクトの進め方に関するアプローチの要約。
+    * \`considerations\`: このシナリオを選択した場合に考慮すべき事項や潜在的な課題点。
+3.  出力は、必ず以下のJSON形式の配列としてください。
+
+## 出力形式 (JSON):
+[
+  {
+    "scenario_id": "string",
+    "scenario_name": "string",
+    "scenario_description": "string",
+    "focus_milestones": [number, number, ...],
+    "approach_summary": "string",
+    "considerations": "string"
+  }
+]
+`;
+
+                const safetySettings = [{
+                    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                    threshold: HarmBlockThreshold.BLOCK_NONE
+                }, {
+                    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold: HarmBlockThreshold.BLOCK_NONE
+                }, {
+                    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                    threshold: HarmBlockThreshold.BLOCK_NONE
+                }, {
+                    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold: HarmBlockThreshold.BLOCK_NONE
+                }, ];
+                const generationConfig = {
+                    // temperature: 1.0, 
+                    // topP: 0.8,
+                    responseMimeType: 'application/json',
+                    //safetySettings:safetySettings
+                };
+                const systemInstructionForScenario = {
+                    parts: [{
+                        text: "あなたはプロジェクト戦略の専門家として、JSON形式でシナリオ提案を出力します。"
+                    }]
+                };
+
+                try {
+                    const modelNameForRequest = selectedGeminiModel.startsWith("models/") ? selectedGeminiModel : `models/${selectedGeminiModel}`;
+
+                    const result = await genAI.models.generateContent({
+                        model: modelNameForRequest,
+                        contents: [{
+                            role: "user",
+                            parts: [{
+                                text: scenarioGenerationPrompt
+                            }]
+                        }],
+                        config: generationConfig
+                    });
+
+                    const scenariosText = result.candidates[0].content.parts[0].text;
+
+                    generatedScenarios = JSON.parse(scenariosText);
+
+                    logMessage(`AIが ${generatedScenarios.length} 件のシナリオを生成しました。`, "success");
+                    renderGeneratedScenarios();
+
+                } catch (error) {
+                    console.error("シナリオ生成AIエラー:", error);
+                    logMessage(`シナリオ生成AIエラー: ${error.message || JSON.stringify(error)}`, "error");
+                    scenarioProposalsOutput.textContent = `エラー: ${error.message || 'シナリオ生成に失敗しました。ログを確認してください。'}`;
+                } finally {
+                    setButtonsDisabled(false, [loadRepoInfoBtn.id, testGeminiApiBtn.id, listGeminiModelsBtn.id]);
+                }
+            }
+            );
+
+            function renderGeneratedScenarios() {
+                // (変更なし)
+                scenarioProposalsOutput.innerHTML = '';
+                if (!generatedScenarios || generatedScenarios.length === 0) {
+                    scenarioProposalsOutput.textContent = "シナリオ案はありません。";
+                    return;
+                }
+                generatedScenarios.forEach(sc => {
+                    const card = document.createElement('div');
+                    card.className = 'scenario-card';
+                    card.innerHTML = `
+                    <h4>${sc.scenario_name} (ID: ${sc.scenario_id})</h4>
+                    <p><strong>説明:</strong> ${sc.scenario_description}</p>
+                    <p><strong>アプローチ要約:</strong> ${sc.approach_summary}</p>
+                    <p><strong>注力マイルストーン (Number):</strong> ${Array.isArray(sc.focus_milestones) ? sc.focus_milestones.join(', ') : 'N/A'}</p>
+                    <p><strong>考慮事項:</strong> ${sc.considerations}</p>
+                    <button class="select-scenario-btn" data-scenario-id="${sc.scenario_id}">このシナリオを選択</button>
+                `;
+                    scenarioProposalsOutput.appendChild(card);
+                }
+                );
+
+            }
+
+            document.querySelectorAll('.select-scenario-btn').forEach(button => {
+                if (typeof button.onclick === 'function') {
+                    console.warn('legacyButton に onclick ハンドラは設定されていません。');
+                }
+                button.onclick = handleSelectScenario;
+            }
+            );
+
+            function handleSelectScenario(event) {
+                // (変更なし)
+                const scenarioId = event.target.dataset.scenarioId;
+                selectedScenario = generatedScenarios.find(s => s.scenario_id === scenarioId);
+                if (selectedScenario) {
+                    logMessage(`シナリオ「${selectedScenario.scenario_name}」が選択されました。`, "success");
+                    alert(`シナリオ「${selectedScenario.scenario_name}」を選択しました。\n次はIssue発行フェーズでターゲットマイルストーンを選択し、クリティカルパスを生成します。`);
+
+                    populateTargetMilestoneForCpSelect();
+                    updateIssuePhaseContextDisplay();
+                    showPhase('issue-phase');
+                }
+            }
+
+            function renderMilestonesForScenarioInput() {
+                // (変更なし)
+                const displayArea = document.getElementById('milestonesForScenarioInputDisplay');
+                displayArea.innerHTML = '';
+                if (github.existingRepoMilestones.length === 0) {
+                    displayArea.textContent = "現在定義されているオープンなMilestoneはありません。シナリオ生成にはMilestoneが必要です。";
+                    return;
+                }
+                const ul = document.createElement('ul');
+                ul.style.paddingLeft = "20px";
+                github.existingRepoMilestones.forEach(ms => {
+                    const li = document.createElement('li');
+                    li.textContent = `${ms.title} (#${ms.number})${ms.dueOn ? ' - 期日: ' + new Date(ms.dueOn).toLocaleDateString() : ''}`;
+                    ul.appendChild(li);
+                }
+                );
+                displayArea.appendChild(ul);
+            }
+
+            function populateTargetMilestoneForCpSelect() {
+                // (変更なし)
+                targetMilestoneForCpSelect.innerHTML = '<option value="">-- ターゲットMilestone選択 --</option>';
+                linkToMilestoneSelect.innerHTML = '<option value="">-- Milestoneなし --</option>';
+
+                if (github.existingRepoMilestones.length === 0) {
+                    logMessage("クリティカルパス生成のためのMilestoneがありません。", "warning");
+                    return;
+                }
+                github.existingRepoMilestones.forEach(ms => {
+                    const optionCp = document.createElement('option');
+                    optionCp.value = ms.number;
+                    optionCp.textContent = `${ms.title} (#${ms.number})`;
+                    optionCp.dataset.milestoneJson = JSON.stringify(ms);
+                    targetMilestoneForCpSelect.appendChild(optionCp);
+
+                    const optionLink = document.createElement('option');
+                    optionLink.value = ms.number;
+                    optionLink.textContent = `${ms.title} (#${ms.number})`;
+                    linkToMilestoneSelect.appendChild(optionLink);
+                }
+                );
+            }
+
+            function updateIssuePhaseContextDisplay() {
+                // (変更なし)
+                let html = "";
+                if (selectedScenario) {
+                    html += `<p><strong>選択中シナリオ:</strong> ${selectedScenario.scenario_name}</p>`;
+                    const targetMsNumber = targetMilestoneForCpSelect.value;
+                    if (targetMsNumber) {
+                        const targetMs = github.existingRepoMilestones.find(ms => ms.number.toString() === targetMsNumber);
+                        if (targetMs) {
+                            html += `<p><strong>ターゲットMilestone:</strong> ${targetMs.title} (#${targetMs.number})</p>`;
+                        } else {
+                            html += `<p><strong>ターゲットMilestone:</strong> (選択されていません)</p>`;
+                        }
+                    } else {
+                        html += `<p><strong>ターゲットMilestone:</strong> (選択されていません)</p>`;
+                    }
+                } else {
+                    html = "<p>シナリオが選択されていません。</p>";
+                }
+                issuePhaseContextDisplay.innerHTML = html;
+            }
+            targetMilestoneForCpSelect.addEventListener('change', updateIssuePhaseContextDisplay);
+
+            generateCriticalPathBtn.addEventListener('click', async () => {
+                // (safetySettings と systemInstruction の設定方法を修正)
+                if (!await initializeGenAI())
+                    return;
+                const conceptualDocument = conceptualDocumentInputScenario.value.trim();
+                const targetMilestoneNumber = targetMilestoneForCpSelect.value;
+
+                if (!conceptualDocument) {
+                    logMessage("エラー: 概念文書が必要です。", "error");
+                    return;
+                }
+                if (!selectedScenario) {
+                    logMessage("エラー: 先にシナリオを選択してください。", "error");
+                    return;
+                }
+                if (!targetMilestoneNumber) {
+                    logMessage("エラー: ターゲットマイルストーンを選択してください。", "error");
+                    return;
+                }
+                if (!selectedGeminiModel) {
+                    logMessage("エラー: 使用するGeminiモデルを選択してください。", "error");
+                    return;
+                }
+
+                const selectedOption = targetMilestoneForCpSelect.options[targetMilestoneForCpSelect.selectedIndex];
+                const targetMilestoneJson = selectedOption.dataset.milestoneJson;
+                if (!targetMilestoneJson) {
+                    logMessage("エラー: 選択されたターゲットマイルストーン情報(JSON)が見つかりません。", "error");
+                    return;
+                }
+                const targetMilestone = JSON.parse(targetMilestoneJson);
+
+                logMessage("AIによるクリティカルパス生成を開始します...", "info");
+                criticalPathOutput.textContent = "クリティカルパス生成中...";
+                setButtonsDisabled(true, [loadRepoInfoBtn.id, testGeminiApiBtn.id, generateScenariosBtn.id, listGeminiModelsBtn.id]);
+
+                const criticalPathPrompt = `
+あなたは熟練のプロジェクトプランナーです。提供された「概念文書」、「選択されたシナリオ」、そして「ターゲットマイルストーン」の情報を分析し、そのターゲットマイルストーンの主要成果物を達成するための、論理的で実行可能なタスク（Issueの骨子）から成るクリティカルパスを提案してください。
+各タスクは、ターゲットマイルストーンの成果物を具体的に実現するためのステップであり、厳格な因果律に基づいて順序付けられるべきです。創造的なタスク発見ではなく、与えられた情報から論理的に分解・整理してください。
+複数のクリティカルパスが考えられる場合は、最も合理的で効率的と思われるものを一つ提案してください。
+
+## 入力情報:
+1.  概念文書:
+    ${conceptualDocument}
+
+2.  選択されたシナリオ (JSON形式):
+    ${JSON.stringify(selectedScenario, null, 2)}
+
+3.  ターゲットマイルストーン (JSON形式、特にdescription内のkey_deliverablesに注目):
+    ${JSON.stringify(targetMilestone, null, 2)} 
+
+## 指示:
+1.  上記の入力情報を基に、ターゲットマイルストーンの「description」内に記述されている「主要成果物」 (key_deliverables) を達成するための具体的なタスク群を特定し、クリティカルパスとして提案してください。
+2.  各タスク（Issueの骨子）には、以下の情報を含めてください。
+    * \`task_id\`: タスクを一意に識別するID（例: "TASK-${targetMilestone.number}-01"のようにターゲットマイルストーン番号をプレフィックスに含むと良い）。
+    * \`task_title_suggestion\`: Issueのタイトルとして適切で、タスク内容を簡潔に示す提案。
+    * \`related_deliverable\`: このタスクが直接的に貢献するターゲットマイルストーンの「key_deliverables」の具体的な項目名。ターゲットマイルストーンのdescription内から抽出してください。
+    * \`dependencies\`: このタスクを実行する前に完了している必要がある他のタスクの\`task_id\`のリスト。クリティカルパスの最初のタスクは空リスト \`[]\`。
+    * \`brief_description\`: タスクの目的や主要な作業内容の短い説明（1-2文程度）。
+    * \`ai_studio_hints\`: このタスクの性質（例：アイデア出し、正確なコード分析、複数案比較、長文解釈など）を考慮し、AI StudioでCopilotへの指示プロンプトを作成する際に推奨されるTemperature(高め/低め/中程度と具体的な範囲例)、TopP(高め/低めと具体的な範囲例)、Output Length(長め/短め/適切に調整)、推奨モデルファミリー(Gemini Flash/Proなど)、その他特記事項（例：「このタスクは自由な発想を重視します。Temperatureを高め(0.8以上推奨)...」）を具体的に記述してください。
+3.  タスクは、ターゲットマイルストーンの各主要成果物を網羅するように、適切な粒度で分割してください。
+4.  タスクの順序は、論理的な前後関係と依存関係を厳密に考慮し、クリティカルパスとして最も効率的な順序で並べてください。
+5.  出力は、必ず以下のJSON形式の配列としてください。
+
+## 出力形式 (JSON):
+[
+  {
+    "task_id": "string",
+    "task_title_suggestion": "string",
+    "related_deliverable": "string",
+    "dependencies": ["string", ...],
+    "brief_description": "string",
+    "ai_studio_hints": "string" 
+  }
+]
+`;
+                const safetySettings = [{
+                    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                    threshold: HarmBlockThreshold.BLOCK_NONE
+                }, {
+                    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold: HarmBlockThreshold.BLOCK_NONE
+                }, {
+                    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                    threshold: HarmBlockThreshold.BLOCK_NONE
+                }, {
+                    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold: HarmBlockThreshold.BLOCK_NONE
+                }, ];
+                const generationConfig = {
+                    temperature: 1.0,
+                    topP: 0.8,
+                    responseMimeType: 'application/json',
+                    safetySettings: safetySettings
+                };
+                const systemInstructionForCP = {
+                    parts: [{
+                        text: "あなたはプロジェクト計画の専門家として、JSON形式でクリティカルパス（タスクリストとAI Studio利用のヒントを含む）を提案します。"
+                    }]
+                };
+
+                try {
+                    const modelNameForRequest = selectedGeminiModel.startsWith("models/") ? selectedGeminiModel : `models/${selectedGeminiModel}`;
+
+                    const result = await genAI.models.generateContent({
+                        model: modelNameForRequest,
+                        contents: [{
+                            role: "user",
+                            parts: [{
+                                text: criticalPathPrompt
+                            }]
+                        }],
+                        config: generationConfig
+                    });
+
+                    const cpText = result.candidates[0].content.parts[0].text;
+
+                    generatedCriticalPath = JSON.parse(cpText);
+                    logMessage(`AIが ${generatedCriticalPath.length} 件のIssue骨子（クリティカルパス）を生成しました。`, "success");
+                    renderGeneratedCriticalPath();
+
+                } catch (error) {
+                    console.error("クリティカルパス生成AIエラー:", error);
+                    logMessage(`クリティカルパス生成AIエラー: ${error.message || JSON.stringify(error)}`, "error");
+                    criticalPathOutput.textContent = `エラー: ${error.message || 'クリティカルパス生成に失敗しました。'}`;
+                } finally {
+                    setButtonsDisabled(false, [loadRepoInfoBtn.id, testGeminiApiBtn.id, generateScenariosBtn.id, listGeminiModelsBtn.id]);
+                }
+            }
+            );
+
+            function renderGeneratedCriticalPath() {
+                // (変更なし)
+                criticalPathOutput.innerHTML = '';
+                if (!generatedCriticalPath || generatedCriticalPath.length === 0) {
+                    criticalPathOutput.textContent = "Issue骨子案はありません。";
+                    return;
+                }
+                generatedCriticalPath.forEach(task => {
+                    const card = document.createElement('div');
+                    card.className = 'task-card';
+                    card.innerHTML = `
+                    <h4>${task.task_title_suggestion} (ID: ${task.task_id})</h4>
+                    <p><strong>関連成果物:</strong> ${task.related_deliverable}</p>
+                    <p><strong>概要:</strong> ${task.brief_description}</p>
+                    <p><strong>依存タスクID:</strong> ${Array.isArray(task.dependencies) ? task.dependencies.join(', ') : 'なし'}</p>
+                    <div class="ai-studio-hints"><strong>AI Studioヒント:</strong> ${task.ai_studio_hints || 'N/A'}</div>
+                    <button class="select-task-for-issue-btn" data-task-id="${task.task_id}">この内容でIssue作成準備</button>
+                `;
+                    criticalPathOutput.appendChild(card);
+                }
+                );
+
+                document.querySelectorAll('.select-task-for-issue-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const taskId = event.target.dataset.taskId;
+                        const selectedTask = generatedCriticalPath.find(t => t.task_id === taskId);
+                        if (selectedTask) {
+                            logMessage(`Issue作成準備: 「${selectedTask.task_title_suggestion}」`, "info");
+                            issueTitleToCreateInput.value = selectedTask.task_title_suggestion;
+                            issueBodyToCreateInput.value = `## 概要\n${selectedTask.brief_description}\n\n## 関連成果物\n${selectedTask.related_deliverable}\n\n## 依存関係\n${Array.isArray(selectedTask.dependencies) ? selectedTask.dependencies.join(', ') : 'なし'}\n\n## AI Studioプロンプトエンジニアリングのヒント\n${selectedTask.ai_studio_hints || '特になし'}\n\n---\n(ここに詳細を記述・ペーストしてください)`;
+
+                            const targetMsNumberForLink = targetMilestoneForCpSelect.value;
+                            if (targetMsNumberForLink) {
+                                linkToMilestoneSelect.value = targetMsNumberForLink;
+                            }
+                            alert(`「${selectedTask.task_title_suggestion}」のIssue作成準備ができました。\n詳細を記述し、発行してください。`);
+                        }
+                    }
+                    );
+                }
+                );
+            }
+
+            publishGithubIssueBtn.addEventListener('click', async () => {
+                // (変更なし)
+                const title = issueTitleToCreateInput.value.trim();
+                const body = issueBodyToCreateInput.value.trim();
+                const selectedMilestoneNumberForLink = linkToMilestoneSelect.value;
+                const selectedProjectNodeId = projectSelect.value;
+                let milestoneNodeId = null;
+                if (selectedMilestoneNumberForLink) {
+                    const milestoneToLink = github.existingRepoMilestones.find(ms => ms.number.toString() === selectedMilestoneNumberForLink);
+                    if (milestoneToLink && milestoneToLink.id) {
+                        milestoneNodeId = milestoneToLink.id;
+                    } else {
+                        logMessage(`警告: 選択されたMilestone (#${selectedMilestoneNumberForLink}) のNode IDが見つかりません。MilestoneなしでIssueを作成します。`, "warning");
+                    }
+                }
+
+                github.createIssue(title, body, "" , selectedProjectNodeId, milestoneNodeId);
+
+            }
+            );
+
+            // --- 初期表示 ---
+            showPhase('config-phase');
+            if (githubPatInput.value && ownerInput.value && repoInput.value) {
+                loadRepoInfoBtn.click();
+            }
+        </script>
+    </body>
 </html>
