@@ -1,6 +1,16 @@
 {
   "name": "Vite AI Studio App",
-  "dockerFile": "../Dockerfile",
+  "build": {
+    "dockerfile": "../Dockerfile", // Dockerfileのパス
+    "target": "development"    // Dockerfile内のビルドステージ名を指定
+    // "context": "..", // Dockerfileのビルドコンテキスト (Dockerfileからの相対パス) デフォルトはdevcontainer.jsonのあるフォルダ
+    // "args": { // DockerfileのARGに渡すビルド引数
+    //   "VARIANT": "22"
+    // }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
   "customizations": {
     "vscode": {
       "extensions": [
