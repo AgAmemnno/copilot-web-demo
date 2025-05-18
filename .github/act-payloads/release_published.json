@@ -1,0 +1,34 @@
+{
+  "action": "published",
+  "release": {
+    "url": "https://api.github.com/repos/your-username/your-repository/releases/1234567",
+    "html_url": "https://github.com/your-username/your-repository/releases/tag/v1.0.0",
+    "assets_url": "https://api.github.com/repos/your-username/your-repository/releases/1234567/assets",
+    "upload_url": "https://uploads.github.com/repos/your-username/your-repository/releases/1234567/assets{?name,label}",
+    "id": 1234567,
+    "node_id": "RE_kwDOA...",
+    "tag_name": "v1.0.0",
+    "target_commitish": "main",
+    "name": "Release v1.0.0",
+    "body": "This is a production release v1.0.0.\n\n**Changes:**\n- New feature X\n- Bug fix Y",
+    "draft": false,
+    "prerelease": false,
+    "created_at": "2025-05-18T12:00:00Z",
+    "published_at": "2025-05-19T00:00:00Z",
+    "author": { 
+      "login": "release-manager",
+      "id": 55667788
+    },
+    "assets": [
+    ]
+  },
+  "repository": { 
+    "id": 123456789,
+    "name": "your-repository",
+    "full_name": "your-username/your-repository",
+    "owner": { "login": "your-username" }
+  },
+  "sender": { 
+    "login": "release-manager"
+  }
+}

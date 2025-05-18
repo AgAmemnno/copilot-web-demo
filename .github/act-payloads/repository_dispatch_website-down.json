@@ -1,0 +1,23 @@
+{
+  "action": "website-down",
+  "client_payload": {
+    "url": "https://example.com",
+    "error_code": 503,
+    "timestamp": "2025-05-19T00:00:00Z",
+    "details": "Service unavailable detected by external monitoring."
+  },
+  "repository": { 
+    "id": 123456789,
+    "name": "your-repository",
+    "full_name": "your-username/your-repository",
+    "owner": { "login": "your-username" }
+  },
+  "sender": { 
+    "login": "github-actions[bot]",
+    "id": 41898282,
+    "type": "Bot"
+  },
+  "installation": { 
+    "id": 12345
+  }
+}

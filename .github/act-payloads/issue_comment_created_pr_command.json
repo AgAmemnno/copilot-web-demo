@@ -1,0 +1,40 @@
+{
+  "action": "created",
+  "issue": { 
+    "url": "https://api.github.com/repos/your-username/your-repository/issues/123",
+    "html_url": "https://github.com/your-username/your-repository/pull/123", 
+    "id": 1234567890, 
+    "number": 123, 
+    "title": "feat: Add amazing new feature",
+    "user": { "login": "contributor-user" }, 
+    "state": "open",
+    "pull_request": { 
+      "url": "https://api.github.com/repos/your-username/your-repository/pulls/123",
+      "html_url": "https://github.com/your-username/your-repository/pull/123",
+      "diff_url": "https://github.com/your-username/your-repository/pull/123.diff",
+      "patch_url": "https://github.com/your-username/your-repository/pull/123.patch"
+    }
+  },
+  "comment": {
+    "url": "https://api.github.com/repos/your-username/your-repository/issues/comments/900000001",
+    "html_url": "https://github.com/your-username/your-repository/pull/123#issuecomment-900000001",
+    "id": 900000001,
+    "node_id": "IC_kwDOA...",
+    "user": { 
+      "login": "devops-user",
+      "id": 77889900
+    },
+    "created_at": "2025-05-19T00:00:00Z",
+    "updated_at": "2025-05-19T00:00:00Z",
+    "body": "/deploy-to-staging"
+  },
+  "repository": { 
+    "id": 123456789,
+    "name": "your-repository",
+    "full_name": "your-username/your-repository",
+    "owner": { "login": "your-username" }
+  },
+  "sender": { 
+    "login": "devops-user"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "action": "opened", 
+  "number": 123,
+  "pull_request": {
+    "url": "https://api.github.com/repos/your-username/your-repository/pulls/123",
+    "id": 1234567890,
+    "node_id": "PR_kwDOA...",
+    "html_url": "https://github.com/your-username/your-repository/pull/123",
+    "diff_url": "https://github.com/your-username/your-repository/pull/123.diff",
+    "patch_url": "https://github.com/your-username/your-repository/pull/123.patch",
+    "number": 123,
+    "state": "open",
+    "locked": false,
+    "title": "feat: Add amazing new feature",
+    "user": {
+      "login": "contributor-user",
+      "id": 11223344
+    },
+    "body": "This PR implements an amazing new feature. Please review!",
+    "created_at": "2025-05-18T10:00:00Z",
+    "updated_at": "2025-05-19T00:00:00Z",
+    "merged": false,
+    "mergeable_state": "unknown",
+    "head": {
+      "label": "contributor-user:feature-branch",
+      "ref": "feature-branch",
+      "sha": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8g9h0", 
+      "user": {
+        "login": "contributor-user"
+      },
+      "repo": { 
+        "id": 987654321,
+        "name": "your-repository",
+        "full_name": "contributor-user/your-repository", 
+        "owner": { "login": "contributor-user" }
+      }
+    },
+    "base": {
+      "label": "your-username:main",
+      "ref": "main",
+      "sha": "b0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8g9", 
+      "user": {
+        "login": "your-username"
+      },
+      "repo": {
+        "id": 123456789,
+        "name": "your-repository",
+        "full_name": "your-username/your-repository",
+        "owner": { "login": "your-username" }
+      }
+    },
+    "labels": [],
+    "draft": false
+  },
+  "repository": { 
+    "id": 123456789,
+    "name": "your-repository",
+    "full_name": "your-username/your-repository",
+    "owner": { "login": "your-username" }
+  },
+  "sender": { 
+    "login": "contributor-user"
+  }
+}
