@@ -1,0 +1,161 @@
+name: Event Payload Inspector
+
+# 以前検討したほぼ全てのイベントタイプをトリガーとして定義します
+on:
+  push: # branches, tags, paths フィルターはここでは省略（どんなpushでも反応するように）
+  pull_request: # types, branches フィルターもここでは省略
+  workflow_dispatch: # 手動実行、入力も受け付けられるように定義
+    inputs:
+      sample_text:
+        description: 'A sample text input for dispatch'
+        required: false
+        type: string
+        default: 'Hello from dispatch'
+      sample_boolean:
+        description: 'A sample boolean input'
+        required: false
+        type: boolean
+        default: true
+  schedule:
+    - cron: '59 23 31 12 5' # 実際には実行されないような未来の日付 (actでテストするため)
+  release:
+    types: [created, published, edited] # 代表的なもの
+  # workflow_call は単独で act でトリガーするのが少し特殊なので、
+  # ここでは呼び出される側のワークフローとしてではなく、
+  # もしこのワークフロー自体が呼び出された場合のペイロードを見る想定は含めません。
+  # workflow_call のテストは、呼び出し元のワークフローを act で実行し、
+  # 呼び出される側のワークフローに secrets や inputs が渡るかを確認するのが主です。
+  # ただし、もし `act workflow_call -e payload.json` のように直接テストする場合の
+  # ペイロード内容確認用として github.event.inputs を表示するステップは含めます。
+  workflow_call: # このワークフローが呼び出された場合のシミュレーション用
+    inputs:
+      caller_message:
+        type: string
+        required: false
+        default: 'Message from caller'
+    # secrets: # secrets は act のコマンドラインオプションで渡すため、ここでは定義のみ
+    #   CALLER_SECRET_EXAMPLE:     //       required: false
+
+  issues:
+    types: [opened, labeled, closed] # 代表的なもの
+  issue_comment:
+    types: [created, edited] # 代表的なもの
+  repository_dispatch:
+    types: [custom-event-type-1, custom-event-type-2] # ワークフロー側でリッスンするtype
+
+jobs:
+  inspect_event_payload:
+    runs-on: ubuntu-latest # actが利用するDockerイメージのベース
+    steps:
+      - name: Display Basic Event Information
+        run: |
+          echo "🎉 Event Inspector Workflow Triggered!"
+          echo "---------------------------------------"
+          echo "Event Name    : ${{ github.event_name }}"
+          echo "Ref           : ${{ github.ref }}"
+          echo "SHA           : ${{ github.sha }}"
+          echo "Actor         : ${{ github.actor }}"
+          echo "Workflow Name : ${{ github.workflow }}"
+          echo "Run ID        : ${{ github.run_id }} (Note: May be a dummy value in act)"
+          echo "Run Number    : ${{ github.run_number }} (Note: May be a dummy value in act)"
+          echo "---------------------------------------"
+
+      - name: Display Full Event Payload (JSON)
+        run: |
+          echo "完整的事件负载 (Full Event Payload as JSON):"
+          echo "${{ toJSON(github.event) }}"
+          echo "---------------------------------------"
+
+      # --- イベントタイプごとの詳細情報表示 ---
+
+      - name: Push Event Specifics
+        if: github.event_name == 'push'
+        run: |
+          echo "➡️ Push Event Details:"
+          echo "  Pusher Name    : ${{ github.event.pusher.name }}"
+          echo "  Pusher Email   : ${{ github.event.pusher.email }}"
+          echo "  Head Commit ID : ${{ github.event.head_commit.id }}"
+          echo "  Head Commit Msg: ${{ github.event.head_commit.message }}"
+          echo "  Commits (first one):"
+          echo "    Msg: ${{ github.event.commits[0].message }}"
+          echo "    Author: ${{ github.event.commits[0].author.name }}"
+          echo "---------------------------------------"
+
+      - name: Pull Request Event Specifics
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "➡️ Pull Request Event Details:"
+          echo "  Action         : ${{ github.event.action }}"
+          echo "  PR Number      : ${{ github.event.number }}"
+          echo "  PR Title       : ${{ github.event.pull_request.title }}"
+          echo "  PR User        : ${{ github.event.pull_request.user.login }}"
+          echo "  Head Ref (from): ${{ github.event.pull_request.head.ref }} (SHA: ${{ github.event.pull_request.head.sha }})"
+          echo "  Base Ref (to)  : ${{ github.event.pull_request.base.ref }} (SHA: ${{ github.event.pull_request.base.sha }})"
+          echo "  Labels         : ${{ toJSON(github.event.pull_request.labels) }}"
+          echo "---------------------------------------"
+
+      - name: Workflow Dispatch Event Specifics
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "➡️ Workflow Dispatch Event Details:"
+          echo "  Inputs Received: ${{ toJSON(github.event.inputs) }}"
+          echo "---------------------------------------"
+
+      - name: Schedule Event Specifics
+        if: github.event_name == 'schedule'
+        run: |
+          echo "➡️ Schedule Event Details:"
+          echo "  Scheduled Cron String (from workflow definition): ${{ github.event.schedule }}"
+          echo "  (Actual payload for 'schedule' is minimal from GitHub)"
+          echo "---------------------------------------"
+
+      - name: Release Event Specifics
+        if: github.event_name == 'release'
+        run: |
+          echo "➡️ Release Event Details:"
+          echo "  Action         : ${{ github.event.action }}"
+          echo "  Tag Name       : ${{ github.event.release.tag_name }}"
+          echo "  Release Name   : ${{ github.event.release.name }}"
+          echo "  Published At   : ${{ github.event.release.published_at }}"
+          echo "  Release Author : ${{ github.event.release.author.login }}"
+          echo "---------------------------------------"
+
+      - name: Workflow Call Event Specifics (if this workflow is called)
+        if: github.event_name == 'workflow_call'
+        run: |
+          echo "➡️ Workflow Call Event Details (inputs for this called workflow):"
+          echo "  Inputs Received: ${{ toJSON(github.event.inputs) }}"
+          # secrets は ${{ secrets.SECRET_NAME }} でアクセスできますが、echoで表示するのは避けるべきです。
+          # echo "  (Secrets are not displayed directly for security reasons)"
+          echo "  Caller Workflow Path (approx.): ${{ github.event.workflow }}" # Usually the path of the calling workflow definition
+          echo "  Caller Repository (approx.): ${{ github.event.repository.full_name }}"
+          echo "---------------------------------------"
+
+      - name: Issues Event Specifics
+        if: github.event_name == 'issues'
+        run: |
+          echo "➡️ Issues Event Details:"
+          echo "  Action         : ${{ github.event.action }}"
+          echo "  Issue Number   : ${{ github.event.issue.number }}"
+          echo "  Issue Title    : ${{ github.event.issue.title }}"
+          echo "  Issue Author   : ${{ github.event.issue.user.login }}"
+          echo "  Issue Labels   : ${{ toJSON(github.event.issue.labels) }}"
+          echo "---------------------------------------"
+
+      - name: Issue Comment Event Specifics
+        if: github.event_name == 'issue_comment'
+        run: |
+          echo "➡️ Issue Comment Event Details:"
+          echo "  Action         : ${{ github.event.action }}"
+          echo "  Issue Number   : ${{ github.event.issue.number }}" # Comment is on this issue/PR
+          echo "  Comment Author : ${{ github.event.comment.user.login }}"
+          echo "  Comment Body   : ${{ github.event.comment.body }}"
+          echo "---------------------------------------"
+
+      - name: Repository Dispatch Event Specifics
+        if: github.event_name == 'repository_dispatch'
+        run: |
+          echo "➡️ Repository Dispatch Event Details:"
+          echo "  Action (event_type) : ${{ github.event.action }}" # This is the 'type' you specified
+          echo "  Client Payload      : ${{ toJSON(github.event.client_payload) }}"
+          echo "---------------------------------------"

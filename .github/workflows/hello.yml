@@ -1,0 +1,29 @@
+name: Hello World Workflow
+
+# このワークフローをトリガーするイベント
+on:
+  push: # pushイベントでトリガー
+    branches:
+      - main # mainブランチへのpush (actでテストする際はどのブランチでも可)
+      - '*'  # 任意のブランチへのpushでトリガー (actでテストしやすくするため)
+  pull_request: # pull_requestイベントでもトリガー
+  workflow_dispatch: # GitHub UIやAPIから手動で実行可能にする (actでも 'act workflow_dispatch' でテスト可能)
+
+jobs:
+  # 'greet_job' というIDのジョブを定義
+  greet_job:
+    # このジョブが実行されるランナー環境 (actがこの情報に基づいてDockerイメージを選択します)
+    runs-on: ubuntu-latest # 一般的なLinux環境
+
+    steps:
+      # ステップ1: コードをチェックアウトする (actがローカルのコードをマウントします)
+      - name: Checkout code
+        uses: actions/checkout@v4 # GitHub公式のアクション
+
+      # ステップ2: 簡単な挨拶メッセージを表示する
+      - name: Say Hello
+        run: echo "Hello, world! This is act running the workflow locally."
+
+      # ステップ3: 現在のディレクトリのファイル一覧を表示する
+      - name: List files in workspace
+        run: ls -la
