@@ -1,0 +1,284 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #61e794;
+    color: #261c24;
+    font-size: 14px;
+}
+.container {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    width: 100%;
+    max-width: 900px;
+    margin: auto;
+}
+
+h1, h2, h3 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+h1 {
+    text-align: center;
+    font-size: 1.8em;
+}
+
+h2 {
+    font-size: 1.4em;
+    border-bottom: 1px solid #e1e4e8;
+    padding-bottom: 8px;
+    margin-top: 25px;
+}
+
+h3 {
+    font-size: 1.2em;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.input-group {
+    margin-bottom: 16px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #444;
+}
+
+.input-group input[type="text"], .input-group input[type="password"], .input-group textarea, .input-group select {
+    width: calc(100% - 22px);
+    padding: 10px;
+    border: 1px solid #d1d5da;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+    background-color: #fff;
+}
+
+.input-group input[type="text"]:focus, .input-group input[type="password"]:focus, .input-group textarea:focus, .input-group select:focus {
+    border-color: #0366d6;
+    box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.3);
+    outline: none;
+}
+
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+#conceptualDocumentInputScenario, #milestonesJsonInput {
+    min-height: 120px;
+}
+
+.button-group {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+button {
+    padding: 10px 18px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+button:disabled {
+    background-color: #94d3a2;
+    cursor: not-allowed;
+}
+
+.secondary-button {
+    background-color: #0366d6;
+}
+
+.secondary-button:hover:not(:disabled) {
+    background-color: #005cc5;
+}
+
+.test-button {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.test-button:hover:not(:disabled) {
+    background-color: #e0a800;
+}
+
+.danger-button {
+    background-color: #d73a49;
+}
+
+.danger-button:hover:not(:disabled) {
+    background-color: #cb2431;
+}
+
+.log-area, .test-output-area, .ai-output-area, .info-display-area {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f1f3f5;
+    border: 1px solid #d1d5da;
+    border-radius: 6px;
+    min-height: 100px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+.test-output-area, .ai-output-area, .info-display-area {
+    min-height: 50px;
+    background-color: #e9ecef;
+}
+
+.info-display-area {
+    max-height: 150px;
+    margin-bottom: 15px;
+}
+
+.ai-output-area .scenario-card, .ai-output-area .task-card {
+    background-color: #fff;
+    border: 1px solid #d1d5da;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.ai-output-area .scenario-card h4, .ai-output-area .task-card h4 {
+    margin-top: 0;
+}
+
+.ai-studio-hints {
+    margin-top: 10px;
+    padding: 8px;
+    background-color: #fff9e6;
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.ai-studio-hints strong {
+    color: #856404;
+}
+
+.spinner {
+    border: 4px solid rgba(0,0,0,0.1);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border-left-color: #0366d6;
+    animation: spin 1s ease infinite;
+    display: none;
+    margin: 15px auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.phase-navigation {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+}
+
+.phase-navigation button {
+    margin: 0 5px;
+    background-color: #6c757d;
+}
+
+.phase-navigation button.active-nav {
+    background-color: #007bff;
+    font-weight: bold;
+}
+
+.phase {
+    display: none;
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.phase.active {
+    display: block;
+}
+
+.columns {
+    display: flex;
+    gap: 20px;
+}
+
+.column {
+    flex: 1;
+}
+
+.flex-row-small-gap {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.flex-row-small-gap .input-group {
+    flex: 1;
+}
+
+.log-entry {
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px dotted #ced4da;
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-error {
+    color: #d73a49;
+    font-weight: bold;
+}
+
+.log-success {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.log-info {
+    color: #0366d6;
+}
+
+hr.section-divider {
+    margin: 30px 0;
+    border: 0;
+    border-top: 1px solid #e1e4e8;
+}
