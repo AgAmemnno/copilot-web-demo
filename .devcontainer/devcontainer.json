@@ -1,0 +1,28 @@
+{
+  "name": "Vite AI Studio App",
+  "dockerFile": "../Dockerfile",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "vite.vscode-vite",
+        "github.copilot",
+        "eamodio.gitlens"
+      ]
+    }
+  },
+  "forwardPorts": [
+    5173
+  ],
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "postCreateCommand": "sh .devcontainer/post-create.sh",
+  "postAttachCommand": "echo 'Welcome! Configure .env if needed, then run: npm run dev'",
+  "remoteUser": "node",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+}
