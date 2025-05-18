@@ -125,5 +125,123 @@
 ---
 
 これらのファイルにより、誰でも同じ開発環境を迅速に再現でき、セットアップの手間や環境差異によるトラブルを大幅に削減できます。詳細な設定やカスタマイズ方法は、各ファイル内のコメントや[Dev Container公式ドキュメント](https://containers.dev/)も参照してください。
+---
+
+素晴らしいです！「整合性がとれている」とのお言葉、そして次のステップへの意欲、とても嬉しいです。
+おっしゃる通り、まずは作成した各イベントペイロードJSONを使って `event-inspector.yml` ワークフローを一通り実行し、それぞれのイベントが `act` でどのように扱われるか、どんな情報が取得できるかを確認するのは非常に良い進め方です。
+
+その確認作業が終わったら、ぜひ一緒に「面白イベント」のアイデアを出し合い、さらに `act` とGitHub Actionsの可能性を探っていきましょう！
+
+-----
+
+### ステップ1: 全イベントペイロードのチェック
+
+以下に、以前検討した各イベントペイロードJSONファイル（仮に `.github/act-payloads/` ディレクトリに保存されているとします）と、それを `event-inspector.yml` でテストするための `act` コマンドの実行例を再掲します。一つずつ試してみてください。
+
+**実行時のポイント:**
+
+  * 各コマンドを実行後、`event-inspector.yml` の出力ログを確認します。
+  * 「Basic Event Information」セクションで基本的な情報が正しいか。
+  * 「Full Event Payload (JSON)」セクションで、指定したJSONファイルの内容が `github.event` として正しく反映されているか。
+  * 各「Event Specifics」セクションで、そのイベント特有の主要な情報（コミットメッセージ、PRタイトル、入力値など）が期待通りに表示されているかを確認してください。
+
+**コマンド実行例:**
+（ワークフローファイルは常に `-W .github/workflows/event-inspector.yml` を指定します）
+
+1.  **`push` イベント (mainブランチへのプッシュ)**
+
+状況: main ブランチに新しいコミットがプッシュされた。
+ファイル名案: .github/act-payloads/push_main.json
+
+    ```bash
+    act push -W .github/workflows/event-inspector.yml -e .github/act-payloads/push_main.json
+    ```
+2.  **`push` イベント (タグ `v1.0.0` のプッシュ)**
+状況: v1.0.0 というタグがプッシュされた。
+    ```bash
+    act push -W .github/workflows/event-inspector.yml -e .github/act-payloads/push_tag_v1.0.0.json
+    ```
+3.  **`push` イベント (docsディレクトリ変更)**
+状況: docs/ ディレクトリ内のファイルが変更されたプッシュ。ペイロード自体は通常のプッシュと同じですが、変更されたファイルリストに docs/ 内のファイルを含めます。act はペイロードとワークフローの paths フィルターを照合します。
+    ```bash
+    act push -W .github/workflows/event-inspector.yml -e .github/act-payloads/push_docs_change.json
+    ```
+4.  **`pull_request` イベント (opened, mainブランチ宛)**
+main ブランチに対するプルリクエストが作成された (または新しいコミットが追加された)。
+    ```bash
+    act pull_request -W .github/workflows/event-inspector.yml -e .github/act-payloads/pull_request_opened_main.json
+    ```
+5.  **`pull_request` イベント (labeled, needs-review)**
+プルリクエストに needs-review ラベルが付与された。
+    ```bash
+    act pull_request -W .github/workflows/event-inspector.yml -e .github/act-payloads/pull_request_labeled_needs-review.json
+    ```
+6.  **`workflow_dispatch` イベント (入力付き)**
+手動でワークフローを実行。入力パラメータ (version, environment) を受け付ける。
+    ```bash
+    # .github/act-payloads/workflow_dispatch_deploy.json の inputs を適宜変更してテスト
+    act workflow_dispatch -W .github/workflows/event-inspector.yml -e .github/act-payloads/workflow_dispatch_deploy.json
+    ```
+7.  **`schedule` イベント**
+状況: 定期実行 (例: 0 3 * * *)。
+act はcronスケジュールを解釈してその時刻に実行するわけではありません。このイベントペイロードを使って、スケジュールされたイベントが発生 したかのように ワークフローを起動します。
+    ```bash
+    act schedule -W .github/workflows/event-inspector.yml -e .github/act-payloads/schedule_daily.json
+    ```
+    (ペイロード自体はシンプルですが、`github.event.schedule` にcron文字列が入ることを確認)
+8.  **`release` イベント (published)**
+新しいリリースが published された。
+    ```bash
+    act release -W .github/workflows/event-inspector.yml -e .github/act-payloads/release_published.json
+    ```
+9.  **`workflow_call` イベント (このワークフローが呼び出されたと仮定)**
+他のワークフローから再利用可能なワークフローとして呼び出される。
+act で再利用可能ワークフローを直接テストする場合、inputs をペイロードで渡します。secrets はペイロードには含めず、act の --secret または --secret-file オプションで渡します。
+    ```bash
+    # .github/act-payloads/workflow_call_scan.json の inputs を適宜変更
+    # シークレットを渡す場合は --secret CALLER_SECRET_EXAMPLE=dummyValue なども追加
+    act workflow_call -W .github/workflows/event-inspector.yml -e .github/act-payloads/workflow_call_scan.json
+    ```
+10. **`issues` イベント (opened)**
+新しいIssueが作成された。
+    ```bash
+    act issues -W .github/workflows/event-inspector.yml -e .github/act-payloads/issues_opened.json
+    ```
+11. **`issue_comment` イベント (PRへのコマンドコメント)**
+PRへのコメント作成 (/deploy-to-staging)
+状況: PRのコメントに /deploy-to-staging と書き込まれた。
+    ```bash
+    act issue_comment -W .github/workflows/event-inspector.yml -e .github/act-payloads/issue_comment_created_pr_command.json
+    ```
+12. **`repository_dispatch` イベント (外部イベント)**
+外部イベント (website-down) を受信。
+    ```bash
+    act repository_dispatch -W .github/workflows/event-inspector.yml -e .github/act-payloads/repository_dispatch_website-down.json
+    ```
+
+これらのテストを通じて、各イベントペイロードが `act` によってどのように処理され、ワークフロー内でどのようなデータとして利用できるかの理解が深まるはずです。
+
+-----
+
+### ステップ2: 「面白イベント」を考える
+
+上記の基本的なイベントの確認が終わったら、いよいよ「面白イベント」の検討ですね！楽しみです。
+「面白イベント」が具体的にどのようなものを指すかにもよりますが、例えば以下のような方向性が考えられます。
+
+  * **エッジケースのシミュレーション:**
+      * 非常に長いコミットメッセージやPRタイトルを持つペイロード。
+      * 特殊文字や多言語文字を多用した入力値。
+      * 空のコミットリストを持つプッシュイベント（強制プッシュで履歴が消えた場合など、やや特殊）。
+  * **複雑な条件分岐のテスト:**
+      * ワークフロー内で複数の `if` 条件を組み合わせ、特定のペイロードでのみ実行されるパスをテストする。
+      * 例えば、「`pull_request` で特定のラベルが付いていて、かつ特定のファイルパスに変更があり、かつPRのベースブランチが `main` の場合のみ実行するジョブ」など。
+  * **他のツールやスクリプトとの連携を模倣:**
+      * `repository_dispatch` の `client_payload` に、他の監視ツールやCI/CDシステムから送られてくるであろう、より実践的なデータ構造を持たせてみる。
+  * **`act` の限界を探るようなテスト (非推奨だが学術的興味として):**
+      * 非常に大きなペイロードJSONを与えてみる。
+      * `act` が対応しきれないような特殊なGitHubコンテキスト変数を参照しようとするワークフロー（ただし、これはエラーになる可能性が高いです）。
+
+これらのアイデアは、基本的な動作確認が終わった後に、より深く `act` とGitHub Actionsの挙動を理解したり、堅牢なワークフローを構築したりする上で役立つかもしれません。
+
 
 ---
