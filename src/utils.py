@@ -16,6 +16,11 @@ except ImportError:
     LOCAL = True
     from dotenv import load_dotenv
 
+def list_calendars(service):
+    calendar_list = service.calendarList().list().execute()
+    calendars = calendar_list.get('items', [])
+    return calendars
+
 
 def credentials():
     """
@@ -34,10 +39,11 @@ def credentials():
         SERVICE_ACCOUNT_FILE = userdata.get('GOOGLE_APPLICATION_CREDENTIALS_JSON')
     credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     service = build('calendar', 'v3', credentials=credentials)
-
+    print(list_calendars(service))
     print(f"service from {SERVICE_ACCOUNT_FILE} {service}")
 
 
+credentials()
 
 def clone_github_repo(repo_url: str, dest_dir: str) -> Path:
     """
