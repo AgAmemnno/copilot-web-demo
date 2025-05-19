@@ -2,6 +2,43 @@ import os
 import subprocess
 from pathlib import Path
 
+import json
+import datetime
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+
+LOCAL = False
+try:
+    from google.colab import drive # Google Driveにアクセスするため
+    from google.colab import userdata # Secretsにアクセスするため
+    from google.colab import auth # Google認証用
+except ImportError:
+    LOCAL = True
+    from dotenv import load_dotenv
+
+
+def credentials():
+    """
+    Google APIの認証情報を取得する。
+    """
+    SCOPES = [
+        'https://www.googleapis.com/auth/calendar',
+        'https://www.googleapis.com/auth/tasks',
+        'https://www.googleapis.com/auth/keep',
+        'https://www.googleapis.com/auth/drive'
+    ]
+    if LOCAL:
+        load_dotenv()  # .envファイルを読み込む
+        SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+    else:
+        SERVICE_ACCOUNT_FILE = userdata.get('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+    credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    service = build('calendar', 'v3', credentials=credentials)
+
+    print(f"service from {SERVICE_ACCOUNT_FILE} {service}")
+
+
+
 def clone_github_repo(repo_url: str, dest_dir: str) -> Path:
     """
     指定したGitHubリポジトリをdest_dirにクローンする。
