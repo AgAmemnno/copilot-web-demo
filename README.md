@@ -146,10 +146,8 @@
 （ワークフローファイルは常に `-W .github/workflows/event-inspector.yml` を指定します）
 
 1.  **`push` イベント (mainブランチへのプッシュ)**
-
 状況: main ブランチに新しいコミットがプッシュされた。
 ファイル名案: .github/act-payloads/push_main.json
-
     ```bash
     act push -W .github/workflows/event-inspector.yml -e .github/act-payloads/push_main.json
     ```
@@ -188,9 +186,25 @@ act はcronスケジュールを解釈してその時刻に実行するわけで
     (ペイロード自体はシンプルですが、`github.event.schedule` にcron文字列が入ることを確認)
 8.  **`release` イベント (published)**
 新しいリリースが published された。
-    ```bash
+assetの例
+```json
+      {
+         "url": "https://api.github.com/repos/your-username/your-repository/releases/assets/1",
+         "browser_download_url": "https://github.com/your-username/your-repository/releases/download/v1.0.0/artifact.zip",
+         "id": 1,
+         "name": "artifact.zip",
+         "label": "Source code (zip)",
+         "state": "uploaded",
+         "content_type": "application/zip",
+         "size": 1024,
+         "download_count": 10,
+         "created_at": "2025-05-19T00:05:00Z",
+         "updated_at": "2025-05-19T00:05:00Z"
+       }
+```
+```bash
     act release -W .github/workflows/event-inspector.yml -e .github/act-payloads/release_published.json
-    ```
+```
 9.  **`workflow_call` イベント (このワークフローが呼び出されたと仮定)**
 他のワークフローから再利用可能なワークフローとして呼び出される。
 act で再利用可能ワークフローを直接テストする場合、inputs をペイロードで渡します。secrets はペイロードには含めず、act の --secret または --secret-file オプションで渡します。
