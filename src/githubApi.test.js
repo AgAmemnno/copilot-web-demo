@@ -13,7 +13,7 @@ import {
 import dotenv from 'dotenv';
 
 // .env.test ファイルから環境変数をロード
-dotenv.config({ path: '.env.local' });
+
 
 describe('GitHub Projects V2 API Tests (Actual Calls)', () => {
   const pat = process.env.GH_PAT_FOR_TEST;

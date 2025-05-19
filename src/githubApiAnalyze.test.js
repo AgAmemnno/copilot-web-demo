@@ -3,7 +3,7 @@ import { initializeOctokit, fetchRepoFileTree } from './githubApi.js';
 import dotenv from 'dotenv';
 
 // .env.local から環境変数をロード
-dotenv.config({ path: '.env.local' });
+
 
 describe('GitHub GraphQL API ファイル一覧取得テスト', () => {
   const pat = process.env.GH_PAT_FOR_TEST;
