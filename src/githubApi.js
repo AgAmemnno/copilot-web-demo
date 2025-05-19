@@ -18,6 +18,91 @@ export function initializeOctokit(pat) {
   return octokitInstance;
 }
 
+
+
+/**
+ * 指定リポジトリ・ブランチのファイル一覧をGraphQLで取得
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} branch
+ * @returns {Promise<string[]>} ファイルパスの配列
+ */
+export async function fetchRepoFileTree(owner, repo, branch = "main") {
+  if (!octokitInstance) throw new Error("Octokit is not initialized. Call initializeOctokit(pat) first.");
+
+  // GitHub GraphQL API: repository.object(expression: "branch:") でツリー取得
+  const query = `
+    query($owner: String!, $repo: String!, $expression: String!) {
+      repository(owner: $owner, name: $repo) {
+        object(expression: $expression) {
+          ... on Tree {
+            entries {
+              name
+              type
+              path
+            }
+          }
+        }
+      }
+    }
+  `;
+  const expression = `${branch}:`;
+  const res = await octokitInstance.graphql(query, {
+    owner,
+    repo,
+    expression,
+  });
+
+  // ルート直下のみ取得。再帰的に全ファイルを取得したい場合は再帰処理を追加
+  const entries = res.repository.object?.entries || [];
+  // ディレクトリも含まれるので、type === 'blob'のみ抽出
+  const files = entries.filter(e => e.type === 'blob').map(e => e.path);
+
+  // ディレクトリも再帰的に探索
+  async function walkTree(prefix) {
+    const q = `
+      query($owner: String!, $repo: String!, $expression: String!) {
+        repository(owner: $owner, name: $repo) {
+          object(expression: $expression) {
+            ... on Tree {
+              entries {
+                name
+                type
+                path
+              }
+            }
+          }
+        }
+      }
+    `;
+    const expr = `${branch}:${prefix}`;
+    const r = await octokitInstance.graphql(q, { owner, repo, expression: expr });
+    const ents = r.repository.object?.entries || [];
+    let result = [];
+    for (const ent of ents) {
+      if (ent.type === 'blob') {
+        result.push(prefix + ent.name);
+      } else if (ent.type === 'tree') {
+        const sub = await walkTree(prefix + ent.name + '/');
+        result = result.concat(sub);
+      }
+    }
+    return result;
+  }
+
+  // ルート直下のディレクトリも再帰的に探索
+  let allFiles = [...files];
+  for (const entry of entries) {
+    if (entry.type === 'tree') {
+      const subFiles = await walkTree(entry.name + '/');
+      allFiles = allFiles.concat(subFiles);
+    }
+  }
+  return allFiles;
+}
+
+
+
 /**
  * Executes a GitHub GraphQL query.
  * @param {string} query - The GraphQL query string.
