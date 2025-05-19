@@ -101,7 +101,74 @@ export async function fetchRepoFileTree(owner, repo, branch = "main") {
   return allFiles;
 }
 
+// ...existing code...
 
+/**
+ * 指定リポジトリ・ブランチの全ファイル一覧とサイズをGraphQLで再帰的に取得
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} branch
+ * @returns {Promise<Array<{path: string, size: number|null}>>}
+ */
+export async function fetchRepoFileTreeWithSize(owner, repo, branch = "main") {
+  if (!octokitInstance) throw new Error("Octokit is not initialized. Call initializeOctokit(pat) first.");
+
+  // 再帰的にtreeをたどり、ファイルパスとサイズを取得
+  async function walkTree(prefix) {
+    const query = `
+      query($owner: String!, $repo: String!, $expression: String!) {
+        repository(owner: $owner, name: $repo) {
+          object(expression: $expression) {
+            ... on Tree {
+              entries {
+                name
+                type
+                path
+              }
+            }
+          }
+        }
+      }
+    `;
+    const expr = `${branch}:${prefix}`;
+    const res = await octokitInstance.graphql(query, { owner, repo, expression: expr });
+    const entries = res.repository.object?.entries || [];
+    let result = [];
+    for (const ent of entries) {
+      if (ent.type === 'blob') {
+        // ファイルサイズを取得
+        const sizeQuery = `
+          query($owner: String!, $repo: String!, $expression: String!) {
+            repository(owner: $owner, name: $repo) {
+              object(expression: $expression) {
+                ... on Blob {
+                  byteSize
+                }
+              }
+            }
+          }
+        `;
+        const fileExpr = `${branch}:${prefix}${ent.name}`;
+        let size = null;
+        try {
+          const sizeRes = await octokitInstance.graphql(sizeQuery, { owner, repo, expression: fileExpr });
+          size = sizeRes.repository.object?.byteSize ?? null;
+        } catch (e) {
+          size = null;
+        }
+        result.push({ path: prefix + ent.name, size });
+      } else if (ent.type === 'tree') {
+        const sub = await walkTree(prefix + ent.name + '/');
+        result = result.concat(sub);
+      }
+    }
+    return result;
+  }
+
+  return await walkTree('');
+}
+
+// ...existing code...
 
 /**
  * Executes a GitHub GraphQL query.
