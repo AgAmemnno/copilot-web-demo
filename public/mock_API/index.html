@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSW Google Docs API Mock Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        h1, h2 { border-bottom: 1px solid #ccc; padding-bottom: 0.3em; }
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+            border: 1px solid #007bff;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #ccc; border-color: #ccc; cursor: not-allowed; }
+        pre {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.85em;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+        #loadingIndicator { display: none; margin-top: 10px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <h1>MSW Google Docs API Mock Demo</h1>
+    <p>
+        このページは、MSW (Mock Service Worker) を使用してGoogle Docs APIの呼び出しをモックするデモです。<br>
+        <strong>注意:</strong> このHTMLファイルと同じ階層に <code>npx msw init .</code> で生成された <code>mockServiceWorker.js</code> が必要です。また、HTTPサーバー経由でアクセスしてください。
+    </p>
+
+    <div>
+        <button id="createDocButton">ドキュメント作成 (Mock)</button>
+        <button id="getDocButton">ドキュメント取得 (Mock ID: mock_doc_123)</button>
+        <button id="updateDocButton">ドキュメント更新 (Mock ID: mock_doc_123)</button>
+        <button id="getErrorButton">存在しないドキュメント取得 (エラー発生)</button>
+        <button id="bypassButton">バイパスされるリクエスト (例: /api/health)</button>
+    </div>
+
+    <div id="loadingIndicator">処理中...</div>
+
+    <h2>APIレスポンス:</h2>
+    <pre id="resultArea">ここにAPIレスポンスが表示されます...</pre>
+
+    <h2>コンソールログ (MSW & App):</h2>
+    <pre id="consoleLogArea">MSWのログやアプリのログはこちらに表示されます...</pre>
+
+
+    <script type="module">
+        import { http, HttpResponse ,delay} from 'https://cdn.jsdelivr.net/npm/msw@2.7.3/+esm';
+        import { setupWorker } from 'https://cdn.jsdelivr.net/npm/msw@2.7.3/browser/+esm';
+        // --- ユーティリティ ---
+        const resultArea = document.getElementById('resultArea');
+        const consoleLogArea = document.getElementById('consoleLogArea');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const buttons = document.querySelectorAll('button');
+
+        function logToScreen(area, message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            entry.classList.add(type);
+            area.appendChild(entry);
+            area.scrollTop = area.scrollHeight; // 自動スクロール
+        }
+
+        function displayResult(data, error = false) {
+            resultArea.textContent = JSON.stringify(data, null, 2);
+            resultArea.className = error ? 'error' : 'success';
+            logToScreen(consoleLogArea, `結果表示: ${error ? 'エラー' : '成功'}`, error ? 'error' : 'success');
+        }
+
+        function setLoading(isLoading) {
+            loadingIndicator.style.display = isLoading ? 'block' : 'none';
+            buttons.forEach(btn => btn.disabled = isLoading);
+        }
+
+
+
+        const GOOGLE_DOCS_API_BASE_URL = 'https://docs.googleapis.com/v1';
+        let mockDatastore = { // 簡単なインメモリデータストア
+            "mock_doc_123": {
+                documentId: "mock_doc_123",
+                title: "初期モックドキュメント",
+                body: { content: [{ paragraph: { elements: [{ textRun: { content: "これはモックドキュメントです。\n" }}] } }] },
+                revisionId: "rev_initial_123",
+            }
+        };
+        // batchUpdateエンドポイントにマッチする正規表現を定義
+        // GOOGLE_DOCS_API_BASE_URL の中の特殊文字をエスケープし、
+        // documentId 部分を名前付きキャプチャグループ (?<documentId>[^/:]+) で取得します。
+        // [^/:]+ は、スラッシュやコロンを含まない1文字以上の文字列にマッチします。
+        const batchUpdateUrlMatcher = new RegExp(
+            `^${GOOGLE_DOCS_API_BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/documents/(?<documentId>[^/:]+):batchUpdate$`
+        );
+        // 1. MSW ハンドラ定義
+        const handlers = [
+            // ドキュメント作成
+            http.post(`${GOOGLE_DOCS_API_BASE_URL}/documents`, async ({ request }) => {
+                logToScreen(consoleLogArea, '[MSW] POST /documents をインターセプトしました。');
+                await delay(800); // ネットワーク遅延のシミュレーション
+                const reqBody = await request.json().catch(() => ({ title: '無題のドキュメント' }));
+                const newDocumentId = `mock_doc_${Date.now()}`;
+                const newDoc = {
+                    documentId: newDocumentId,
+                    title: reqBody.title || '新しいモックドキュメント',
+                    body: { content: [{ endIndex: 1, sectionBreak: {} }] }, // 最小限のボディ
+                    revisionId: `rev_mock_${Date.now()}`,
+                };
+                mockDatastore[newDocumentId] = newDoc; // データストアに追加
+                logToScreen(consoleLogArea, `[MSW] 新規ドキュメント作成: ${newDocumentId}`);
+                return HttpResponse.json(newDoc, { status: 201 });
+            }),
+
+            // ドキュメント取得
+            http.get(`${GOOGLE_DOCS_API_BASE_URL}/documents/:documentId`, async ({ params }) => {
+                const { documentId } = params;
+                logToScreen(consoleLogArea, `[MSW] GET /documents/${documentId} をインターセプトしました。`);
+                await delay(500);
+
+                if (mockDatastore[documentId]) {
+                    logToScreen(consoleLogArea, `[MSW] ドキュメント ${documentId} を返します。`);
+                    return HttpResponse.json(mockDatastore[documentId]);
+                } else {
+                    logToScreen(consoleLogArea, `[MSW] ドキュメント ${documentId} は見つかりません。404エラーを返します。`, 'error');
+                    return HttpResponse.json({
+                        error: { code: 404, message: `Document not found: ${documentId}`, status: 'NOT_FOUND' }
+                    }, { status: 404 });
+                }
+            }),
+            http.post(batchUpdateUrlMatcher, async ({ request }) => { // 第1引数を正規表現に変更
+              // 名前付きキャプチャグループ 'documentId' の値を request.params から取得
+              //const documentId = request.params.documentId;
+
+              // (代替案: もし request.params.documentId がうまく機能しない場合、URLから手動でパース)
+              const url = new URL(request.url);
+              const pathname = url.pathname; // 例: "/v1/documents/mock_doc_123:batchUpdate"
+              const segments = pathname.split('/');
+              const lastSegment = segments[segments.length - 1]; // 例: "mock_doc_123:batchUpdate"
+              const documentId = lastSegment.substring(0, lastSegment.indexOf(':batchUpdate'));
+              console.log('Manually parsed documentId:', documentId);
+
+              // request body を取得
+              const reqBody = await request.json();
+              logToScreen(consoleLogArea, `[MSW] Intercepted POST /documents/${documentId}:batchUpdate (RegExp)`);
+              console.log(`[MSW] Document ID: ${documentId}, Request Body:`, reqBody); // ブラウザコンソールにもログ
+              await delay(700);
+
+              if (mockDatastore[documentId]) {
+                  logToScreen(consoleLogArea, `[MSW] ドキュメント ${documentId} を更新します。リクエスト数: ${reqBody.requests?.length || 0}`);
+                  mockDatastore[documentId].revisionId = `rev_updated_${Date.now()}`;
+                  mockDatastore[documentId].title += " (更新済 via RegExp)";
+                  if (reqBody.requests && reqBody.requests[0] && reqBody.requests[0].insertText) {
+                      // 簡単なテキスト追加のシミュレーション
+                      if (!mockDatastore[documentId].body.content[0].paragraph.elements[0].textRun.content.endsWith('\n')) {
+                          mockDatastore[documentId].body.content[0].paragraph.elements[0].textRun.content += '\n';
+                      }
+                      mockDatastore[documentId].body.content[0].paragraph.elements[0].textRun.content += reqBody.requests[0].insertText.text;
+                  }
+                  return HttpResponse.json({
+                      documentId: documentId,
+                      replies: reqBody.requests.map(() => ({})),
+                      writeControl: { requiredRevisionId: mockDatastore[documentId].revisionId },
+                  });
+              } else {
+                  logToScreen(consoleLogArea, `[MSW] 更新対象のドキュメント ${documentId} は見つかりません。404エラーを返します。`, 'error');
+                  return HttpResponse.json({
+                      error: { code: 404, message: `Document not found for update: ${documentId}`, status: 'NOT_FOUND' }
+                  }, { status: 404 });
+              }
+          }),
+            /*
+            http.post(`${GOOGLE_DOCS_API_BASE_URL}/documents/:documentId:batchUpdate`, async ({ params, request }) => {
+                const { documentId } = params;
+                logToScreen(consoleLogArea, `[MSW] POST /documents/${documentId}:batchUpdate をインターセプトしました。`);
+                await delay(700);
+
+                if (mockDatastore[documentId]) {
+                    const reqBody = await request.json();
+                    logToScreen(consoleLogArea, `[MSW] ドキュメント ${documentId} を更新します。リクエスト数: ${reqBody.requests?.length || 0}`);
+                    // 実際の更新ロジックは複雑なのでここでは省略し、成功応答のみを返す
+                    mockDatastore[documentId].revisionId = `rev_updated_${Date.now()}`; // リビジョンIDを更新する例
+                    mockDatastore[documentId].title += " (更新済)"; // タイトルを更新する例
+                    return HttpResponse.json({
+                        documentId: documentId,
+                        replies: reqBody.requests.map(() => ({})), // 各リクエストに対するダミーの成功応答
+                        writeControl: { requiredRevisionId: mockDatastore[documentId].revisionId },
+                    });
+                } else {
+                    logToScreen(consoleLogArea, `[MSW] 更新対象のドキュメント ${documentId} は見つかりません。404エラーを返します。`, 'error');
+                    return HttpResponse.json({
+                        error: { code: 404, message: `Document not found for update: ${documentId}`, status: 'NOT_FOUND' }
+                    }, { status: 404 });
+                }
+            }),
+            */
+            // バイパスされることを確認するためのダミーエンドポイント
+            // http.get('/api/health', () => { /* このハンドラは意図的にコメントアウト or 未定義 */ })
+        ];
+
+        // 2. MSW ワーカーセットアップ
+        const worker = setupWorker(...handlers);
+
+        // --- クライアントアプリケーションのロジック ---
+
+        async function makeApiCall(url, options = {}, buttonId) {
+            logToScreen(consoleLogArea, `[App] API呼び出し開始: ${options.method || 'GET'} ${url}`);
+            setLoading(true);
+            resultArea.textContent = 'API呼び出し中...';
+            resultArea.className = 'info';
+
+            try {
+                const response = await fetch(url, options);
+                const responseText = await response.text(); // まずテキストとして取得
+                let data;
+                try {
+                    data = JSON.parse(responseText); // JSONパースを試みる
+                } catch (e) {
+                    data = { rawResponse: responseText }; // パース失敗時は生のテキストを保持
+                    if (!response.ok) { // レスポンスがOKでない場合は、テキストもエラー情報として扱う
+                         throw { status: response.status, statusText: response.statusText, data: data };
+                    }
+                }
+
+
+                logToScreen(consoleLogArea, `[App] APIレスポンス受信: ${response.status} ${response.statusText}`);
+                if (!response.ok) {
+                    throw { status: response.status, statusText: response.statusText, data: data };
+                }
+                displayResult(data);
+            } catch (error) {
+                logToScreen(consoleLogArea, `[App] API呼び出しエラー: ${error.statusText || error.message}`, 'error');
+                displayResult(error.data || { message: error.message, status: error.status, statusText: error.statusText }, true);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        document.getElementById('createDocButton').addEventListener('click', () => {
+            makeApiCall(`${GOOGLE_DOCS_API_BASE_URL}/documents`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: 'My Awesome Document' })
+            }, 'createDocButton');
+        });
+
+        document.getElementById('getDocButton').addEventListener('click', () => {
+            makeApiCall(`${GOOGLE_DOCS_API_BASE_URL}/documents/mock_doc_123`, {}, 'getDocButton');
+        });
+
+        document.getElementById('updateDocButton').addEventListener('click', () => {
+            makeApiCall(`${GOOGLE_DOCS_API_BASE_URL}/documents/mock_doc_123:batchUpdate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    requests: [
+                        { insertText: { location: { index: 1 }, text: "追加テキスト！\n" } },
+                        { updateDocumentStyle: { fields: "pageSize", documentStyle: { pageSize: { width: { magnitude: 500, unit: "PT" } }}}}
+                    ]
+                })
+            }, 'updateDocButton');
+        });
+
+        document.getElementById('getErrorButton').addEventListener('click', () => {
+            makeApiCall(`${GOOGLE_DOCS_API_BASE_URL}/documents/non_existent_document_id`, {}, 'getErrorButton');
+        });
+
+        document.getElementById('bypassButton').addEventListener('click', () => {
+            // このエンドポイントはMSWハンドラに定義されていないため、
+            // worker.startのonUnhandledRequest設定に従って処理される。
+            // 'bypass'なら実際のネットワークへ (この場合、存在しないのでネットワークエラーになる)
+            // 'warn'ならコンソールに警告
+            // 'error'ならMSWがエラーを返す
+            logToScreen(consoleLogArea, "[App] バイパスされるリクエスト /api/health を試みます。");
+            makeApiCall('/api/health', {}, 'bypassButton');
+        });
+
+
+        // 3. MSW ワーカー起動
+        async function startMSW() {
+            logToScreen(consoleLogArea, "MSWワーカーの起動を試みます...");
+            try {
+                await worker.start({
+                    // ↓↓↓ この serviceWorker.url オプションを追加・確認してください ↓↓↓
+                    serviceWorker: {
+                        url: '/mock_API/mockServiceWorker.js' // Viteのdevサーバーのルートからの絶対パス
+                    },
+                    onUnhandledRequest: (req, print) => {
+                        print.warning();
+                        logToScreen(consoleLogArea, `[MSW] 未処理のリクエスト: ${req.method} ${req.url.href}`, 'warn');
+                    },
+                    quiet: false,
+                });
+                logToScreen(consoleLogArea, "MSWワーカーが正常に起動しました。", "success");
+                resultArea.textContent = 'MSWが起動しました。ボタンを押してAPIを呼び出してください。';
+                resultArea.className = 'info';
+            } catch (error) {
+                logToScreen(consoleLogArea, `MSWワーカーの起動に失敗しました: ${error}`, 'error');
+                resultArea.textContent = `MSWワーカーの起動に失敗しました: ${error}`;
+                resultArea.className = 'error';
+            }
+        }
+
+        // アプリケーションのメイン処理を開始
+        startMSW();
+
+    </script>
+</body>
+</html>

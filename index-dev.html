@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>UIロジック プロトタイプ (API接続)</title>
+        <link rel="stylesheet" href="./static/styles.css">
+        <style>
+            :root {
+                --name-display: none; /* デフォルト値 */
+                --element-background: #0b20d3ad;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>UIロジック プロトタイプ (API接続)</h1>
+            <div class="phase-navigation">
+                <button id="nav-config-phase" class="active-nav">0. 基本設定</button>
+                <button id="nav-milestone-phase">1. マイルストーン定義</button>
+                <button id="nav-scenario-phase">2. シナリオ生成</button>
+                <button id="nav-issue-phase">3. Issue発行</button>
+                <button id="nav-save">4．Save</button>
+                <button id="nav-load">5．Load</button>
+            </div>
+            <config-phase class="pahse active"></config-phase>
+            <milestone-phase class="pahse"></milestone-phase>
+            <scenario-phase class="pahse"></scenario-phase>
+            <issue-phase class="pahse"></issue-phase>
+            <div id="loadingSpinner" class="spinner"></div>
+            <h2>実行ログ</h2>
+            <div id="logArea" class="log-area">ここに実行ログが表示されます...</div>
+        </div>
+        <script type="module">
+            import  {logMessage,setButtonsDisabled} from './static/log.js';
+            import './static/github.js';
+            import ConfigPhase from './static/config-phase.js';
+            import MileStonePhase from './static/milestone-phase.js';
+            import ScenarioPhase from './static/scenario-phase.js';
+            import IssuePhase from './static/issue-phase.js';
+            import  IDB from './static/idb.js';
+            
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelector('config-phase').load();
+                document.querySelector('milestone-phase').load();
+                document.querySelector('scenario-phase').load();
+                document.querySelector('issue-phase').load();
+
+                document.querySelector('config-phase').tweak();
+
+                IDB.onload();
+            });
+        </script>
+    </body>
+</html>

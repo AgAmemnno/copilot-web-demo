@@ -1,55 +1,115 @@
 <!DOCTYPE html>
 <html lang="ja">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>UIロジック プロトタイプ (API接続)</title>
-        <link rel="stylesheet" href="./static/styles.css">
-        <style>
-            :root {
-                --name-display: none; /* デフォルト値 */
-                --element-background: #0b20d3ad;
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アプリケーションコンテナ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e0e0e0; /* 明るいグレーの背景 */
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden; /* スクロールバーをbodyには出さない */
+        }
+
+        .controls-container {
+            padding: 1rem;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid #cccccc;
+        }
+
+        .controls-container label {
+            font-weight: 500;
+            color: #333333;
+        }
+
+        .controls-container select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #cccccc;
+            border-radius: 0.375rem; /* rounded-md */
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            background-color: #f9f9f9;
+            min-width: 250px; /* ドロップダウンの最小幅 */
+        }
+        .controls-container select:focus {
+            outline: none;
+            border-color: #007bff; /* 青系のフォーカス色 */
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .iframe-container {
+            flex-grow: 1; /* 残りの高さをすべて使用 */
+            overflow: hidden; /* iframeのスクロールはiframe自体に任せる */
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls-container">
+        <label for="appSelector">表示するアプリケーション:</label>
+        <select id="appSelector">
+            <option value="mock_API/index.html" selected>GitHubブランチ解析アプリ</option>
+        </select>
+    </div>
+
+    <div class="iframe-container">
+        <iframe id="appFrame" src="mock_API/index.html" title="選択されたアプリケーション">
+            お使いのブラウザはiframeをサポートしていません。
+        </iframe>
+    </div>
+
+    <script>
+        const appSelector = document.getElementById('appSelector');
+        const appFrame = document.getElementById('appFrame');
+
+        // ドロップダウンの選択が変更されたときの処理
+        appSelector.addEventListener('change', function() {
+            const selectedAppUrl = this.value;
+            if (selectedAppUrl) {
+                appFrame.src = selectedAppUrl;
+                console.log(`iframeのソースを ${selectedAppUrl} に変更しました。`);
             }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>UIロジック プロトタイプ (API接続)</h1>
-            <div class="phase-navigation">
-                <button id="nav-config-phase" class="active-nav">0. 基本設定</button>
-                <button id="nav-milestone-phase">1. マイルストーン定義</button>
-                <button id="nav-scenario-phase">2. シナリオ生成</button>
-                <button id="nav-issue-phase">3. Issue発行</button>
-                <button id="nav-save">4．Save</button>
-                <button id="nav-load">5．Load</button>
-            </div>
-            <config-phase class="pahse active"></config-phase>
-            <milestone-phase class="pahse"></milestone-phase>
-            <scenario-phase class="pahse"></scenario-phase>
-            <issue-phase class="pahse"></issue-phase>
-            <div id="loadingSpinner" class="spinner"></div>
-            <h2>実行ログ</h2>
-            <div id="logArea" class="log-area">ここに実行ログが表示されます...</div>
-        </div>
-        <script type="module">
-            import  {logMessage,setButtonsDisabled} from './static/log.js';
-            import './static/github.js';
-            import ConfigPhase from './static/config-phase.js';
-            import MileStonePhase from './static/milestone-phase.js';
-            import ScenarioPhase from './static/scenario-phase.js';
-            import IssuePhase from './static/issue-phase.js';
-            import  IDB from './static/idb.js';
-            
-            document.addEventListener('DOMContentLoaded', () => {
-                document.querySelector('config-phase').load();
-                document.querySelector('milestone-phase').load();
-                document.querySelector('scenario-phase').load();
-                document.querySelector('issue-phase').load();
+        });
 
-                document.querySelector('config-phase').tweak();
+        // 初期ロード時に選択されているアプリを読み込む (デフォルトでHTMLのsrc属性で設定済みだが、念のため)
+        // window.addEventListener('load', () => {
+        //     if (appSelector.value) {
+        //         appFrame.src = appSelector.value;
+        //     }
+        // });
 
-                IDB.onload();
-            });
-        </script>
-    </body>
+        // iframeのロード完了/エラー時のログ (デバッグ用)
+        appFrame.addEventListener('load', () => {
+            console.log(`iframeコンテンツ (${appFrame.src}) のロードが完了しました。`);
+            try {
+                // iframe内のタイトルを取得しようと試みる (同一オリジンポリシーに注意)
+                // console.log('iframe内のタイトル:', appFrame.contentWindow.document.title);
+            } catch (e) {
+                console.warn('iframe内のコンテンツにアクセスできませんでした (クロスオリジン制限の可能性)。', e.message);
+            }
+        });
+        appFrame.addEventListener('error', (event) => {
+            console.error(`iframeコンテンツ (${appFrame.src}) のロード中にエラーが発生しました。`, event);
+            // エラー発生時、iframe内にメッセージを表示するなどのフォールバック処理も検討可能
+            // appFrame.contentDocument.body.innerHTML = `<p style="color:red; padding:20px;">コンテンツの読み込みに失敗しました: ${appFrame.src}</p>`;
+        });
+
+    </script>
+</body>
 </html>
