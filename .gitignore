@@ -1,4 +1,9 @@
+.venv
+.pytest_cache
+__pycache__
 .env
+sa.json
+.gitignore
 **/__pycache__/
 cache/*
 node_modules/

@@ -1,18 +1,30 @@
 {
     "version": "0.2.0",
     "configurations": [
+        {
+            "name": "Python: pytest (venv)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/.venv/Scripts/pytest.exe", // Windows venv用
+            "args": [
+                "-s",
+                "test"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
       {
-        "type": "node",
-        "request": "launch",
-        "name": "Debug Vitest Tests",
-        "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
-        "args": [],
-        "autoAttachChildProcesses": true,
-        "smartStep": true,
-        "skipFiles": ["<node_internals>/**"],
-        "console": "integratedTerminal",
-        "cwd": "${workspaceFolder}",
-        "envFile": "${workspaceFolder}/.env.test"
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Vitest Tests",
+            "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+            "args": [],
+            "autoAttachChildProcesses": true,
+            "smartStep": true,
+            "skipFiles": ["<node_internals>/**"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env.test",
       }
     ]
   }
