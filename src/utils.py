@@ -13,6 +13,7 @@ try:
     from google.colab import drive # Google Driveにアクセスするため
     from google.colab import userdata # Secretsにアクセスするため
     from google.colab import auth # Google認証用
+    auth.authenticate_user()
 except ImportError:
     LOCAL = True
     from dotenv import load_dotenv
