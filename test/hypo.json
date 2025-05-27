@@ -1,0 +1,687 @@
+{
+    "overallRepositoryImpression_ja": "ComfyUIは、ノードベースの柔軟なワークフロー構築を核とする、急速に進化するマルチモーダルAIプラットフォームである。BRUSH_MODERNISMの思想がQ-F(赤)の構造的明確性をコアアーキテクチャにもたらし、各機能がノードとして表現される。BRUSH_ORGANICDESIGNは、活発なコミュニティによるカスタムノードエコシステムの発展と、新AIモデルへの迅速な対応に現れ、これがQ-TP(緑)の広範なエコシステムを形成している。しかし、この有機的成長はBRUSH_POSTMODERNISM的な多様性（時にカオス）も生み、アップデート時の互換性問題やセキュリティ懸念（Q-F赤の信頼性への挑戦）を引き起こしている。コア機能のパフォーマンス最適化（例：`--mmap-torch-files`、TeaCache）にはQ-AI（青）の効率性追求が見られる。Comfy OrgによるRFCプロセス導入や新ブランディングは、プロジェクトの成熟とQ-F(赤)の計画性強化を示唆している。全体として、革新性と拡張性を追求するあまり、安定性や統一感とのバランスが常に問われる、ダイナミックなリポジトリと言える。",
+    "analysisByBrush": [
+        {
+            "brushId": "BRUSH_MINIMALISM_V1",
+            "summaryForRepo_ja": "ComfyUIのコア自体は比較的コンパクト（約17.2MB）だが、カスタムノードによる機能拡張で全体像は複雑化する傾向。`cuda_malloc.py`や各種最適化オプション（`--mmap-torch-files`など）の存在は、リソース効率（Q-AI青）を重視するミニマリズムの側面を示唆する。ただし、カスタムノードエコシステムのS/N比は検証が必要。",
+            "relatedHypothesisIds": [
+                "MINIMALISM_hyp_001",
+                "BRUTALISM_hyp_001"
+            ]
+        },
+        {
+            "brushId": "BRUSH_MODERNISM_V1",
+            "summaryForRepo_ja": "ノードベースアーキテクチャ（`nodes.py`, `execution.py`）は、「形態は機能に従う」というモダニズムの原則を強く体現しており、機能の論理的配置（Q-F赤）が明確。`api_server/`などのディレクトリ構造も合理的。ただし、カスタムノードの多様性が全体の統一性を損なう可能性もある。",
+            "relatedHypothesisIds": [
+                "MODERNISM_hyp_001",
+                "MODERNISM_hyp_002"
+            ]
+        },
+        {
+            "brushId": "BRUSH_BRUTALISM_V1",
+            "summaryForRepo_ja": "パフォーマンスクリティカルな部分（例: `execution.py`のコアロジック、`cuda_malloc.py`）では、抽象化を排した剥き出しの効率性（Q-AI青）を追求している可能性がある。APIも直接的なものが多いと推測されるが、その「力強さ」が開発者体験にどう影響しているかは要検証。",
+            "relatedHypothesisIds": [
+                "BRUTALISM_hyp_001",
+                "MINIMALISM_hyp_001"
+            ]
+        },
+        {
+            "brushId": "BRUSH_NEUOMORPHISM_V1",
+            "summaryForRepo_ja": "ノードを繋ぐUIの操作感は、開発者にとって「触り心地」が良いかという点で評価可能。充実したREADME (`README.md`, `CONTRIBUTING.md`) や型情報 (`comfy/comfy_types/README.md`) は、開発者に寄り添う「柔らかさ」（Q-TP緑）を提供しようとする姿勢を示唆する。",
+            "relatedHypothesisIds": [
+                "NEUOMORPHISM_hyp_001"
+            ]
+        },
+        {
+            "brushId": "BRUSH_ASYMMETRICAL_V1",
+            "summaryForRepo_ja": "当初の画像生成中心から、動画、音声、3Dへと対応範囲を拡大しており、機能配分に非対称な成長が見られる。この非対称性は、プロジェクトの進化の方向性と、エコシステム内での独自の価値提案（Q-TP緑）を強調している。コア機能と膨大なカスタムノード群の間にも非対称性が存在する。",
+            "relatedHypothesisIds": [
+                "ASYMMETRICAL_hyp_001"
+            ]
+        },
+        {
+            "brushId": "BRUSH_FLATDESIGN_V1",
+            "summaryForRepo_ja": "ノードベースのUIは、視覚的にはフラットデザインに近いシンプルさを持つ。API設計やドキュメント (`README.md`, `comfy_api_nodes/README.md`) が、過度な抽象化を避け、情報を直接的かつ明瞭に伝えようとしているか（Q-F赤, Q-TP緑）が評価ポイント。",
+            "relatedHypothesisIds": [
+                "FLATDESIGN_hyp_001",
+                "MODERNISM_hyp_001"
+            ]
+        },
+        {
+            "brushId": "BRUSH_GRIDDESIGN_V1",
+            "summaryForRepo_ja": "ノードを配置するUI自体がグリッド的な性質を持つ。ディレクトリ構造 (`comfy/`, `api_server/`など) やファイル命名規則、APIエンドポイント設計に一貫したパターン（暗黙的なグリッド）が存在すれば、プロジェクトの整然さや予測可能性（Q-F赤）に貢献する。",
+            "relatedHypothesisIds": [
+                "MODERNISM_hyp_001"
+            ]
+        },
+        {
+            "brushId": "BRUSH_HEROIMAGE_V1",
+            "summaryForRepo_ja": "リポジトリの「ヒーロー」は、`README.md`冒頭の「The most powerful and modular visual AI engine」という宣言と、それを具現化するノードベースUIのコンセプトそのもの。これがプロジェクトの核心的価値（Q-F赤, Q-TP緑）を効果的に伝えている。",
+            "relatedHypothesisIds": [
+                "HEROIMAGE_hyp_001"
+            ]
+        },
+        {
+            "brushId": "BRUSH_MATERIALDESIGN_V1",
+            "summaryForRepo_ja": "ノード間の接続やデータの流れは、比喩的に「物理的」に理解しやすいインターフェースを目指している可能性がある。モジュールの階層構造（例: `comfy/`内のサブディレクトリ）やドキュメント (`comfy/comfy_types/README.md`) での情報の構造化は、マテリアルデザイン的な明確さ（Q-F赤, Q-TP緑）に繋がり得る。",
+            "relatedHypothesisIds": [
+                "MODERNISM_hyp_001",
+                "NEUOMORPHISM_hyp_001"
+            ]
+        },
+        {
+            "brushId": "BRUSH_ORGANICDESIGN_V1",
+            "summaryForRepo_ja": "カスタムノードエコシステム (`custom_nodes/`) と新AIモデルへの迅速な対応は、典型的な有機的成長（Q-TP緑）を示す。この柔軟性が強みだが、Web調査結果にあるように、アップデート時の互換性問題やセキュリティリスク（Q-F赤への影響）など、無秩序な複雑化（スパゲッティ化）の兆候も併せ持つ。",
+            "relatedHypothesisIds": [
+                "ORGANICDESIGN_hyp_001",
+                "ORGANICDESIGN_hyp_002",
+                "ASYMMETRICAL_hyp_001"
+            ]
+        },
+        {
+            "brushId": "BRUSH_POSTMODERNISM_V1",
+            "summaryForRepo_ja": "多様なカスタムノードの存在、様々なAIモデルや技術の（時に実験的な）取り込みは、ポストモダニズム的な折衷主義と多様性を示す。これはイノベーションの源泉（Q-TP緑, Q-AI青）である一方、標準化や品質管理の難しさ（Q-F赤）という課題も提示する。",
+            "relatedHypothesisIds": [
+                "ORGANICDESIGN_hyp_001",
+                "ORGANICDESIGN_hyp_002"
+            ]
+        },
+        {
+            "brushId": "BRUSH_RETRO_V1",
+            "summaryForRepo_ja": "ComfyUI自体は新しいが、Stable Diffusionなど既存の強力なモデル群を、ノードベースUIという新たなインターフェースで「再解釈」し、その価値を最大化しようとしている。これは過去の技術資産の現代的活用（Q-TP緑, Q-AI青）というレトロの側面も持つ。",
+            "relatedHypothesisIds": []
+        }
+    ],
+    "hypotheses": [
+        {
+            "hypothesisId": "MODERNISM_hyp_001",
+            "derivingBrushIds": [
+                "BRUSH_MODERNISM_V1",
+                "BRUSH_GRIDDESIGN_V1",
+                "BRUSH_FLATDESIGN_V1"
+            ],
+            "hypothesisStatement": {
+                "ja": "ComfyUIのノードベースアーキテクチャ (主に`nodes.py`, `execution.py`, `server.py`) は、「形態は機能に従う」というモダニズムの原則を体現し、処理フローの論理的整合性、構造の明確性、および予測可能性 (Q-F赤) を高いレベルで実現している。",
+                "en": "ComfyUI's node-based architecture (mainly in `nodes.py`, `execution.py`, `server.py`) embodies the modernist principle of \"Form Follows Function,\" achieving a high level of logical consistency in processing flow, structural clarity, and predictability (Q-F Red)."
+            },
+            "confidenceLevel": "High",
+            "supportingEvidenceFromScan_description_ja": "リポジトリ初期スキャンデータにおいて、`nodes.py` (94KB), `execution.py` (41KB), `server.py` (37KB) が主要な機能コンポーネントとして存在。Web調査結果(1,2)で、ノードベースの視覚的ワークフローがコア機能として強調されており、各ノードが独立した機能を持ち、それらを接続することでパイプラインを構築する点がモダニズム的合理性を強く示唆する。ディレクトリ構造も`comfy`, `api_server`, `comfy_execution`など機能ごとに分割されている。",
+            "areasToValidate": [
+                {
+                    "path": "nodes.py",
+                    "validationGoal_ja": "ノード定義の責務分離とインターフェースの明確性を検証"
+                },
+                {
+                    "path": "execution.py",
+                    "validationGoal_ja": "ワークフロー実行ロジックの論理的整合性と構造化度合いを検証"
+                },
+                {
+                    "path": "comfy/",
+                    "validationGoal_ja": "コアモジュール群の構造的な一貫性と責務分担の適切性を検証"
+                }
+            ],
+            "suggestedValidationActions": [
+                {
+                    "actionId": "val_act_001",
+                    "actionType": "AI_EVALUATE_TARGET_WITH_BRUSHES",
+                    "targetPath": "nodes.py",
+                    "parameters": {
+                        "brushesToApply": [
+                            "BRUSH_MODERNISM_V1",
+                            "BRUSH_FLATDESIGN_V1"
+                        ],
+                        "analysisFocus_ja": "クラス設計、インターフェース定義の合理性と明確性"
+                    },
+                    "description_ja": "`nodes.py`内のクラス設計やインターフェース定義が、モダニズムおよびフラットデザインの観点から合理的かつ明確であるかを評価する。"
+                },
+                {
+                    "actionId": "val_act_002",
+                    "actionType": "VERIFY_STRUCTURAL_PATTERN",
+                    "targetPath": "execution.py",
+                    "parameters": {
+                        "patternDescription": "Clear separation of concerns for workflow parsing, validation, and execution stages."
+                    },
+                    "description_ja": "`execution.py`において、ワークフローの解析・検証・実行ステージが明確に分離されているか、構造的パターンを確認する。"
+                }
+            ],
+            "expectedOutcomeIfConfirmed": {
+                "ja": "Q-F(赤)の強化: システムの信頼性、保守性、スケーラビリティが向上する。DevExも向上し、開発者がロジックを理解しやすくなる。Q-TP(緑)の強化: システム構造の理解が容易になることで、新規参入者の学習コストが低減し、ナレッジ共有が促進される。",
+                "en": "Q-F (Red) enhancement: Improved system reliability, maintainability, and scalability. Enhanced DevEx, making it easier for developers to understand logic. Q-TP (Green) enhancement: Easier understanding of system structure reduces learning curve for newcomers and promotes knowledge sharing."
+            },
+            "status": "PENDING_VALIDATION"
+        },
+        {
+            "hypothesisId": "ORGANICDESIGN_hyp_001",
+            "derivingBrushIds": [
+                "BRUSH_ORGANICDESIGN_V1",
+                "BRUSH_POSTMODERNISM_V1"
+            ],
+            "hypothesisStatement": {
+                "ja": "`custom_nodes/`ディレクトリに代表されるカスタムノードエコシステムは、オーガニックデザインのように多様な機能拡張 (Q-TP緑) を可能にしているが、その統制の取れていない成長はポストモダニズム的な複雑性と非互換性を生み、システム全体の安定性や管理容易性 (Q-F赤の課題) を潜在的に低下させている。",
+                "en": "The custom node ecosystem, exemplified by the `custom_nodes/` directory, enables diverse functional extensions (Q-TP Green) like organic design, but its uncontrolled growth creates postmodern complexity and incompatibility, potentially reducing overall system stability and manageability (Q-F Red challenge)."
+            },
+            "confidenceLevel": "High",
+            "supportingEvidenceFromScan_description_ja": "初期スキャンデータに `custom_nodes/` ディレクトリが存在。Web調査結果(2, 29, 30, 34)で、豊富なカスタムノードがComfyUIの強みであると同時に、アップデート時の互換性問題や不安定性の主要因として頻繁に言及されている。1600以上のカスタムノードが存在したとの報告もある。",
+            "areasToValidate": [
+                {
+                    "path": "custom_nodes/",
+                    "validationGoal_ja": "カスタムノードの多様性と、それに伴う潜在的な複雑性・非互換性の実態を把握 (サンプル調査)"
+                },
+                {
+                    "path": "main.py",
+                    "validationGoal_ja": "カスタムノード読み込み処理におけるエラーハンドリングや分離メカニズムの堅牢性を評価"
+                }
+            ],
+            "suggestedValidationActions": [
+                {
+                    "actionId": "val_act_003",
+                    "actionType": "CALCULATE_DIRECTORY_METRICS",
+                    "targetPath": "custom_nodes/",
+                    "parameters": {
+                        "metrics": [
+                            "number_of_subdirectories",
+                            "avg_files_per_node"
+                        ],
+                        "analysisFocus_ja": "ディレクトリ構造の複雑性指標を収集し、多様性を定量化（注: 実際のカスタムノードがないため、サンプルを想定）"
+                    },
+                    "description_ja": "`custom_nodes/`ディレクトリ内のサブディレクトリ数や平均ファイル数を（サンプルベースで）計測し、エコシステムの規模と複雑度を推定する。"
+                },
+                {
+                    "actionId": "val_act_004",
+                    "actionType": "FETCH_AND_ANALYZE_FILE_CONTENT_FOR_KEYWORDS",
+                    "targetPath": "main.py",
+                    "parameters": {
+                        "keywords": [
+                            "try",
+                            "except",
+                            "ExtensionConflict",
+                            "compatibility"
+                        ],
+                        "analysisFocus_ja": "カスタムノード読み込み時のエラー処理や互換性担保の仕組み"
+                    },
+                    "description_ja": "`main.py`（または関連ファイル）でカスタムノードを読み込む部分のコードを調査し、エラーハンドリングやバージョニング、競合解決に関するキーワードやパターンの有無を確認する。"
+                }
+            ],
+            "expectedOutcomeIfConfirmed": {
+                "ja": "Q-TP(緑)の強みとQ-F(赤)の弱点が明確になる。エコシステムの活力を維持しつつ、安定性・信頼性を向上させるためのメカニズム（例: カスタムノードの認証制度、サンドボックス強化）の必要性が高まる。DevSecOpsの観点からの改善点が示唆される。",
+                "en": "Clarifies Q-TP (Green) strengths and Q-F (Red) weaknesses. Highlights the need for mechanisms (e.g., custom node certification, enhanced sandboxing) to improve stability/reliability while maintaining ecosystem vitality. Suggests areas for DevSecOps improvement."
+            },
+            "status": "PENDING_VALIDATION"
+        },
+        {
+            "hypothesisId": "MINIMALISM_hyp_001",
+            "derivingBrushIds": [
+                "BRUSH_MINIMALISM_V1",
+                "BRUSH_AI_V1"
+            ],
+            "hypothesisStatement": {
+                "ja": "`cuda_malloc.py`の存在や、`main.py`における `--mmap-torch-files`, `--async-offload`といったメモリ管理オプション、Web調査で言及されるTeaCacheの統合は、ミニマリズム的なリソース効率とQ-AI(青)の反射的有効性(高速化・省メモリ)を追求する強い設計思想を反映している。",
+                "en": "The existence of `cuda_malloc.py`, memory management options like `--mmap-torch-files` and `--async-offload` in `main.py`, and the integration of TeaCache mentioned in web research, reflect a strong design philosophy pursuing minimalist resource efficiency and Q-AI (Blue) reflexive effectiveness (speed-up, memory saving)."
+            },
+            "confidenceLevel": "High",
+            "supportingEvidenceFromScan_description_ja": "初期スキャンデータに `cuda_malloc.py` (3.5KB) が存在。Web調査結果(10, 24, 25)で、`--mmap-torch-files`オプション、`--async-offload`オプション、FP8対応、TeaCacheによるキャッシュ機構など、パフォーマンスとメモリ効率を改善する機能が最近のアップデートで多数導入されていることが確認できる。",
+            "areasToValidate": [
+                {
+                    "path": "cuda_malloc.py",
+                    "validationGoal_ja": "CUDAメモリ管理の最適化ロジックとその効果を検証"
+                },
+                {
+                    "path": "main.py",
+                    "validationGoal_ja": "起動オプションに関連するメモリ・パフォーマンス最適化処理の具体的な実装を確認"
+                },
+                {
+                    "path": "comfy/sd.py",
+                    "validationGoal_ja": "TeaCache関連のコード(もしあれば)の効率性を評価"
+                }
+            ],
+            "suggestedValidationActions": [
+                {
+                    "actionId": "val_act_005",
+                    "actionType": "AI_EVALUATE_TARGET_WITH_BRUSHES",
+                    "targetPath": "cuda_malloc.py",
+                    "parameters": {
+                        "brushesToApply": [
+                            "BRUSH_MINIMALISM_V1",
+                            "BRUSH_AI_V1"
+                        ],
+                        "analysisFocus_ja": "メモリ割り当ての効率性とコードの簡潔性"
+                    },
+                    "description_ja": "`cuda_malloc.py`のコードが、ミニマリズムとQ-AIの観点から効率的かつ簡潔に記述されているかを評価する。"
+                },
+                {
+                    "actionId": "val_act_006",
+                    "actionType": "FETCH_AND_ANALYZE_FILE_CONTENT_FOR_KEYWORDS",
+                    "targetPath": "main.py",
+                    "parameters": {
+                        "keywords": [
+                            "mmap",
+                            "offload",
+                            "torch.backends.cuda.sdp_kernel"
+                        ],
+                        "analysisFocus_ja": "パフォーマンスオプションに関連する実装箇所"
+                    },
+                    "description_ja": "`main.py`内でメモリマップ、オフロード、FP8関連などのキーワードを検索し、該当箇所の実装ロジックを分析する。"
+                }
+            ],
+            "expectedOutcomeIfConfirmed": {
+                "ja": "Q-AI(青)の卓越性が確認される。リソース制約のある環境でも動作可能な点がComfyUIの強みとして裏付けられる。これはユーザーベースの拡大に寄与する。Q-F(赤)の観点では、システムのレジリエンス向上にも繋がる。",
+                "en": "Confirms Q-AI (Blue) excellence. Underpins ComfyUI's strength in operating in resource-constrained environments, contributing to user base expansion. From a Q-F (Red) perspective, it also leads to improved system resilience."
+            },
+            "status": "PENDING_VALIDATION"
+        },
+        {
+            "hypothesisId": "MODERNISM_hyp_002",
+            "derivingBrushIds": [
+                "BRUSH_MODERNISM_V1",
+                "BRUSH_TP_V1"
+            ],
+            "hypothesisStatement": {
+                "ja": "ルートディレクトリ直下の `api_server/`, `comfy_api/`, `comfy_api_nodes/` といったディレクトリ群の存在は、ComfyUIが単なるUIツールではなく、外部システムやサービス (Web調査で言及されるAPIノード経由のクローズドモデル等) と連携するプラットフォーム (Q-TP緑) としての役割を、モダンで明確なAPI設計 (Q-F赤) を通じて目指していることを強く示している。",
+                "en": "The presence of directories like `api_server/`, `comfy_api/`, and `comfy_api_nodes/` directly under the root directory strongly indicates that ComfyUI aims to be a platform (Q-TP Green) interacting with external systems and services (like closed models via API nodes mentioned in web research) through modern and clear API design (Q-F Red), rather than just a UI tool."
+            },
+            "confidenceLevel": "High",
+            "supportingEvidenceFromScan_description_ja": "初期スキャンデータに`api_server/`, `comfy_api/`, `comfy_api_nodes/`ディレクトリが存在。Web調査結果(5, 14, 15)で、APIノードの導入が大きく取り上げられ、外部のクローズドソースAIモデルとの連携がComfyUIの新たな戦略的方向性として示されている。Comfy OrgがComfyUIを「生成AIのOS」として位置づけている点もこれを裏付ける。",
+            "areasToValidate": [
+                {
+                    "path": "api_server/",
+                    "validationGoal_ja": "APIサーバーの実装におけるエンドポイント設計の明瞭性とRESTful原則への準拠度を評価"
+                },
+                {
+                    "path": "comfy_api_nodes/",
+                    "validationGoal_ja": "APIノードのインターフェース設計が、外部サービス連携を容易にする構造になっているか検証"
+                },
+                {
+                    "path": "comfy_api_nodes/README.md",
+                    "validationGoal_ja": "APIノードの利用方法や設計思想に関するドキュメントの質を評価"
+                }
+            ],
+            "suggestedValidationActions": [
+                {
+                    "actionId": "val_act_007",
+                    "actionType": "AI_EVALUATE_TARGET_WITH_BRUSHES",
+                    "targetPath": "api_server/",
+                    "parameters": {
+                        "brushesToApply": [
+                            "BRUSH_MODERNISM_V1",
+                            "BRUSH_FLATDESIGN_V1"
+                        ],
+                        "analysisFocus_ja": "APIエンドポイントの設計と構造の明瞭性"
+                    },
+                    "description_ja": "`api_server/`内のAPIエンドポイント定義やルーティング構造が、モダニズムおよびフラットデザインの観点から明瞭かつ合理的であるかを評価する。"
+                },
+                {
+                    "actionId": "val_act_008",
+                    "actionType": "FETCH_AND_ANALYZE_FILE_CONTENT_FOR_KEYWORDS",
+                    "targetPath": "comfy_api_nodes/README.md",
+                    "parameters": {
+                        "keywords": [
+                            "API key",
+                            "endpoint",
+                            "request",
+                            "response",
+                            "schema"
+                        ],
+                        "analysisFocus_ja": "API連携のためのドキュメントの網羅性と分かりやすさ"
+                    },
+                    "description_ja": "`comfy_api_nodes/README.md` を分析し、外部API連携に必要な情報（APIキー管理、エンドポイント、リクエスト/レスポンス形式、スキーマ等）が明確に記述されているか確認する。"
+                }
+            ],
+            "expectedOutcomeIfConfirmed": {
+                "ja": "Q-TP(緑)の強化: ComfyUIが広範なAIエコシステムとのハブとして機能する可能性が示される。Q-F(赤)の強化: 明確なAPI設計は開発者体験(DevEx)を向上させ、外部連携の信頼性を高める。プロジェクトの戦略的価値が増大する。",
+                "en": "Q-TP (Green) enhancement: Shows ComfyUI's potential to act as a hub for a broader AI ecosystem. Q-F (Red) enhancement: Clear API design improves DevEx and enhances reliability of external integrations. Increases the project's strategic value."
+            },
+            "status": "PENDING_VALIDATION"
+        },
+        {
+            "hypothesisId": "NEUOMORPHISM_hyp_001",
+            "derivingBrushIds": [
+                "BRUSH_NEUOMORPHISM_V1",
+                "BRUSH_TP_V1"
+            ],
+            "hypothesisStatement": {
+                "ja": "詳細な `README.md` (25KB)、`CONTRIBUTING.md`、および `comfy/comfy_types/README.md` に見られる型情報や各種説明ドキュメントは、開発者にとって「触り心地が良く」直感的に理解しやすい情報提供 (ニューモーフィズム的な配慮) を意図しており、コミュニティとの積極的な連携と知識共有 (Q-TP緑) を重視する姿勢を表している。",
+                "en": "The detailed `README.md` (25KB), `CONTRIBUTING.md`, and type information and various explanatory documents found in `comfy/comfy_types/README.md` are intended to provide information that is \"comfortable to touch\" and intuitively understandable for developers (Neuomorphism-like consideration), reflecting an emphasis on active collaboration and knowledge sharing with the community (Q-TP Green)."
+            },
+            "confidenceLevel": "High",
+            "supportingEvidenceFromScan_description_ja": "初期スキャンデータで `README.md` が25KBと非常に大きく、`CONTRIBUTING.md` (1.8KB) や `comfy/comfy_types/README.md` (1.3KB) など複数の詳細なドキュメントファイルが存在。Web調査結果(3, 8)でも公式ドキュメントやWikiの存在が確認されており、情報提供に力を入れていることがわかる。",
+            "areasToValidate": [
+                {
+                    "path": "README.md",
+                    "validationGoal_ja": "情報の網羅性、構造の分かりやすさ、表現の丁寧さを評価"
+                },
+                {
+                    "path": "CONTRIBUTING.md",
+                    "validationGoal_ja": "貢献プロセスの明確さと、貢献者への配慮が感じられる記述か評価"
+                },
+                {
+                    "path": "comfy/comfy_types/README.md",
+                    "validationGoal_ja": "型定義に関する説明が開発者の理解を助けるものになっているか評価"
+                }
+            ],
+            "suggestedValidationActions": [
+                {
+                    "actionId": "val_act_009",
+                    "actionType": "AI_EVALUATE_TARGET_WITH_BRUSHES",
+                    "targetPath": "README.md",
+                    "parameters": {
+                        "brushesToApply": [
+                            "BRUSH_NEUOMORPHISM_V1",
+                            "BRUSH_HEROIMAGE_V1"
+                        ],
+                        "analysisFocus_ja": "情報の提示方法と第一印象、親しみやすさ"
+                    },
+                    "description_ja": "`README.md` の内容と構成が、ニューモーフィズムおよびヒーローイメージの観点から、開発者にとって魅力的で理解しやすいものとなっているかを評価する。"
+                },
+                {
+                    "actionId": "val_act_010",
+                    "actionType": "FETCH_AND_ANALYZE_FILE_CONTENT_FOR_KEYWORDS",
+                    "targetPath": "CONTRIBUTING.md",
+                    "parameters": {
+                        "keywords": [
+                            "welcome",
+                            "thank you",
+                            "guidelines",
+                            "how to",
+                            "support"
+                        ],
+                        "analysisFocus_ja": "貢献者への配慮とプロセスの明確さ"
+                    },
+                    "description_ja": "`CONTRIBUTING.md` を分析し、貢献者を歓迎し、プロセスを明確にガイドするようなキーワードや表現が用いられているか確認する。"
+                }
+            ],
+            "expectedOutcomeIfConfirmed": {
+                "ja": "Q-TP(緑)の強化: コミュニティの活性化、新規貢献者の増加、知識共有の円滑化に繋がる。学習コストの低減はプロジェクトの採用拡大に貢献。Q-F(赤)の観点では、開発者体験(DevEx)の向上により、間接的にコード品質やプロジェクトの持続可能性向上に寄与する。",
+                "en": "Q-TP (Green) enhancement: Leads to community vitalization, increase in new contributors, and smoother knowledge sharing. Reduced learning curve contributes to wider project adoption. From a Q-F (Red) perspective, improved DevEx indirectly contributes to code quality and project sustainability."
+            },
+            "status": "PENDING_VALIDATION"
+        },
+        {
+            "hypothesisId": "HEROIMAGE_hyp_001",
+            "derivingBrushIds": [
+                "BRUSH_HEROIMAGE_V1"
+            ],
+            "hypothesisStatement": {
+                "ja": "ComfyUIの核心的価値である強力かつモジュラーなノードベースのUIそのもの、及び `README.md` の冒頭 (「The most powerful and modular visual AI engine」) が「ヒーローイメージ」として機能し、プロジェクトの目的 (Q-F赤の計画性) と独自の提供価値 (Q-TP緑のコンテキスト) を瞬時に伝達している。",
+                "en": "ComfyUI's core value proposition—its powerful and modular node-based UI—along with the opening statement in `README.md` (\"The most powerful and modular visual AI engine\"), acts as a \"hero image,\" instantly conveying the project's purpose (Q-F Red planning) and unique value (Q-TP Green context)."
+            },
+            "confidenceLevel": "High",
+            "supportingEvidenceFromScan_description_ja": "`README.md` (25KB) の冒頭の記述 (content_snippetより「# ComfyUI\n**The most powerful and modular visual AI engine and application.**」)。Web調査結果(1, 2)で、ノードベースUIがComfyUIの最大の特徴であり、人気の理由として一貫して挙げられている点。",
+            "areasToValidate": [
+                {
+                    "path": "README.md",
+                    "validationGoal_ja": "冒頭部分のメッセージがプロジェクトの核心を効果的に伝えているか、その魅力を評価"
+                },
+                {
+                    "path": "app/",
+                    "validationGoal_ja": "（もしフロントエンドコードが含まれていれば）UIの設計思想がプロジェクトの「顔」としての役割を果たしているか評価"
+                }
+            ],
+            "suggestedValidationActions": [
+                {
+                    "actionId": "val_act_011",
+                    "actionType": "AI_EVALUATE_TARGET_WITH_BRUSHES",
+                    "targetPath": "README.md",
+                    "parameters": {
+                        "brushesToApply": [
+                            "BRUSH_HEROIMAGE_V1"
+                        ],
+                        "analysisFocus_ja": "冒頭のメッセージの訴求力とプロジェクトの核心的価値の伝達度"
+                    },
+                    "description_ja": "`README.md` の冒頭部分が、ヒーローイメージの観点からプロジェクトの核心的価値と魅力を効果的に伝えているかを評価する。"
+                }
+            ],
+            "expectedOutcomeIfConfirmed": {
+                "ja": "Q-TP(緑)の強化: プロジェクトの認知度向上とエコシステム内でのポジション確立に貢献。Q-F(赤)の強化: プロジェクトの目標と方向性が明確になり、開発チーム内外での共通認識を醸成する。ユーザー獲得とコミュニティ形成の初期段階で重要な役割を果たす。",
+                "en": "Q-TP (Green) enhancement: Contributes to increased project visibility and established positioning within the ecosystem. Q-F (Red) enhancement: Clarifies project goals and direction, fostering common understanding within and outside the development team. Plays a crucial role in early user acquisition and community building."
+            },
+            "status": "PENDING_VALIDATION"
+        },
+        {
+            "hypothesisId": "ORGANICDESIGN_hyp_002",
+            "derivingBrushIds": [
+                "BRUSH_ORGANICDESIGN_V1",
+                "BRUSH_POSTMODERNISM_V1"
+            ],
+            "hypothesisStatement": {
+                "ja": "Web調査結果で指摘されるカスタムノード経由のマルウェア混入事例や、意図せず公開されたインスタンスからのデータ漏洩リスクは、ComfyUIのオーガニックでオープンな拡張性が生んだ統制の難しさ (Q-F赤のDevSecOpsにおける課題) を示唆しており、セキュリティ対策の強化が急務である。",
+                "en": "Incidents of malware injection via custom nodes and data leakage risks from unintentionally exposed instances, as highlighted in web research, suggest a lack of control stemming from ComfyUI's organic and open extensibility (a Q-F Red DevSecOps challenge), making enhanced security measures urgent."
+            },
+            "confidenceLevel": "High",
+            "supportingEvidenceFromScan_description_ja": "初期スキャンデータには直接的な証拠はないが、`custom_nodes/` ディレクトリの存在が拡張性の高さを示唆。Web調査結果(2, 37, 38, 39)で、ComfyUI_LLMVISIONの侵害事件、クリプトマイニングコード混入、公開サーバーからのデータ漏洩、セキュリティポリシーRFCの存在など、セキュリティ問題が具体的に報告されている。",
+            "areasToValidate": [
+                {
+                    "path": "main.py",
+                    "validationGoal_ja": "カスタムノード読み込み・実行時のサンドボックス機構や権限管理の有無・実効性を確認"
+                },
+                {
+                    "path": "server.py",
+                    "validationGoal_ja": "デフォルト設定での認証やアクセス制御の堅牢性を確認"
+                },
+                {
+                    "path": ".github/workflows/",
+                    "validationGoal_ja": "セキュリティスキャンや依存関係チェックなどのCIプロセスが組み込まれているか確認 (存在すれば)"
+                }
+            ],
+            "suggestedValidationActions": [
+                {
+                    "actionId": "val_act_012",
+                    "actionType": "FETCH_AND_ANALYZE_FILE_CONTENT_FOR_KEYWORDS",
+                    "targetPath": "main.py",
+                    "parameters": {
+                        "keywords": [
+                            "sandbox",
+                            "permission",
+                            "security",
+                            "exploit",
+                            "sanitize"
+                        ],
+                        "analysisFocus_ja": "カスタムノード実行環境のセキュリティ対策"
+                    },
+                    "description_ja": "`main.py`（または関連ファイル）でカスタムノードを扱う部分を調査し、サンドボックス化、権限分離、入力サニタイズなど、セキュリティ関連のキーワードや対策の有無を確認する。"
+                },
+                {
+                    "actionId": "val_act_013",
+                    "actionType": "AI_EVALUATE_TARGET_WITH_BRUSHES",
+                    "targetPath": "server.py",
+                    "parameters": {
+                        "brushesToApply": [
+                            "BRUSH_BRUTALISM_V1"
+                        ],
+                        "analysisFocus_ja": "デフォルト設定におけるセキュリティの「剥き出し度」"
+                    },
+                    "description_ja": "`server.py` のデフォルト設定が、ブルータリズム的に機能優先でセキュリティが甘くなっていないか、あるいは堅牢なデフォルト設定になっているかを評価する。"
+                }
+            ],
+            "expectedOutcomeIfConfirmed": {
+                "ja": "Q-F(赤)の信頼性・安全性に関する重大な課題が明確になる。DevSecOpsプラクティスの導入や強化、カスタムノードの審査・署名メカニズム、セキュリティ意識向上啓発など、具体的な対策の必要性が裏付けられる。放置すればプロジェクトの評判やユーザー信頼を損なうリスクが高い。",
+                "en": "Highlights critical Q-F (Red) reliability and security issues. Underpins the need for specific measures like adopting/strengthening DevSecOps practices, custom node review/signing mechanisms, and security awareness campaigns. Neglect poses high risk to project reputation and user trust."
+            },
+            "status": "PENDING_VALIDATION"
+        },
+        {
+            "hypothesisId": "ASYMMETRICAL_hyp_001",
+            "derivingBrushIds": [
+                "BRUSH_ASYMMETRICAL_V1",
+                "BRUSH_ORGANICDESIGN_V1"
+            ],
+            "hypothesisStatement": {
+                "ja": "ComfyUIが当初の画像生成中心から、動画 (Wan2.1等)、音声 (ACE Step)、3Dモデルへと対応を急速に拡大している状況は、リポジトリの機能配分にアシンメトリーな成長と焦点のシフト (Q-TP緑のエコシステム内でのニッチ拡大と価値提案の多様化) をもたらしており、コア機能と新規領域のバランスが問われている。",
+                "en": "ComfyUI's rapid expansion from its initial image generation focus to support video (e.g., Wan2.1), audio (ACE Step), and 3D models is creating an asymmetrical growth and a shift in focus in the repository's feature distribution (Q-TP Green niche expansion and value proposition diversification within the ecosystem), questioning the balance between core functionality and new domains."
+            },
+            "confidenceLevel": "Medium",
+            "supportingEvidenceFromScan_description_ja": "初期スキャンデータでは主にPythonリポジトリとしての汎用的な構造が見られるが、`nodes.py`のサイズが大きいことがコア機能の複雑さを示唆。Web調査結果(2, 4, 5, 9, 18)で、画像生成に加え、Stable Video Diffusion, Wan2.1, ACE Step, Hunyuan3Dなど多様なモーダルへの対応が積極的に進められていることが明記されている。これが非対称なリソース配分や開発優先順位を生んでいる可能性がある。",
+            "areasToValidate": [
+                {
+                    "path": "nodes.py",
+                    "validationGoal_ja": "画像、動画、音声など各モーダルに対応するノード群のコード量や複雑度の偏りを比較分析"
+                },
+                {
+                    "path": "comfy/",
+                    "validationGoal_ja": "コアロジックにおけるマルチモーダル対応のための汎用的な基盤と、特定モーダル特化コードのバランスを確認"
+                }
+            ],
+            "suggestedValidationActions": [
+                {
+                    "actionId": "val_act_014",
+                    "actionType": "FETCH_AND_ANALYZE_FILE_CONTENT_FOR_KEYWORDS",
+                    "targetPath": "nodes.py",
+                    "parameters": {
+                        "keywords": [
+                            "Image",
+                            "Video",
+                            "Audio",
+                            "3D",
+                            "Latent"
+                        ],
+                        "analysisFocus_ja": "各モーダル関連キーワードの出現頻度や関連コードブロックの規模"
+                    },
+                    "description_ja": "`nodes.py`内で各モーダル（画像、動画、音声、3D）に関連するキーワードやクラス定義を検索し、それぞれのコード規模や複雑さに偏りがないか sơ bộ đánh giá (sơ bộ đánh giá - preliminary assessment in Vietnamese, used here as a placeholder for 'preliminary assessment')する。"
+                },
+                {
+                    "actionId": "val_act_015",
+                    "actionType": "AI_EVALUATE_TARGET_WITH_BRUSHES",
+                    "targetPath": "comfy/",
+                    "parameters": {
+                        "brushesToApply": [
+                            "BRUSH_ASYMMETRICAL_V1",
+                            "BRUSH_MODERNISM_V1"
+                        ],
+                        "analysisFocus_ja": "コアモジュール群の機能的バランスと構造的対称性"
+                    },
+                    "description_ja": "`comfy/`ディレクトリ以下のコアモジュール群が、アシンメトリーデザインの観点から特定の機能領域に戦略的に注力しているか、あるいはモダニズム的な均整の取れた構造を目指しているかを評価する。"
+                }
+            ],
+            "expectedOutcomeIfConfirmed": {
+                "ja": "Q-TP(緑)の拡張戦略と、それに伴うQ-F(赤)の設計・リソース配分への影響が明らかになる。プロジェクトがどの領域に注力しているか、またその戦略が持続可能かどうかの洞察が得られる。多機能化とコア機能の安定性・洗練度のバランスについて議論を促す。",
+                "en": "Clarifies Q-TP (Green) expansion strategy and its impact on Q-F (Red) design and resource allocation. Provides insights into which areas the project is focusing on and whether its strategy is sustainable. Prompts discussion on balancing multi-functionality with core feature stability and refinement."
+            },
+            "status": "PENDING_VALIDATION"
+        },
+        {
+            "hypothesisId": "BRUTALISM_hyp_001",
+            "derivingBrushIds": [
+                "BRUSH_BRUTALISM_V1",
+                "BRUSH_AI_V1"
+            ],
+            "hypothesisStatement": {
+                "ja": "`execution.py`や`nodes.py`内のパフォーマンスクリティカルな箇所、及び`cuda_malloc.py`のような低レベルコードでは、可読性や抽象化をある程度犠牲にしてでも、剥き出しの効率性や直接的なハードウェア制御 (ブルータリズム的アプローチ) を追求しており、これがQ-AI(青)の反射的有効性 (高速処理) に大きく貢献している可能性がある。",
+                "en": "In performance-critical sections of `execution.py` and `nodes.py`, and in low-level code like `cuda_malloc.py`, a brutalist approach prioritizing raw efficiency and direct hardware control over readability or abstraction may be pursued, potentially contributing significantly to Q-AI (Blue) reflexive effectiveness (high-speed processing)."
+            },
+            "confidenceLevel": "Medium",
+            "supportingEvidenceFromScan_description_ja": "初期スキャンデータに `cuda_malloc.py` (3.5KB) という低レベル操作を示唆するファイルが存在。`execution.py` (41KB) と `nodes.py` (94KB) はサイズが大きく、複雑な処理を含んでいるため、内部に高度に最適化された箇所が含まれる可能性がある。Web調査結果の多数のパフォーマンス改善への言及も、効率追求の姿勢を裏付ける。",
+            "areasToValidate": [
+                {
+                    "path": "cuda_malloc.py",
+                    "validationGoal_ja": "コードが低レベルCUDA APIを直接利用し、効率を最大化する設計になっているか検証"
+                },
+                {
+                    "path": "execution.py",
+                    "validationGoal_ja": "コア実行ループや頻繁に呼び出される関数において、パフォーマンスを優先した剥き出しの実装箇所がないか特定"
+                },
+                {
+                    "path": "nodes.py",
+                    "validationGoal_ja": "特定の計算量の多いノード実装において、最適化のために意図的に可読性を下げたコードがないか調査"
+                }
+            ],
+            "suggestedValidationActions": [
+                {
+                    "actionId": "val_act_016",
+                    "actionType": "AI_EVALUATE_TARGET_WITH_BRUSHES",
+                    "targetPath": "cuda_malloc.py",
+                    "parameters": {
+                        "brushesToApply": [
+                            "BRUSH_BRUTALISM_V1",
+                            "BRUSH_AI_V1"
+                        ],
+                        "analysisFocus_ja": "コードの直接性と効率性、素材（CUDA）の生の質感の活用度"
+                    },
+                    "description_ja": "`cuda_malloc.py` が、ブルータリズムおよびQ-AIの観点から、CUDAの機能を直接的かつ効率的に活用しているかを評価する。"
+                },
+                {
+                    "actionId": "val_act_017",
+                    "actionType": "FETCH_AND_ANALYZE_FILE_CONTENT_FOR_KEYWORDS",
+                    "targetPath": "execution.py",
+                    "parameters": {
+                        "keywords": [
+                            "#pragma",
+                            "inline",
+                            "unsafe",
+                            "ctypes",
+                            "optim"
+                        ],
+                        "analysisFocus_ja": "パフォーマンス最適化のための低レベルな記述や技巧"
+                    },
+                    "description_ja": "`execution.py` 内で、低レベルな最適化を示唆するキーワード（コンパイラ指示子、インライン展開、unsafeブロック、ctypes利用など）を検索し、該当箇所の意図を分析する。"
+                }
+            ],
+            "expectedOutcomeIfConfirmed": {
+                "ja": "Q-AI(青)の効率性が、ブルータリズム的な設計判断によって支えられていることが明らかになる。これはComfyUIの高性能という評価を技術的に裏付ける。一方で、Q-F(赤)の観点から、そのようなコード部分の保守性や可読性のトレードオフも明確になる。",
+                "en": "Reveals that Q-AI (Blue) efficiency is supported by brutalist design decisions, technically backing ComfyUI's high-performance reputation. Also clarifies the trade-off in maintainability and readability (Q-F Red) for such code sections."
+            },
+            "status": "PENDING_VALIDATION"
+        },
+        {
+            "hypothesisId": "FLATDESIGN_hyp_001",
+            "derivingBrushIds": [
+                "BRUSH_FLATDESIGN_V1",
+                "BRUSH_MINIMALISM_V1"
+            ],
+            "hypothesisStatement": {
+                "ja": "ComfyUIのAPI設計 (特に `api_server/` や `comfy_api_nodes/` で定義されるもの) や主要なドキュメント (`README.md`) は、フラットデザインの原則に則り、過度な抽象化レイヤーや複雑な階層構造を避け、機能や情報へのアクセスを簡潔明瞭かつ直接的にすることで、開発者の学習コスト低減と利用容易性 (Q-F赤のDevEx向上、Q-TP緑のコンテキスト理解促進) を目指している。",
+                "en": "ComfyUI's API design (especially as defined in `api_server/` and `comfy_api_nodes/`) and key documentation (`README.md`) adhere to flat design principles by avoiding excessive abstraction layers or complex hierarchies, aiming for concise, clear, and direct access to functionality and information, thereby reducing developer learning curves and improving usability (Q-F Red DevEx improvement, Q-TP Green context understanding facilitation)."
+            },
+            "confidenceLevel": "Medium",
+            "supportingEvidenceFromScan_description_ja": "Web調査結果(1, 15)で、ノードベースUIの直感性や、APIノードによるシンプルな外部モデルアクセスが示唆される。`README.md`のcontent_snippetが情報を直接的に提示しようとしている。`api_server/routes/internal/README.md`が内部ルートを明確に区分している点も、情報の整理を示唆する。ただし、API全体のフラット性は詳細なコードレビューが必要。",
+            "areasToValidate": [
+                {
+                    "path": "api_server/",
+                    "validationGoal_ja": "APIエンドポイントの構造がフラットで直感的か、過度なネストがないか評価"
+                },
+                {
+                    "path": "comfy_api_nodes/README.md",
+                    "validationGoal_ja": "APIノードの利用説明が簡潔明瞭で、開発者が必要な情報に容易にアクセスできるか評価"
+                },
+                {
+                    "path": "README.md",
+                    "validationGoal_ja": "情報構造がフラットで、主要な情報へのナビゲーションが容易か評価"
+                }
+            ],
+            "suggestedValidationActions": [
+                {
+                    "actionId": "val_act_018",
+                    "actionType": "AI_EVALUATE_TARGET_WITH_BRUSHES",
+                    "targetPath": "api_server/",
+                    "parameters": {
+                        "brushesToApply": [
+                            "BRUSH_FLATDESIGN_V1",
+                            "BRUSH_MINIMALISM_V1"
+                        ],
+                        "analysisFocus_ja": "API構造のシンプルさと直接性"
+                    },
+                    "description_ja": "`api_server/` のAPI構造が、フラットデザインおよびミニマリズムの観点からシンプルかつ直接的であるかを評価する。"
+                },
+                {
+                    "actionId": "val_act_019",
+                    "actionType": "FETCH_AND_ANALYZE_FILE_CONTENT_FOR_KEYWORDS",
+                    "targetPath": "comfy_api_nodes/README.md",
+                    "parameters": {
+                        "keywords": [
+                            "simple",
+                            "direct",
+                            "easy",
+                            "straightforward",
+                            "example"
+                        ],
+                        "analysisFocus_ja": "ドキュメントの平易さと簡潔さを示す表現"
+                    },
+                    "description_ja": "`comfy_api_nodes/README.md` を分析し、簡潔さや平易さを示すキーワードの使用頻度や、提供されるサンプルコードの分かりやすさを評価する。"
+                }
+            ],
+            "expectedOutcomeIfConfirmed": {
+                "ja": "Q-F(赤)のDevExが向上し、開発効率や保守性が高まる。Q-TP(緑)のコンテキスト理解が容易になり、新規参入者の学習コストが低減、コミュニティへの参加が促進される。APIの利用しやすさはエコシステムの拡大にも貢献する。",
+                "en": "Enhances Q-F (Red) DevEx, leading to improved development efficiency and maintainability. Facilitates Q-TP (Green) context understanding, reducing learning curve for newcomers and promoting community participation. Ease of API use also contributes to ecosystem expansion."
+            },
+            "status": "PENDING_VALIDATION"
+        }
+    ]
+}

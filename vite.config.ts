@@ -9,6 +9,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), ''); // 第2引数を process.cwd() に変更するとより堅牢です
   console.log(`Current mode: ${mode}`);
   return {
+    publicDir: 'public', // 公開ディレクトリの指定 (デフォルトは 'public')
     // アプリケーションコード用のグローバル定数定義
     // これにより、クライアントサイドのコードで process.env.API_KEY のようにアクセスできる
     // (Viteがビルド時に実際の値に置き換えます)
